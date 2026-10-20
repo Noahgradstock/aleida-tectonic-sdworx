@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { activeSession, cookieOptions, createSession, GUEST_ID, guestEnabled, SESSION_COOKIE } from "@/lib/auth";
+import { activeSession, clientIp, cookieOptions, createSession, GUEST_ID, guestEnabled, rateLimit, SESSION_COOKIE } from "@/lib/auth";
 
 // Everything except the login page and the login/guest endpoints needs a valid, not logged-out session.
 // Visitors without one are signed in as the read-only demo guest, so the demo opens without a login screen.
@@ -16,7 +16,10 @@ export async function proxy(request: NextRequest) {
   if (await activeSession(request.cookies.get(SESSION_COOKIE)?.value)) return NextResponse.next();
   if (pathname.startsWith("/api/")) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
-  if (guestEnabled()) {
+  // Same kind of limit as "Continue as guest" (/api/auth/guest): per IP on Vercel, otherwise one global cap.
+  // Over the limit (or with the store down) the visitor gets the login page instead of a new guest session.
+  const ip = clientIp(request);
+  if (guestEnabled() && (await rateLimit(ip ? `guest-auto:${ip}` : "guest-auto-all", ip ? 30 : 600, 60_000))) {
     try {
       const token = createSession(GUEST_ID);
       // Set it on this request too, so the page renders signed in straight away.

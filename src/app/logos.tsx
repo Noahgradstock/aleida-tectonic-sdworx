@@ -56,3 +56,25 @@ export function OutlookLogo() {
     </svg>
   );
 }
+
+// Microsoft Copilot, drawn simply: two soft ribbons in its blue-to-orange colours.
+export function CopilotLogo() {
+  return (
+    <svg viewBox="0 0 32 32" className="h-7 w-7">
+      <defs>
+        <linearGradient id="copilot-a" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#2870ea" />
+          <stop offset="55%" stopColor="#8b5cf6" />
+          <stop offset="100%" stopColor="#e5489d" />
+        </linearGradient>
+        <linearGradient id="copilot-b" x1="1" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="60%" stopColor="#ef5d92" />
+          <stop offset="100%" stopColor="#8b5cf6" />
+        </linearGradient>
+      </defs>
+      <path d="M11.5 4h6.2c1.6 0 3 1.1 3.4 2.6L17 23.8c-.4 1.5-1.8 2.6-3.4 2.6H7.4c-2.3 0-3.9-2.2-3.3-4.4l4.1-15.4C8.6 5.1 10 4 11.5 4Z" fill="url(#copilot-a)" />
+      <path d="M20.5 28h-6.2c-1.6 0-3-1.1-3.4-2.6L15 8.2c.4-1.5 1.8-2.6 3.4-2.6h6.2c2.3 0 3.9 2.2 3.3 4.4l-4.1 15.4c-.4 1.5-1.8 2.6-3.3 2.6Z" fill="url(#copilot-b)" opacity=".92" />
+    </svg>
+  );
+}

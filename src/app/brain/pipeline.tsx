@@ -2,13 +2,15 @@
 
 import type { ReactNode } from "react";
 import { Flag } from "@/lib/demo-shared";
-import { DatabaseLogo, DocsLogo, GmailLogo, OutlookLogo, TeamsLogo } from "../logos";
+import { CopilotLogo, DatabaseLogo, DocsLogo, GmailLogo, OutlookLogo, TeamsLogo } from "../logos";
+import { KIND } from "./documents";
 import type { BrainData } from "./brain-map";
 
 // How the brain reads: connect → find → scan → extract, in one calm row above the documents.
 
 type Channel = BrainData["channels"][number]["type"];
 const SOURCES: { name: string; type: Channel | null; logo: ReactNode }[] = [
+  { name: "Copilot", type: "meeting", logo: <CopilotLogo /> },
   { name: "Teams", type: "teams", logo: <TeamsLogo /> },
   { name: "Outlook", type: "email", logo: <OutlookLogo /> },
   { name: "Gmail", type: "email", logo: <GmailLogo /> },
@@ -25,6 +27,10 @@ export default function Pipeline({ data }: { data: BrainData }) {
     .find((t) => t.key === "sick-relapse")
     ?.claims.filter((c) => c.score !== null)
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+  // What the brain found: documents by kind (most common first), the statements in them, and who made them.
+  const kinds = Object.entries(data.documents.reduce<Record<string, number>>((m, d) => ((m[d.kind] = (m[d.kind] ?? 0) + 1), m), {})).sort((a, b) => b[1] - a[1]);
+  const statements = data.topics.reduce((n, t) => n + t.claims.length, 0);
+  const voices = data.people.filter((p) => p.claims > 0).length;
   const author = example?.author ? data.people.find((p) => p.id === example.author)?.name : "Official publication";
 
   return (
@@ -33,7 +39,7 @@ export default function Pipeline({ data }: { data: BrainData }) {
       <p className="mt-1.5 text-sm text-neutral-500">From what people say to a trusted answer, in four steps. Nobody has to write anything down.</p>
 
       <ol className="mt-6 grid gap-3 sm:grid-cols-4">
-        <Step n={1} title="Hears" text="The mascot listens to meetings, Teams and email, read-only with your own access.">
+        <Step n={1} title="Hears" text="The mascot listens to meetings, Teams, email and Copilot, read-only with your own access.">
           <div className="grid grid-cols-4 gap-x-1 gap-y-2">
             {SOURCES.map((s) => (
               <div key={s.name} className="flex flex-col items-center gap-1" title={`${s.name}: ${count(s.type)} statements`}>
@@ -45,20 +51,37 @@ export default function Pipeline({ data }: { data: BrainData }) {
         </Step>
 
         <Step n={2} title="Finds" text="Every document that already mentions the topic.">
-          <div className="flex items-end gap-3">
-            <div className="relative h-12 w-10">
-              {[0, 1, 2].map((i) => (
+          {/* a fan of the documents it found, by kind, and what came out of them */}
+          <div className="flex items-end gap-4">
+            <div className="relative h-16 w-24 shrink-0">
+              {kinds.slice(0, 5).map(([kind], i, all) => (
                 <span
-                  key={i}
-                  className="absolute h-11 w-8 rounded-[4px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] ring-1 ring-black/5"
-                  style={{ left: i * 4, top: (2 - i) * 2 }}
-                />
+                  key={kind}
+                  className="absolute bottom-0 left-6 flex h-14 w-11 flex-col rounded-[5px] bg-white p-1 shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-black/5"
+                  style={{ transform: `rotate(${(i - (all.length - 1) / 2) * 11}deg) translateX(${(i - (all.length - 1) / 2) * 7}px)`, transformOrigin: "bottom center", zIndex: i }}
+                >
+                  <span className="h-1.5 w-full rounded-sm" style={{ background: KIND[kind as keyof typeof KIND]?.color ?? "#a3a3a3" }} />
+                  <span className="mt-1 h-0.5 w-4/5 rounded bg-neutral-200" />
+                  <span className="mt-0.5 h-0.5 w-3/5 rounded bg-neutral-200" />
+                  <span className="mt-0.5 h-0.5 w-4/5 rounded bg-neutral-200" />
+                </span>
               ))}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="font-serif text-4xl leading-none">{data.documents.length}</div>
               <div className="text-[11px] text-neutral-500">documents</div>
             </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-neutral-500">
+            <span>
+              <b className="font-medium text-neutral-800">{statements}</b> statements
+            </span>
+            <span>
+              <b className="font-medium text-neutral-800">{voices}</b> people
+            </span>
+            <span>
+              <b className="font-medium text-neutral-800">{kinds.length}</b> kinds of source
+            </span>
           </div>
         </Step>
 

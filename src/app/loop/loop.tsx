@@ -255,7 +255,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
         </button>
       </header>
 
-      {howItWorks && <div className="mt-8">{howItWorks}</div>}
+      {howItWorks && <div className="mt-8 max-w-6xl">{howItWorks}</div>}
 
       {toast && (
         <p role="status" className="mt-4 rounded-xl bg-[#eef7f1] px-4 py-2 text-sm text-[#0f8a4f]">

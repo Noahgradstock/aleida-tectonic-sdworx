@@ -16,7 +16,7 @@ export default async function ConnectionsPage() {
   const k = await liveKb();
   // Facts per kind of source, so every line on the page matches what the Brain shows.
   const stats: Partial<Record<SourceType, SourceStats>> = {};
-  for (const c of k.claims) {
+  for (const c of k.claims.filter((c) => canReadClaim(user, c, k))) { // only what this user may see
     const s = (stats[c.source.type] ??= { facts: 0, latest: null });
     s.facts += 1;
     if (!s.latest || c.date > s.latest) s.latest = c.date;

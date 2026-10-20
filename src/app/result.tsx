@@ -124,9 +124,16 @@ export function Result({
               <button
                 onClick={() => setAsked(true)}
                 disabled={asked}
-                className="text-xs text-neutral-500 hover:text-neutral-900 disabled:text-neutral-400"
+                className={`flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 text-sm font-medium transition-all duration-300 active:scale-[0.97] ${
+                  asked ? "bg-[#eef3ff] text-[#1463ff]" : "bg-[#1463ff] text-white shadow-[0_1px_2px_rgba(20,99,255,0.3)] hover:bg-[#0f52d9]"
+                }`}
               >
-                {asked ? `Sent to ${expert.name} ✓` : `Ask ${expert.name} to confirm →`}
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${asked ? "bg-[#1463ff] text-white" : "bg-white/20"}`}
+                >
+                  {asked ? "✓" : initials(expert.name)}
+                </span>
+                {asked ? `Sent to ${expert.name.split(" ")[0]}` : `Ask ${expert.name.split(" ")[0]} to confirm`}
               </button>
             )}
           </div>

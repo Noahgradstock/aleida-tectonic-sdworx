@@ -101,10 +101,17 @@ async function classifyWithHaiku(question) {
   }
 }
 
-// Returns { text, answer } where answer (if any) is shown as a card.
+const QUESTION = /\?\s*$|^\s*(what|what's|whats|how|who|where|when|why|which|can you|could you|tell me|explain|is it|is the|are|do we|does|should|vad|hur|vem|varför|kan du)\b/i;
+
+// Is this said to the mascot (a question, a follow-up, small talk or a payroll topic), not just room chatter?
+function isAddressed(text) {
+  return Boolean(smallTalk(text) || QUESTION.test(text) || PATTERNS.some(([, re]) => re.test(text)) || brain.findFactByText(text));
+}
+
+// Returns { text, answer, known } where answer (if any) is shown as a card.
 async function converse(question) {
   const chat = smallTalk(question);
-  if (chat) return { text: chat };
+  if (chat) return { text: chat, known: true };
 
   // A follow-up about the current topic, unless the question clearly names another topic.
   const namesOtherTopic = (() => {
@@ -115,16 +122,16 @@ async function converse(question) {
     let intent = (PATTERNS.find(([, re]) => re.test(question)) || [])[0];
     if (!intent && !brain.findFactByText(question)) intent = await classifyWithHaiku(question);
     const text = intent && reply(intent, topic);
-    if (text) return { text, answer: topic };
+    if (text) return { text, answer: topic, known: true };
   }
 
   const answer = await brain.ask(question);
   if (!answer.matched || !answer.value) {
-    return { text: answer.message && !answer.matched ? "I don't have a trusted answer for that yet. I'll flag it for an expert." : "Nothing in the brain applies to this case yet.", answer };
+    return { text: answer.message && !answer.matched ? "I don't have a trusted answer for that yet. I'll flag it for an expert." : "Nothing in the brain applies to this case yet.", answer, known: false };
   }
   remember(answer);
   const status = answer.status === "trusted" ? `${answer.score} percent trusted` : `only ${answer.score} percent trusted, so double-check it`;
-  return { text: `${answer.label}: ${answer.value}. ${status}, from the ${sourceName(answer)}.`, answer };
+  return { text: `${answer.label}: ${answer.value}. ${status}, from the ${sourceName(answer)}.`, answer, known: true };
 }
 
-module.exports = { converse, rememberWarning, speakable };
+module.exports = { converse, rememberWarning, speakable, isAddressed };

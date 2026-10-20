@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("mascot", {
   setContext: (mode) => ipcRenderer.send("mascot:set-context", String(mode)),
   fixMail: () => ipcRenderer.send("mascot:fix-mail"),
   onFixed: on("mascot:fixed"),
+  onSilence: on("mascot:silence"),
   copy: (text) => ipcRenderer.send("mascot:copy", String(text)),
   onToggleAsk: on("mascot:toggle-ask"),
   onThinking: on("mascot:thinking"),

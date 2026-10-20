@@ -19,6 +19,13 @@ let compose;
 let listener;
 let waitingForQuestion = false;
 let deafUntil = 0; // do not listen to our own voice
+let gen = 0; // bumped when talking is turned off or the mascot goes offline; stale answers are dropped
+
+function silence() {
+  gen++;
+  deafUntil = 0;
+  send("mascot:silence");
+}
 
 function lockDown(win) {
   win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
@@ -202,27 +209,36 @@ function stopMeeting() {
 
 }
 
-async function say(text) {
+async function say(text, g = gen) {
+  if (g !== gen) return;
   const audio = await voice.speak(text);
+  if (g !== gen) return; // turned off while the voice was being made
   const seconds = audio ? (audio.length * 0.75 * 8) / 32000 : text.length * 0.07;
   deafUntil = Date.now() + seconds * 1000 + 700;
   send("mascot:speak", { text, audio });
 }
 
-async function answerAloud(question) {
-  log("question:", question);
+// explicit: you said "Hey SD Worx" (or used the button), so it always replies; otherwise it only replies when it knows.
+async function answerAloud(question, explicit = true) {
+  const g = gen;
+  log("question:", question, explicit ? "" : "(follow-up)");
   if (FIX_COMMAND.test(question) || (Date.now() < offerUntil && YES.test(question))) return fixMail(true);
   send("mascot:thinking");
   let r;
   try {
     r = await conversation.converse(question);
   } catch {
-    r = { text: "Sorry, I can't reach the brain right now." };
+    r = { text: "Sorry, I can't reach the brain right now.", known: false };
+  }
+  if (g !== gen) return log("dropped (turned off):", question);
+  if (!explicit && !r.known) {
+    send("mascot:check", { ok: true });
+    return log("ignored, not a known topic:", question);
   }
   log("reply:", r.text);
-  convoUntil = Math.max(convoUntil, Date.now() + CONVO_MS);
   send("mascot:answer", r);
-  await say(conversation.speakable(r.text));
+  if (inConversation()) convoUntil = Math.max(convoUntil, Date.now() + CONVO_MS);
+  await say(conversation.speakable(r.text), g);
 }
 
 async function onSegment(buffer, mime) {
@@ -245,16 +261,23 @@ async function onSegment(buffer, mime) {
   if (wake) {
     openConversation();
     const question = wake[1].trim();
-    if (question.length > 3) return answerAloud(question);
+    if (question.length > 3) return answerAloud(question, true);
     waitingForQuestion = true;
     return send("mascot:wake");
   }
-  if (waitingForQuestion || inConversation()) {
+
+  // In a meeting, a wrong value is corrected before anything else.
+  if (activeContext === "meeting") {
+    const c = await brain.check(text);
+    if (!c.ok) return checkWriting(text, "meeting");
+  }
+
+  if (waitingForQuestion) {
     waitingForQuestion = false;
-    if (text.split(/\s+/).length >= 2 || FIX_COMMAND.test(text)) {
-      openConversation();
-      return answerAloud(text);
-    }
+    return answerAloud(text, true);
+  }
+  if (inConversation() && (conversation.isAddressed(text) || FIX_COMMAND.test(text))) {
+    return answerAloud(text, false);
   }
   if (activeContext !== "meeting") return; // outside meetings, only "Hey SD Worx" counts
   checkWriting(text, "meeting");
@@ -288,13 +311,21 @@ function setOnline(on) {
   else {
     watcher.stop();
     talkMode = false;
+    convoUntil = 0;
+    waitingForQuestion = false;
+    silence();
   }
   send("mascot:online", on);
   updateContext();
 }
 function toggleTalk() {
   talkMode = !inConversation();
-  if (!talkMode) convoUntil = 0;
+  if (!talkMode) {
+    convoUntil = 0;
+    waitingForQuestion = false;
+    offerUntil = 0;
+    silence();
+  }
   if (talkMode && !online) setOnline(true);
   log("talk mode:", talkMode);
   updateContext();

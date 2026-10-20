@@ -204,6 +204,13 @@ $("fix").addEventListener("click", () => {
 });
 $("ignore").addEventListener("click", closeCard);
 
+window.mascot.onSilence(() => {
+  audio.pause();
+  audio.removeAttribute("src");
+  pill("");
+  if (mood === "speaking" || mood === "thinking" || mood === "wake") setMood("calm");
+});
+
 window.mascot.onFixed(({ count }) => {
   closeCard();
   pill(`Fixed ${count} value${count > 1 ? "s" : ""} in your email ✓`, 3000);

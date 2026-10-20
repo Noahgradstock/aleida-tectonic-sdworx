@@ -91,6 +91,7 @@ async function readWriting() {
 function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Electron", "Company brain"]) {
   let timer = null;
   let last = "";
+  let pending = "";
   let reported = false;
   return {
     start() {
@@ -105,14 +106,20 @@ function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Elect
         }
         reported = false;
         if (!r.text || ignoreApps.includes(r.app) || r.text === last) return;
+        // Wait until the text is the same on two reads in a row, so half-typed numbers are not checked.
+        if (r.text !== pending) {
+          pending = r.text;
+          return;
+        }
         last = r.text;
         onText(r.app, r.text);
-      }, 1500);
+      }, 900);
     },
     stop() {
       clearInterval(timer);
       timer = null;
       last = "";
+      pending = "";
     },
   };
 }

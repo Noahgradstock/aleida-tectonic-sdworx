@@ -13,7 +13,7 @@ export type Scope = { country: string; pc?: string; client?: string };
 export type Entry = {
   id: string;
   at: string;
-  kind: "learned" | "confirmed" | "rejected" | "outdated";
+  kind: "learned" | "confirmed" | "rejected" | "outdated" | "removed" | "corrected" | "restored";
   actor: string;
   channel: string;
   factKey: string;
@@ -28,6 +28,7 @@ export type Entry = {
   evidence: Evidence[];
   caps: string[];
   explain?: string; // older entries have none
+  replaces?: string; // a correction: the claim it took the place of
 };
 export type SetAside = { person: { id: string; name: string }; reason: string };
 export type Answer = {
@@ -265,7 +266,13 @@ export function LedgerRow({
         ? `Confirmed by ${by}${e.actor === e.speaker ? ", who said it" : ""}`
         : e.kind === "rejected"
           ? `Marked wrong by ${by}`
-          : `Marked outdated by ${by}`;
+          : e.kind === "removed"
+            ? `Taken back by ${by}`
+            : e.kind === "corrected"
+              ? `Corrected by ${by}`
+              : e.kind === "restored"
+                ? `Put back by ${by}`
+                : `Marked outdated by ${by}`;
   const d = e.claimScore.before == null ? 0 : e.claimScore.after - e.claimScore.before;
   const flash = d > 0.005 ? ["#0f8a4f", "#eef7f1"] : d < -0.005 ? ["#c0392b", "#fdecea"] : ["#a3a3a3", "#f5f5f5"];
   const style = { "--flash": flash[0], "--flash-bg": flash[1], "--rest-bg": latest ? "#faf9f6" : "transparent" } as CSSProperties;

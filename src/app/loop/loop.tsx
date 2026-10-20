@@ -1,6 +1,7 @@
 "use client";
 
 import { ForecastLine } from "../trust-visuals";
+import YourInbox from "./inbox";
 import { useCallback, useEffect, useState } from "react";
 import {
   ago,
@@ -59,6 +60,26 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
 }
 
 const sameSnap = (a: Snapshot, b: Snapshot) => a.value === b.value && a.status === b.status && Math.round((a.score ?? -1) * 100) === Math.round((b.score ?? -1) * 100);
+
+// What a person did, in words: for the freshness line and "What changed".
+const DID: Record<Entry["kind"], string> = {
+  learned: "added it",
+  confirmed: "confirmed it",
+  rejected: "marked it wrong",
+  outdated: "marked it outdated",
+  removed: "took it back",
+  corrected: "corrected it",
+  restored: "put it back",
+};
+const DID_VALUE: Record<Entry["kind"], (v: string) => string> = {
+  learned: (v) => `added ${v}`,
+  confirmed: (v) => `confirmed ${v}`,
+  rejected: (v) => `marked ${v} wrong`,
+  outdated: (v) => `marked ${v} outdated`,
+  removed: (v) => `took back ${v}`,
+  corrected: (v) => `corrected it to ${v}`,
+  restored: (v) => `put ${v} back`,
+};
 
 export default function Loop() {
   const [me, setMe] = useState<Me | null>(null);
@@ -167,7 +188,14 @@ export default function Loop() {
   const fresh = new Set(view.fresh);
   const latestPerClaim = new Map<string, Entry>();
   for (const e of entries) if (!latestPerClaim.has(e.claimId)) latestPerClaim.set(e.claimId, e);
-  const isPending = (e: Entry) => latestPerClaim.get(e.claimId)?.id === e.id && e.kind !== "rejected" && waitsForConfirm(e.caps);
+  // Claims their speaker took back or corrected no longer wait for anyone (unless put back later).
+  const takenBack = new Set<string>();
+  for (const e of [...entries].reverse()) {
+    if (e.kind === "removed") takenBack.add(e.claimId);
+    if (e.kind === "corrected" && e.replaces) takenBack.add(e.replaces);
+    if (e.kind === "restored") takenBack.delete(e.claimId);
+  }
+  const isPending = (e: Entry) => latestPerClaim.get(e.claimId)?.id === e.id && e.kind !== "rejected" && !takenBack.has(e.claimId) && waitsForConfirm(e.caps);
 
   const best = answer?.matched ? answer.best : null;
   const current: Snapshot | null = best ? { value: best.claim.value, score: best.score, status: answer?.status ?? "trusted" } : null;
@@ -187,9 +215,7 @@ export default function Loop() {
     ? `Last updated ${ago(latestHere.at, now)} from ${CHANNEL[latestHere.channel] ?? latestHere.channel}. ${
         latestHere.kind === "learned"
           ? `${name(latestHere.actor)} added it.`
-          : latestHere.kind === "confirmed"
-            ? `${name(latestHere.actor)} confirmed it.`
-            : `${name(latestHere.actor)} marked it ${latestHere.kind === "rejected" ? "wrong" : "outdated"}.`
+          : `${name(latestHere.actor)} ${DID[latestHere.kind]}.`
       }`
     : answer?.lastUpdated
       ? `Last updated on ${new Date(answer.lastUpdated.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} from ${answer.lastUpdated.source}${answer.lastUpdated.by ? `, by ${name(answer.lastUpdated.by)}` : ""}.`
@@ -234,8 +260,9 @@ export default function Loop() {
       )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        {/* Everyday work goes in */}
-        <section className="self-start rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6 lg:sticky lg:top-20">
+        {/* Left: everyday work goes in, and your own inbox and log right under it */}
+        <div className="min-w-0 space-y-6 self-start">
+        <section className="rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6">
           <h2 className="font-serif text-3xl">Everyday work</h2>
           <div role="group" aria-label="Kind of work" className="mt-3 flex flex-wrap gap-1 text-sm">
             {(Object.keys(DEMO) as (keyof typeof DEMO)[]).map((c) => (
@@ -300,6 +327,8 @@ export default function Loop() {
             </div>
           )}
         </section>
+        <YourInbox onChange={() => void refresh(true)} />
+        </div>
 
         <div className="min-w-0 space-y-6">
           {/* The answer now */}
@@ -391,9 +420,7 @@ export default function Loop() {
                       What changed {ago(latestHere.at, now)}:{" "}
                       {latestHere.kind === "learned"
                         ? `the brain learned ${latestHere.value} from ${CHANNEL[latestHere.channel] ?? latestHere.channel}.`
-                        : latestHere.kind === "confirmed"
-                          ? `${name(latestHere.actor)} confirmed ${latestHere.value}.`
-                          : `${name(latestHere.actor)} marked ${latestHere.value} ${latestHere.kind === "rejected" ? "wrong" : "outdated"}.`}
+                        : `${name(latestHere.actor)} ${DID_VALUE[latestHere.kind](latestHere.value)}.`}
                     </p>
                     <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2">
                       <span className="col-span-2 text-sm text-neutral-600">

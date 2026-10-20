@@ -23,7 +23,22 @@ export async function liveClaims(): Promise<LiveClaim[]> {
 
 // The static knowledge base plus everything learned since. Same claim id = same claim, so feeding
 // the same sentence twice never counts twice.
+// Claims their speaker or reporter took back. They stay in the person's own log (with Undo),
+// but count nowhere else: not in answers, not in who-to-contact, not in the Brain.
+export type Retraction = { claimId: string; by: string; at: string; correctedTo?: string };
+export async function retractions(): Promise<Retraction[]> {
+  return (await store.hvals("retractions")).map((v) => JSON.parse(v) as Retraction);
+}
+
 export async function liveKb(): Promise<KnowledgeBase> {
+  const [live, gone] = await Promise.all([liveClaims(), retractions()]);
+  const ids = new Set(kb.claims.map((c) => c.id));
+  const removed = new Set(gone.map((r) => r.claimId));
+  return { ...kb, claims: [...kb.claims, ...live.filter((c) => !ids.has(c.id))].filter((c) => !removed.has(c.id)) };
+}
+
+// Everything, including what was taken back: for the person's own log only.
+export async function fullKb(): Promise<KnowledgeBase> {
   const live = await liveClaims();
   const ids = new Set(kb.claims.map((c) => c.id));
   return { ...kb, claims: [...kb.claims, ...live.filter((c) => !ids.has(c.id))] };
@@ -66,7 +81,7 @@ type Snapshot = { value: string | null; score: number | null; status: FactStatus
 export type LedgerEntry = {
   id: string;
   at: string; // wall-clock time of the change
-  kind: "learned" | "confirmed" | "rejected" | "outdated";
+  kind: "learned" | "confirmed" | "rejected" | "outdated" | "removed" | "corrected" | "restored";
   actor: string; // signed-in user who caused it (reporter, voter)
   channel: string;
   factKey: string;
@@ -82,6 +97,7 @@ export type LedgerEntry = {
   evidence: Evidence[];
   caps: string[];
   explain: string; // one plain sentence: which question moved the score, and by how much
+  replaces?: string; // a correction: the claim it took the place of
 };
 
 // The claim's own scope as a case, for scoring and for access checks.
@@ -104,6 +120,8 @@ export async function recordChange(opts: {
   after: KnowledgeBase;
   feedbackBefore?: Feedback[];
   now: Date;
+  explain?: string; // overrides the generated sentence, e.g. for a removal
+  replaces?: string;
 }): Promise<LedgerEntry> {
   const fbAfter = await allFeedback();
   const fbBefore = opts.feedbackBefore ?? fbAfter;
@@ -128,7 +146,8 @@ export async function recordChange(opts: {
     answer: { before: b.answer, after: a.answer },
     evidence: a.mine?.evidence ?? [],
     caps: a.mine?.caps ?? [],
-    explain: explainChange(b.mine?.evidence ?? null, a.mine?.evidence ?? [], b.mine?.caps ?? [], a.mine?.caps ?? []),
+    replaces: opts.replaces,
+    explain: opts.explain ?? explainChange(b.mine?.evidence ?? null, a.mine?.evidence ?? [], b.mine?.caps ?? [], a.mine?.caps ?? []),
   };
   // Ring buffer: slot = sequence number modulo the size, so the newest entry overwrites the oldest
   // and the ledger never grows beyond LEDGER_SIZE fields.
@@ -148,14 +167,14 @@ export function explainChange(before: Evidence[] | null, after: Evidence[], caps
   const capText = (c: string) => c.replace(/^Capped at /, "").replace(":", " cap:");
   if (!before) {
     const top = [...after].sort((x, y) => Math.abs(y.points) - Math.abs(x.points)).slice(0, 3);
-    const parts = top.map((e) => `${LAYERS.find((l) => l.id === e.layer)?.question ?? e.layer} ${signed(e.points)} (${e.label.charAt(0).toLowerCase() + e.label.slice(1)})`);
+    const parts = top.map((e) => `${LAYERS.find((l) => l.id === e.layer)?.question ?? e.layer} ${signed(e.points)} (${e.label})`);
     return `New claim. ${parts.join(", ")}${capsAfter[0] ? `. ${capText(capsAfter[0])}` : ""}.`;
   }
   const moved = LAYERS.map((l) => {
     const d = sum(after, l.id) - sum(before, l.id);
     if (Math.abs(d) < 0.05) return null;
     const why = after.find((e) => e.layer === l.id && !before.some((x) => x.label === e.label))?.label;
-    return `${l.question} ${signed(d)}${why ? ` (${why.charAt(0).toLowerCase() + why.slice(1)})` : ""}`;
+    return `${l.question} ${signed(d)}${why ? ` (${why})` : ""}`;
   }).filter(Boolean);
   const lifted = capsBefore.filter((c) => !capsAfter.includes(c)).map((c) => `lifted the ${capText(c)}`);
   const added = capsAfter.filter((c) => !capsBefore.includes(c)).map((c) => `new ${capText(c)}`);

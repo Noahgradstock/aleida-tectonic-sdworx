@@ -1,5 +1,5 @@
 import { currentUser, unauthorized } from "@/lib/trust-server";
-import { ctxOf, ledger, liveKb } from "@/lib/live";
+import { ctxOf, fullKb, ledger } from "@/lib/live";
 import { canUseContext } from "@/lib/access";
 
 // GET ?fact=<key> -> the latest score changes, newest first. Only for cases the user may ask about:
@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const fact = new URL(request.url).searchParams.get("fact");
   if (fact !== null && !/^[a-z0-9-]{1,80}$/.test(fact)) return Response.json({ error: "Unknown fact" }, { status: 400 });
   try {
-    const k = await liveKb();
+    // Including claims that were taken back: their removal is part of the history.
+    const k = await fullKb();
     const claims = new Map(k.claims.map((c) => [c.id, c]));
     const entries = (await ledger())
       .filter((e) => !fact || e.factKey === fact)

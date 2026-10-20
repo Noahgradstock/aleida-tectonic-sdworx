@@ -3,7 +3,6 @@ import { requireUser } from "@/lib/session";
 import { buildBrainData } from "@/lib/brain-data";
 import Pipeline from "../brain/pipeline";
 import Loop from "./loop";
-import QuestionsForYou from "./questions";
 
 export const metadata: Metadata = {
   title: "Company brain – live loop",
@@ -15,7 +14,6 @@ export default async function LoopPage() {
   const data = await buildBrainData(await requireUser());
   return (
     <>
-      <QuestionsForYou />
       <Loop />
       {/* How a document or a meeting becomes a statement the brain can score. */}
       <div className="mx-auto max-w-6xl px-4 pb-24">

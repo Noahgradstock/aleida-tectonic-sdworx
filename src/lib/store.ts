@@ -15,6 +15,7 @@ export interface Store {
   flagged(key: string): Promise<boolean>;
   hset(hash: string, field: string, value: string): Promise<void>;
   hvals(hash: string): Promise<string[]>;
+  hdel(hash: string, field: string): Promise<void>;
 }
 
 class MemoryStore implements Store {
@@ -49,6 +50,9 @@ class MemoryStore implements Store {
   }
   async hvals(hash: string) {
     return [...(this.hashes.get(hash)?.values() ?? [])];
+  }
+  async hdel(hash: string, field: string) {
+    this.hashes.get(hash)?.delete(field);
   }
 }
 
@@ -94,6 +98,9 @@ export class UpstashStore implements Store {
   async hvals(hash: string) {
     const [v] = await this.pipeline([["HVALS", hash]]);
     return (v as string[] | null) ?? [];
+  }
+  async hdel(hash: string, field: string) {
+    await this.pipeline([["HDEL", hash, field]]);
   }
 }
 

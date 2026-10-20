@@ -81,7 +81,7 @@ export function explainScore(best: ScoredClaim | null, ahead: Forecast | null): 
   const byLayer = LAYERS.map((l) => {
     const items = best.evidence.filter((e) => e.layer === l.id);
     const points = items.reduce((s, e) => s + e.points, 0);
-    return { q: l.question.replace("?", "").toLowerCase(), points, why: items[0]?.label.toLowerCase() };
+    return { q: l.question.replace("?", "").toLowerCase(), points, why: items[0]?.label };
   }).filter((r) => Math.abs(r.points) >= 0.05);
   const parts = byLayer.map((r) => `${r.q} ${r.points > 0 ? "+" : "−"}${Math.abs(r.points).toFixed(1)}${r.why ? ` (${r.why})` : ""}`);
   const cap = best.caps[0] ? ` ${best.caps[0]}.` : "";

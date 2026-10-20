@@ -66,6 +66,16 @@ export default function Ask() {
       .then((m) => {
         setClients(m.clients);
         setExamples(m.examples);
+        // Deep link from the desktop assistant: /?q=<question>&client=<id> asks that exact question.
+        const sp = new URLSearchParams(window.location.search);
+        const q0 = (sp.get("q") ?? "").slice(0, 500).trim();
+        if (q0) {
+          const c0 = sp.get("client");
+          const linked = c0 && m.clients.some((x: Client) => x.id === c0) ? { client: c0 } : inferContext(q0, m.clients);
+          setQuestion(q0);
+          ask(q0, linked);
+          return;
+        }
         // Start on a client this user works on.
         setCtx((c) =>
           c.client && !m.clients.some((x: Client) => x.id === c.client)

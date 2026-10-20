@@ -22,6 +22,8 @@ const TABS = [
   { href: "/brain", label: "Brain", icon: "M6 6.5a2.5 2.5 0 1 0 0-.01M18 6.5a2.5 2.5 0 1 0 0-.01M12 18a2.5 2.5 0 1 0 0-.01M8.2 7.6l2.6 8M15.8 7.6l-2.6 8M8.5 6.5h7" },
   // a pulse: what changes, live
   { href: "/loop", label: "Live loop", icon: "M3 12h4l2.5-6 5 12 2.5-6H21" },
+  // a plug: where the brain learns from
+  { href: "/connections", label: "Connections", icon: "M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8ZM12 17v4" },
 ];
 
 const initials = (name: string) =>

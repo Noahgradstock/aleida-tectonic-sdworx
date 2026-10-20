@@ -56,8 +56,7 @@ Fill this in as soon as the case is known and the work is split. Update it (pull
 
 | Area / folder | Owner |
 |---|---|
-| Trust loop core: best-before date, headroom, conflict types, decision lanes (`src/trust-engine/forecast.ts`, `src/trust-engine/lanes.ts`, tests). Design: `docs/trusted-tomorrow-algorithm.md` | Isak (`kasikasikasi`) |
-| _rest to be decided_ | |
+| _to be decided_ | |
 
 ---
 

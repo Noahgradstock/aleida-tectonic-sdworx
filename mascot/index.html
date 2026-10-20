@@ -2,42 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'" />
   <title>Company brain</title>
-  <style>
-    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; font-family: -apple-system, system-ui, sans-serif; user-select: none; }
-    .stage { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 12px; box-sizing: border-box; -webkit-app-region: drag; }
-    .bubble { max-width: 190px; margin-bottom: 8px; padding: 8px 12px; border-radius: 14px; background: rgba(255,255,255,.95); color: #2c2c2a; font-size: 12px; line-height: 1.4; box-shadow: 0 2px 10px rgba(0,0,0,.15); opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; }
-    .bubble.show { opacity: 1; transform: none; }
-    svg { width: 150px; height: 140px; overflow: visible; }
-    .body { transition: fill .4s; animation: wobble 4s ease-in-out infinite; transform-origin: 75px 80px; }
-    .calm .body { fill: #5DCAA5; }
-    .thinking .body { fill: #85B7EB; animation-duration: 1.2s; }
-    .warning .body { fill: #EF9F27; animation: shake .5s ease-in-out infinite; }
-    .eye { fill: #2c2c2a; animation: blink 5s infinite; transform-origin: center; transform-box: fill-box; }
-    .badge { opacity: 0; transition: opacity .3s; }
-    .warning .badge { opacity: 1; }
-    .shadow { fill: rgba(0,0,0,.12); animation: squash 4s ease-in-out infinite; transform-origin: 75px 132px; }
-    @keyframes wobble { 0%,100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-6px) scale(1.03,.97); } }
-    @keyframes squash { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(.85); } }
-    @keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
-    @keyframes blink { 0%,92%,100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
-  </style>
+  <link rel="stylesheet" href="mascot.css" />
 </head>
 <body>
   <div class="stage calm" id="stage">
-    <div class="bubble" id="bubble"></div>
-    <svg viewBox="0 0 150 140" aria-label="Company brain mascot">
-      <ellipse class="shadow" cx="75" cy="132" rx="40" ry="6" />
-      <path class="body" d="M75 22 C112 22 132 50 130 82 C128 112 106 126 75 126 C44 126 20 112 20 82 C18 50 38 22 75 22 Z" />
-      <ellipse class="eye" cx="58" cy="74" rx="6" ry="9" />
-      <ellipse class="eye" cx="92" cy="74" rx="6" ry="9" />
-      <path d="M62 96 Q75 104 88 96" fill="none" stroke="#2c2c2a" stroke-width="3" stroke-linecap="round" />
-      <g class="badge">
-        <circle cx="122" cy="30" r="15" fill="#E24B4A" />
-        <text x="122" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">!</text>
-      </g>
-    </svg>
+    <div class="card hit" id="card" hidden>
+      <div class="card-head">
+        <span class="brand"><span class="dot"></span>Company brain</span>
+        <button class="close" id="close" aria-label="Close">×</button>
+      </div>
+
+      <form id="ask-form" class="ask">
+        <input id="question" type="text" maxlength="500" placeholder="Ask anything about payroll…" autocomplete="off" />
+        <button type="submit" aria-label="Ask">↵</button>
+      </form>
+
+      <div id="answer" class="answer" hidden>
+        <div class="label" id="a-label"></div>
+        <div class="value" id="a-value"></div>
+        <div class="meta"><span class="chip" id="a-chip"></span><span id="a-source"></span></div>
+        <div class="expert" id="a-expert"></div>
+      </div>
+
+      <div id="warning" class="warn" hidden>
+        <div class="warn-title">Heads up before you send</div>
+        <p id="w-text"></p>
+        <div class="meta"><span class="chip trusted" id="w-chip"></span><span id="w-source"></span></div>
+        <div class="actions">
+          <button id="fix" class="primary">Fix it</button>
+          <button id="ignore">Ignore</button>
+        </div>
+      </div>
+
+      <div id="note" class="note" hidden></div>
+      <button class="link" id="open-compose">Open demo email</button>
+    </div>
+
+    <div class="mascot hit" id="mascot" title="Click to ask · drag to move">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      <svg viewBox="0 0 160 160" aria-label="Company brain mascot">
+        <defs>
+          <radialGradient id="shine" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity=".55" />
+            <stop offset="45%" stop-color="#ffffff" stop-opacity="0" />
+          </radialGradient>
+        </defs>
+        <ellipse class="shadow" cx="80" cy="150" rx="44" ry="6" />
+        <g class="bob">
+          <path class="body" d="M80 40 C118 40 140 66 138 98 C136 128 112 144 80 144 C48 144 22 128 22 98 C20 66 42 40 80 40 Z" />
+          <path d="M80 40 C118 40 140 66 138 98 C136 128 112 144 80 144 C48 144 22 128 22 98 C20 66 42 40 80 40 Z" fill="url(#shine)" />
+          <g class="face">
+            <ellipse class="eye" cx="62" cy="94" rx="7" ry="10" />
+            <ellipse class="eye" cx="98" cy="94" rx="7" ry="10" />
+            <circle cx="64.5" cy="90" r="2.4" fill="#fff" />
+            <circle cx="100.5" cy="90" r="2.4" fill="#fff" />
+            <ellipse cx="48" cy="110" rx="7" ry="4" fill="#ff8a8a" opacity=".35" />
+            <ellipse cx="112" cy="110" rx="7" ry="4" fill="#ff8a8a" opacity=".35" />
+            <path class="mouth" d="M70 114 Q80 121 90 114" fill="none" stroke="#1f2a3a" stroke-width="3" stroke-linecap="round" />
+          </g>
+          <g class="cap">
+            <path d="M34 66 C38 30 122 30 126 66 Z" fill="#1d2b4a" />
+            <path d="M34 66 C70 58 92 58 126 66 L132 72 C96 64 62 64 26 72 Z" fill="#14203a" />
+            <path d="M104 64 C124 62 146 66 150 74 C136 74 118 72 104 70 Z" fill="#14203a" />
+            <circle cx="80" cy="33" r="3.5" fill="#14203a" />
+            <g transform="translate(55 42)">
+              <rect x="0" y="0" width="3" height="12" rx="1.5" fill="#7ED957" transform="skewX(-20)" />
+              <rect x="5" y="0" width="3" height="12" rx="1.5" fill="#4FB3F6" transform="skewX(-20)" />
+              <text x="14" y="10.5" font-family="-apple-system, system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#ffffff" letter-spacing=".2">sdworx</text>
+            </g>
+          </g>
+          <g class="badge">
+            <circle cx="136" cy="44" r="14" fill="#E24B4A" stroke="#fff" stroke-width="2.5" />
+            <text x="136" y="50" text-anchor="middle" font-size="17" font-weight="800" fill="#fff" font-family="-apple-system, system-ui, sans-serif">!</text>
+          </g>
+        </g>
+      </svg>
+    </div>
   </div>
   <script src="renderer.js"></script>
 </body>

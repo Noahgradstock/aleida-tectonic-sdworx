@@ -272,3 +272,15 @@ test("confirming colleagues counts per colleague, and only for answers that held
   // Jan and Lotte gave 👍 to Anna's 1.8% (right); Sofie's 👍 there counts too, but no credit for confirming 2.1%.
   assert.ok(ranked.find((c) => c.person.id === "jan")!.reasons.includes("Confirmed 1 colleague"));
 });
+
+test("after a client exception wins, whoever gave the country rule is still 'right' at their own level", () => {
+  const { extracted } = extractClaims("Jan: For Brouwerij De Kroon we agreed 22 holiday days.", "meeting", BE, kb, kb.people.find((p) => p.id === "jan")!, now);
+  const claim = { ...extracted[0].claim, reportedBy: "jan" };
+  const live = { ...kb, claims: [...kb.claims, claim] };
+  const ctx = { country: "BE", pc: "200", client: "brouwerij-de-kroon" };
+  const fb: Feedback[] = [{ claimId: claim.id, userId: "anna", kind: "correct", context: ctx, date: now.toISOString() }];
+  const r = evaluateFact(fact, live, ctx, fb, now);
+  assert.equal(r.best?.claim.value, "22 days");
+  const anna = rankContacts(r, ctx, live, fb, now).ranked.find((c) => c.person.id === "anna")!;
+  assert.ok(anna.reasons.some((x) => /Right 1 of 1/.test(x)), anna.reasons.join(", "));
+});

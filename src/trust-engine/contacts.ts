@@ -47,6 +47,15 @@ export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase
   const people = new Map(kb.people.map((p) => [p.id, p]));
   const trustedValue = result.status === "trusted" || result.status === "conflict" ? result.best?.claim.value : undefined;
   const all: Claim[] = kb.claims.filter((c) => c.factKey === result.fact.key);
+  // Right means right at the level you spoke about: someone who gave the Belgian rule was not wrong
+  // just because this client has its own agreement. Compare with the best trusted claim at the same level.
+  const levelOf = new Map(result.claims.map((s) => [s.claim.id, s.relevance]));
+  const trustedAt = new Map<string, string>();
+  for (const s of result.claims) if (s.score >= 0.75 && !trustedAt.has(s.relevance)) trustedAt.set(s.relevance, s.claim.value);
+  const isRight = (c: Claim) => {
+    const own = trustedAt.get(levelOf.get(c.id) ?? "");
+    return (!!trustedValue && sameValue(c.value, trustedValue)) || (!!own && sameValue(c.value, own));
+  };
   const inScope = (c: Claim) => matchScope(c, ctx, feedback).ok;
   const isExpert = (id: string) => people.get(id)?.role === "expert";
 
@@ -59,14 +68,14 @@ export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase
   // the trusted value; it can never hurt them. Curated transcripts and self-reports count as written.
   const selfReported = (c: Claim) => "reportedBy" in c && c.reportedBy === c.author;
   const hearsay = (c: Claim) => c.source.type === "meeting" && c.id.startsWith("live-") && !selfReported(c) && !confirmed(c);
-  const counts = (c: Claim) => !hearsay(c) || (!!trustedValue && sameValue(c.value, trustedValue));
+  const counts = (c: Claim) => !hearsay(c) || isRight(c);
 
   // Everyone who left a trace on this topic: wrote a claim, or confirmed someone else's in your scope.
   // Confirming an answer that turned out wrong earns nothing.
   const touched = new Map<string, { claims: Claim[]; confirmed: Set<string> }>();
   const touch = (id: string) => touched.get(id) ?? touched.set(id, { claims: [], confirmed: new Set() }).get(id)!;
   const confirmedBy = (id: string, c: Claim) => {
-    if (id === c.author || !inScope(c) || (trustedValue && !sameValue(c.value, trustedValue))) return;
+    if (id === c.author || !inScope(c) || (trustedValue && !isRight(c))) return;
     touch(id).confirmed.add(c.author ?? c.id); // per colleague: three 👍 on one person's messages is one colleague
   };
   for (const c of all) {
@@ -101,7 +110,7 @@ export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase
       setAside.push({ person, reason: "Only mentioned in a meeting, not confirmed yet" });
       continue;
     }
-    ranked.push(contactFor(person, counted, confirms, trustedValue, now));
+    ranked.push(contactFor(person, counted, confirms, trustedValue ? isRight : undefined, now));
   }
 
   ranked.sort((a, b) => b.points - a.points || a.person.name.localeCompare(b.person.name));
@@ -109,7 +118,7 @@ export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase
 }
 
 // Points, chips and one sentence for one person. Every point has a visible reason.
-function contactFor(person: Person, counted: Claim[], confirms: number, trustedValue: string | undefined, now: Date): Contact {
+function contactFor(person: Person, counted: Claim[], confirms: number, isRight: ((c: Claim) => boolean) | undefined, now: Date): Contact {
   const reasons: string[] = [];
   const why: string[] = [];
   let points = 0;
@@ -125,9 +134,9 @@ function contactFor(person: Person, counted: Claim[], confirms: number, trustedV
   } else why.push(`works in ${person.team}`);
 
   // Track record: Beta(1,1) prior, so one right answer is not proof.
-  if (trustedValue && counted.length) {
+  if (isRight && counted.length) {
     const n = counted.length;
-    const right = counted.filter((c) => sameValue(c.value, trustedValue)).length;
+    const right = counted.filter(isRight).length;
     const r = (1 + right) / (2 + n);
     points += 2 * Math.log(r / (1 - r));
     reasons.push(`Right ${right} of ${plural(n, "time")}`);

@@ -16,10 +16,9 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 | In the video | Who | Line |
 |---|---|---|
 | 0:00 the blob lands | | *(silent)* |
-| 0:04 "01 · The new hire" | **ISAK** | Day one. I was told a meal voucher is €6.91. |
-| 0:16 the blob turns amber | **ISAK** | Company brain checks me as I type. It's €8.91 now. One click, fixed. |
-| 0:21 €8.91, fixed | **ISAK** | But where does that knowledge come from? |
-| 0:23 "02 · The expert" | **ILKE** | From people like me. |
+| 0:04 "01 · The new hire" | **ISAK** | Day one: I have to send an email to a client. |
+| 0:15 just before amber | **ISAK** | Company brain checks my email in real time, and tells me when I'm wrong, and why. Then I can fix my email automatically, with the most trusted source. |
+| 0:23 "02 · The expert" | **ILKE** | Where does it know that from? From people like me. |
 | 0:29 Ilke's email | **ILKE** | I just agreed 22 holiday days with this client. That isn't written in any document. |
 | 0:32 blue card | **ILKE** | So I share it. Just this sentence. |
 | 0:37 "Shared for review" | **ILKE** | Nothing leaves my laptop until I click. And it counts for nobody until a colleague approves. |
@@ -45,12 +44,11 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 
 ### Isak
 1. *(title slide)* "Hello, I'm Isak, the newest hire at SD Worx. Follow my first week, and see how I tap into SD Worx's knowledge: what's already known, and what nobody wrote down yet. Meet my colleagues Noah and Ilke."
-2. *(0:04)* "Day one. I was told a meal voucher is €6.91."
-3. *(0:16, amber)* "Company brain checks me as I type. It's €8.91 now. One click, fixed."
-4. *(0:21)* "But where does that knowledge come from?"
+2. *(0:04)* "Day one: I have to send an email to a client."
+3. *(0:15, just before amber)* "Company brain checks my email in real time, and tells me when I'm wrong, and why. Then I can fix my email automatically, with the most trusted source."
 
 ### Ilke
-1. *(0:23)* "From people like me."
+1. *(0:23)* "Where does it know that from? From people like me."
 2. *(0:29)* "I just agreed 22 holiday days with this client. That isn't written in any document."
 3. *(0:32)* "So I share it. Just this sentence."
 4. *(0:37)* "Nothing leaves my laptop until I click. And it counts for nobody until a colleague approves."

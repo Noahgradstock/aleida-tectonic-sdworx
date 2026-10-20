@@ -106,7 +106,7 @@ export default function Pipeline({ data, bare }: { data: BrainData; bare?: boole
       )}
 
       <ol className="mt-6 grid gap-3 sm:grid-cols-4">
-        <Step n={1} title="Hears" text="The mascot listens to meetings, Teams, email and Copilot, read-only with your own access.">
+        <Step n={1} title="Hears" text="Jef, our mascot, listens to meetings, Teams, email and Copilot, read-only with your own access.">
           <div className="grid grid-cols-4 gap-x-1 gap-y-2">
             {SOURCES.map((s) => (
               <div key={s.name} className="flex flex-col items-center gap-1" title={`${s.name}: ${count(s.type)} statements`}>

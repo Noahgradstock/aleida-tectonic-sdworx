@@ -215,7 +215,9 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
           {log.map((it) => {
             const lead =
               it.kind === "said"
-                ? "You said"
+                ? it.channel === "agreement"
+                  ? "You uploaded"
+                  : "You said"
                 : it.kind === "added"
                   ? `You added ${it.speakerName?.split(" ")[0] ?? "a colleague"}'s words`
                   : it.kind === "confirmed"

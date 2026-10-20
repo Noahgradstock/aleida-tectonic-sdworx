@@ -2,72 +2,189 @@
 
 # Company brain
 
-**A calm assistant on your desktop that knows what your company knows,<br>stays silent while you are right, and speaks up the moment you are not.**
+**Every answer your company knows, why you can trust it, and who to ask.<br>It keeps itself up to date from the work people already do.**
 
-[Live demo](https://tavling-eight.vercel.app) · [Desktop mascot](mascot/README.md) · [Trust engine](src/trust-engine/README.md) · [Pitch script](docs/pitch-script.md) · Tectonic Hackathon 2026 · SD Worx challenge
+[Try the live demo](https://tavling-eight.vercel.app) · [Watch the 1-minute film](video/film-silent.mp4) · [Pitch script](docs/pitch-script.md) · [Trust engine](src/trust-engine/README.md) · Tectonic Hackathon 2026 · SD Worx challenge
 
 Built by team Aleida.ai: Ilke Seynaeve, Isak Andersson, Noa Gradstock
 
-<img src="docs/mascot-warning.png" alt="The desktop mascot in its SD Worx cap, warning that 20 holiday days is wrong for Brouwerij De Kroon: the trusted value is 22 days" width="360">
+<img src="docs/screenshots/mascot-meeting.gif" alt="Jef, the desktop mascot, listening in a team meeting and correcting a wrong number out loud" width="720">
+
+<sub>Jef, our desktop mascot, hears "600 hours" in a meeting and corrects it: the trusted value is 650 hours.</sub>
 
 </div>
 
+## Overview
+
+**The challenge.** SD Worx asked: *"Can your solution stay trusted without becoming another task?"* Knowledge lives in meetings, emails, Teams and people's heads. It goes out of date when the law changes, and it walks out the door when people leave. A wiki doesn't fix that, because nobody maintains it.
+
+**What we built.** One trust engine with three ways in:
+
+| | What it is | What it does for you |
+|---|---|---|
+| **Jef** | A small mascot on your desktop ([mascot/](mascot/README.md)) | Listens while you work. Silent when you are right, speaks up the moment an email or a meeting gets a number wrong. |
+| **Ask** and **Brain** | The web app | One answer to any payroll question, with the exact source, a trust score you can follow step by step, and the person to ask. The Brain shows who knows what across the company. |
+| **Live loop** | The web app, "What changed today" | Everything Jef heard and every change it made to an answer, as a log you can trace back. You confirm what is yours with one click, or not at all. |
+
+**Why you can trust it.**
+- **AI reads, code decides.** Every score comes from six visible rules, the same input always gives the same score, and every point is explained.
+- **Every answer carries its evidence**: the verbatim sentence, where it came from, who said it and when.
+- **It stays trusted by itself.** It learns from meetings, emails and documents, notices when the law changes, and only asks a person when their answer would change the outcome.
+
+All people, clients and documents are fictional.
+
 ## Try it in 2 minutes (no password)
 
-Open the [live demo](https://tavling-eight.vercel.app). You are signed in as **Sofie Maes**, a payroll consultant. All people, clients and documents are fictional.
+Open the [live demo](https://tavling-eight.vercel.app). You are signed in as **Sofie Maes**, a payroll consultant. You can also start from the sign-in page and pick a person.
 
-1. **Ask:** ask *"How many holiday days does a full-time employee get?"* and see the answer, how the score was built (six questions) and who to talk to.
-2. **Live loop:** this morning the mascot heard a meeting, an email and a Teams message, and an agreement came in. Open **Why** on any entry to see the six checks.
-3. **Switch to Jan** (bottom of the sidebar), the expert. Under **For you**, confirm his meeting line or approve the agreement, and watch *20 days* become *22 days* for Brouwerij De Kroon.
+<img src="docs/screenshots/login.png" alt="Sign-in page with 'Try it without a password': Try as Sofie (consultant) or Try as Jan (expert)" width="360">
+
+1. **Ask:** *"How many holiday days does a full-time employee get?"* See the answer, how its score was built and who to talk to.
+2. **Live loop:** this morning Jef heard a meeting, an email and a Teams message, and an agreement came in. Open **Why** on any entry to see the six checks.
+3. **Switch to Jan** (bottom of the sidebar), the expert. Under **For you**, approve the agreement and watch *20 days* become *22 days* for Brouwerij De Kroon.
 4. **Brain:** who knows what, how far each topic can be trusted, and what is worth a look.
 
 **Reset the demo morning** in the sidebar puts everything back for the next person.
 
-## The challenge
+## A tour
 
-> **Can your solution stay trusted without becoming another task?**
-> Find it. Understand it. Trust it. Keep it trusted. Make it transparent. Make it effortless.
+### 1. Jef hears your work
 
-SD Worx doesn't have one mentor. It has ten thousand. Their knowledge lives in meetings, emails and people's heads, it goes out of date when the law changes, and it walks out the door when people leave. A wiki doesn't fix that: nobody maintains it.
+Jef is a blob in an SD Worx cap that lives in the corner of your screen. It knows whether you are writing an email or sitting in a meeting, and it only speaks when something is wrong.
 
-Our answer has two halves:
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/mascot-meeting-correction.png" alt="In a meeting, Jef turns amber and shows: the last thing you said was off, 600 hours, the trusted value is 650 hours"><br><sub><b>In a meeting:</b> "600 hours" is outdated. Jef shows and says the trusted value, 650 hours, with its source.</sub></td>
+<td width="50%"><img src="docs/mascot-warning.png" alt="While writing an email, Jef warns: you wrote 20 holiday days, but for Brouwerij De Kroon it is 22 days, trusted 98%"><br><sub><b>In an email:</b> 20 holiday days is wrong for this client. <b>Fix it</b> corrects the draft.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/mascot-meeting-sent.png" alt="The meeting ends and the transcript is sent to Company brain"><br><sub><b>After the meeting:</b> what was said goes to Company brain, where the speaker can confirm it.</sub></td>
+<td width="50%"><img src="docs/screenshots/mascot-meeting-listening.png" alt="Jef listening quietly in the corner during a meeting"><br><sub><b>Most of the time:</b> quiet, listening, out of the way.</sub></td>
+</tr>
+</table>
 
-1. **A desktop mascot** that lives in the corner of your screen. It reads trusted answers *down* while you work and only interrupts when what you write or say disagrees with them. "Think electricity, think wifi": invisible when things are right, clear when you need to act.
-2. **Company brain**, the trust engine behind it. Every answer has a score, a source, a verbatim quote and the people behind it, and it keeps itself up to date from everyday work, asking a human only when their answer would change the outcome.
+| It knows where you are | What it does | Does it speak? |
+|---|---|---|
+| **Email** (Mail in front) | Reads the draft you are writing and checks every sentence that states a value (€, %, days, weeks, hours) against the brain, including client-specific agreements when the email names the client. Amber card with **Fix it**, **I know better** and **See in Company brain**. | Only when you talk to it |
+| **Meeting** (Teams, Meet, Zoom in front) | Listens for wrong values and speaks up: *"Quick correction: 600 hours is outdated. It's 650 hours."* | Corrections and answers |
+| **"Hey SD Worx"** (anywhere) | Opens a 30-second conversation: *"what's the right answer?"*, *"where does that come from?"*, *"how did you get this?"*, *"who should I ask?"*, *"fix my email"*. Answers on screen and out loud (ElevenLabs). | Yes |
 
-## The circle: knowledge goes up, comes down, stays trusted
+
+**Speed:** all trusted facts are loaded when Jef starts and refreshed every 5 minutes, so a check runs locally in milliseconds; speech is cut as soon as you pause.
+**Calm by design:** offline it sleeps (grey, eyes closed, mic off). Online it is silent until something is wrong. A warning stays exactly as long as the mistake is in your text.
+
+
+### 2. Ask: one answer, and why you can trust it
+
+<img src="docs/screenshots/ask-home.png" alt="Ask the company brain: a question box and example questions, with Jef next to the heading" width="100%">
+
+Ask in any language. Company brain searches the law, SharePoint, Teams and email, sets aside what does not apply to your case, and gives one answer.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/ask-answer.png" alt="Answer card: €8.91, trusted 96, reliable, current, applies here, with the verbatim quote from the royal decree"><br><sub><b>The answer:</b> the value, the trust score, the exact sentence and its source. One click asks the right colleague to confirm.</sub></td>
+<td width="50%"><img src="docs/screenshots/ask-checks.png" alt="How we got to 96%: six questions as a waterfall from 50%, and 'Will it hold?': trusted until 1 Jan 2027, then €9.50"><br><sub><b>How we got to 96%</b> (six questions, every point visible) and <b>Will it hold?</b> The same rules run forward: this answer changes on 1 January 2027.</sub></td>
+</tr>
+</table>
+
+<img src="docs/screenshots/ask-who.png" alt="Who to talk to: contact Anna De Smet first, and who recently discussed this topic, including a colleague in Germany with a different rule" width="100%">
+
+**Who to talk to** is computed from work that already happened: who was right before on this topic, who dealt with it recently, and whether it was about your country. Meetings show only that a topic was discussed, never what was said.
+
+### 3. Live loop: what changed today
+
+<img src="docs/screenshots/loop.png" alt="Live loop: Jef is listening, how it works in four steps, For you on the left and the log on the right" width="100%">
+
+Everything Jef heard and every change it made, newest first. **How it works** sums it up in four steps: Jef **hears**, the brain **finds** the documents, **reads** the exact line, and **scores** it. Open **Why** on any entry:
+
+<img src="docs/screenshots/loop-checks.png" alt="A log entry with the six checks: who said it, still current, who agrees, matches the law, fits your case, held up for others, and the result" width="760">
+
+New entries open by themselves and tick the six checks off one by one, so you can watch the brain decide.
+
+### 4. For you: confirm, correct, approve, or do nothing
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/jan-for-you.png" alt="For you, as Jan: a document to approve with its checks, and a meeting line that counts as his tomorrow unless he changes it"><br><sub><b>For you</b> (signed in as Jan): what was heard from you counts by itself after a day. Change it only if it's wrong.</sub></td>
+<td width="50%"><img src="docs/screenshots/jan-approved.png" alt="The log: Jan Wouters approved the agreement, annual leave 20 days becomes 22 days for Brouwerij De Kroon, 100%"><br><sub>Jan approves the agreement: <b>20 → 22 days</b> for that client, logged with the reason.</sub></td>
+</tr>
+</table>
+
+### 5. Import a whole document
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/import-dialog.png" alt="Import: meeting transcript, Teams message, email or document"><br><sub>Normally Jef does this by itself. You can also import a meeting, a message, an email or a document.</sub></td>
+<td width="50%"><img src="docs/screenshots/import-document.png" alt="A client agreement checked: about Brouwerij De Kroon, signed on 2026-10-03, final version, 2 statements found"><br><sub>A client agreement is checked (client, signed, not a draft) and waits for an expert to approve it.</sub></td>
+</tr>
+</table>
+
+### 6. Brain: who knows what
+
+<img src="docs/screenshots/brain.png" alt="The Brain: a web of people and topics grouped in domains, coloured by trust, with 'Worth a look' and People on the right" width="100%">
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/brain-filter.png" alt="Only the topics where sources disagree, and the people who know them, are lit up"><br><sub>Click a status, e.g. <b>Sources disagree</b>, to light up those topics and the people who know them.</sub></td>
+<td width="50%"><img src="docs/screenshots/brain-topic.png" alt="Topic panel for the end-of-year bonus: December for most, November for TechStart Gent, who knows it and where it is written"><br><sub>A topic: the answer, its forecast, clients with their own agreement, who knows it and where it is written.</sub></td>
+</tr>
+</table>
+
+## How it works
+
+### The circle: knowledge goes up, comes down, stays trusted
 
 ```mermaid
 flowchart LR
-    A["Ilke (expert) writes to a client:<br/>'22 holiday days for De Kroon'"] -->|"mascot: the brain says 20.<br/>Ilke clicks 'I know better'"| B["One sentence shared<br/>for review (50%)"]
+    A["Ilke (expert) writes to a client:<br/>'22 holiday days for De Kroon'"] -->|"Jef: the brain says 20.<br/>Ilke clicks 'I know better'"| B["One sentence shared<br/>for review (50%)"]
     B -->|"Anna approves<br/>with one click"| C["Company brain<br/>22 days · 98%"]
     C -->|"read down"| D["Isak (first week) writes<br/>'20 holiday days'"]
-    D -->|"mascot turns amber<br/>'Hey SD Worx, fix it'"| E["Email says 22 days"]
+    D -->|"Jef turns amber<br/>'Hey SD Worx, fix it'"| E["Email says 22 days"]
 ```
 
 | Step | What happens | Who does anything |
 |---|---|---|
-| **Up** | Ilke writes "22 holiday days" in an email to Brouwerij De Kroon. Her mascot sees the brain says 20 (the law) and asks. She clicks **I know better**: that one sentence, and nothing else from her email, is shared for review. | Ilke: one click |
+| **Up** | Ilke writes "22 holiday days" in an email to Brouwerij De Kroon. Her Jef sees the brain says 20 (the law) and asks. She clicks **I know better**: that one sentence, and nothing else from her email, is shared for review. | Ilke: one click |
 | **Approve** | The brain asks the best available colleague (never the author) to confirm. Until then the claim is capped at 50% and changes nobody's answer. Anna approves: 22 days for De Kroon, 98%. | Anna: one click |
-| **Down** | A week later Isak, new on the job, writes "20 holiday days" to De Kroon. His mascot turns amber: *"For Brouwerij De Kroon it's 22 days."* He says **"Hey SD Worx, fix it"** and the draft is corrected. Other clients keep 20. | Nobody |
-| **Tomorrow** | When the law changes, older answers lose trust on their own; when a meeting says something wrong, the mascot corrects it out loud; when something is unclear, one person gets one question. | Only when it changes the outcome |
+| **Down** | A week later Isak, new on the job, writes "20 holiday days" to De Kroon. Jef turns amber: *"For Brouwerij De Kroon it's 22 days."* He says **"Hey SD Worx, fix it"** and the draft is corrected. Other clients keep 20. | Nobody |
+| **Tomorrow** | When the law changes, older answers lose trust on their own; when a meeting says something wrong, Jef corrects it out loud; when something is unclear, one person gets one question. | Only when it changes the outcome |
 
-## Meet the mascot
 
-A blob in an SD Worx cap, always on top, in the corner of the screen. Built with Electron for macOS ([mascot/](mascot/README.md)).
+```mermaid
+flowchart LR
+    A["Jef hears<br/>meeting · email · Teams · document"] --> B["Code extracts<br/>value · topic · speaker · quote"]
+    B --> C["Six questions<br/>score it"]
+    C --> D["Logged<br/>before → after, and why"]
+    D --> E["Answer<br/>+ who to ask"]
+    E -. confirm · correct · approve .-> C
+```
 
-| It knows where you are | What it does | Does it speak? |
+### The six questions
+
+Every statement starts at **50%**. Six questions move it up or down; the points are added and turned into a percentage (+2 ≈ 88%, −2 ≈ 12%). Weights are in [src/trust-engine/config.ts](src/trust-engine/config.ts).
+
+| Question | What it checks | Points (examples) |
 |---|---|---|
-| ✉️ **Email** (Mail in front) | Reads the draft you are writing and checks every sentence that states a value (€, %, days, weeks, hours) against the brain, including client-specific agreements when the email names the client. Amber card with **Fix it**, **I know better** and **See in Company brain**. | Only when you talk to it |
-| 🎥 **Meeting** (Teams, Meet, Zoom in front) | Listens for wrong values and speaks up: *"Quick correction: 600 hours is outdated. It's 650 hours."* | Corrections and answers |
-| 🎙️ **"Hey SD Worx"** (anywhere) | Opens a 30-second conversation: *"what's the right answer?"*, *"where does that come from?"*, *"how did you get this?"*, *"who should I ask?"*, *"fix my email"*. Answers on screen and out loud (ElevenLabs). | Yes |
+| **Who said it?** | The source | law or official +3 · signed client agreement +2.5 · expert +1 · new hire −0.5 · author has left −1 · said in a meeting −0.3 · sounded unsure −1 |
+| **Still current?** | Age | −1 per half-life of the topic (max −2) · written before the rule changed −2.5 |
+| **Who agrees?** | Others saying the same | expert approval +0.5 each · colleague says the same +0.7 · corrected by someone −1.5 |
+| **Matches the law?** | The official rule | matches +2 · contradicts −3 · a client's own agreement +0.5 |
+| **Fits your case?** | Your client, sector, country | client +1.5 · sector +1 · country +0.3 · other country: set aside |
+| **Held up for others?** | Colleagues' feedback | weighted by role, max ±2 · nobody can vote down the law |
 
-**Speed:** all trusted facts are loaded when the mascot starts and refreshed every 5 minutes, so a check runs locally in milliseconds; speech is cut as soon as you pause.
-**Calm by design:** offline it sleeps (grey, eyes closed, mic off). Online it is silent until something is wrong. A warning stays exactly as long as the mistake is in your text.
+**Caps** stop a high sum from hiding a real problem: contradicts the law → max 20%, written before the current rule → max 30%, said in a meeting or uploaded and not yet confirmed → max 50%, nothing official or expert behind it → max 60%.
+
+**Which answer wins:** the most specific trusted claim (75% or more). A client's own agreement beats the sector rule. Two trusted claims that disagree are shown as **sources disagree**, never guessed.
+
+**Will it hold?** The engine takes the date as an input, so we run it forward 18 months. The first day today's answer stops being trusted is its best-before date, with the reason (a new rule takes effect, the sources get too old, sources start to disagree).
+
+**Staying current without work:** what Jef heard from you counts as yours after a day unless you change it; asking a colleague to confirm goes to the best available person (never the author, at most three questions a week each); a newer approved agreement replaces the older one. Every step is a line in the log.
+
+**Does it work?** `npm test` runs 70 tests, including 36 real-data questions over 28 topics in [data/salary](data/salary), and checks every answer.
 
 ## Privacy: it reads down, it never leaks up
 
-The mascot sits next to your email, so it has to be trustworthy itself.
+Jef sits next to your email, so it has to be trustworthy itself.
 
 | Principle | How it is built |
 |---|---|
@@ -81,79 +198,6 @@ The mascot sits next to your email, so it has to be trustworthy itself.
 | **Stores claims, not text** | The brain keeps the verbatim sentence as evidence for a claim, never whole emails. Personal data is masked before any model call. |
 | **AI reads, code decides** | Claude Haiku only classifies what you meant from a fixed list; every answer, score and correction is built by deterministic code from sources. |
 
-## Live loop (final)
-
-The final case asks: *"Can your solution stay trusted without becoming another task?"* and *"Could your solution learn from signals already created through everyday work?"* In the qualifier, claims were entered by hand and votes were the only feedback. Now the brain learns from work that already happens:
-
-1. **Everyday work goes in.** A meeting transcript, a Teams message or an email (`POST /api/brain/ingest`). On `/loop` you paste it; the desktop mascot sends a single sentence only when the user clicks **Share for review** (`review: true`: capped at 50% until an expert other than the author approves it).
-2. **Code extracts claims, no AI.** A sentence becomes a claim only if it states a value, matches a known topic and uses the right unit. The quote is the sentence verbatim; the speaker, the scope (client, sector, country) and hedges ("I think…") are recorded.
-3. **The same six layers score it**, with new rules: something said in a meeting gets −0.3 and stays **capped at 50% until the speaker or an expert confirms it** with one click; hedged speech gets −1.
-4. **Every score change is logged** with the score before and after, for the claim and for the answer, and the exact points that moved it (`GET /api/brain/ledger`).
-5. **Answers show who to contact first**, computed from work that already happened: does this person work on your case, were they right before on this topic, did they confirm others, and how recently did they deal with it. People who left, or who only spoke about another country, are set aside with the reason. Nobody maintains an expert list.
-
-Example on `/loop`: Jan says in a meeting "For Brouwerij De Kroon we agreed 22 holiday days". The brain learns it for that client only, at 50%, and waits for Jan. Jan clicks "Still right" once: 50% → about 97%, the client's answer becomes 22 days, and Jan becomes the first person to contact. The Belgian answer for everyone else stays 20 days.
-
-Technical reference, API and demo script: [docs/context/12-live-loop.md](docs/context/12-live-loop.md).
-
-## How it works
-
-```mermaid
-flowchart LR
-    A[Ask<br/>any language] --> B[Search<br/>law · SharePoint · Teams · email]
-    B --> C[Filter<br/>does it apply to this client?]
-    C --> D[Score<br/>six trust layers]
-    D --> E[Decide<br/>answer · conflicts · expert]
-    E -. feedback .-> D
-```
-
-| | Step | What happens |
-|---|---|---|
-| 1 | **Ask** | Type a question or pick an example. Gemini understands it and routes it to a topic. |
-| 2 | **Search** | Every source that mentions the topic is collected. |
-| 3 | **Filter** | Sources for another country, sector or client are set aside, with the reason shown. |
-| 4 | **Score** | Each claim is scored on six layers: authority, freshness, corroboration, consistency with the law, relevance, feedback. |
-| 5 | **Decide** | The trusted answer, the sources that disagree, and which expert to ask. |
-| 6 | **Learn** | Users mark an answer correct, wrong, outdated or "not my case", and the scores update. |
-
-<table>
-<tr>
-<td width="50%"><img src="docs/1-ask.png" alt="Ask a question for a client"><br><sub><b>1. Ask</b> a question for a specific client</sub></td>
-<td width="50%"><img src="docs/2-score.png" alt="Sources narrowed from 6 found to 1 to read first"><br><sub><b>2–4. Choose</b>: 6 found, 5 apply, 2 trusted, 1 to read first</sub></td>
-</tr>
-</table>
-
-## Why you can trust it
-
-Gemini only interprets the question. The score comes from a deterministic engine: the same input always gives the same score, and every point is explained. Nothing is hidden in a black box. Weights and rules are in [src/trust-engine/config.ts](src/trust-engine/config.ts).
-
-## The trust algorithm
-
-Every source is split into **claims**: one statement, one value, one scope (country, sector, client). Each claim starts at 50% and six layers add or subtract points. The points are summed and turned into a percentage (log-odds: +2 ≈ 88%, −2 ≈ 12%).
-
-| Layer | Question | Points |
-|---|---|---|
-| 1. Authority | Who said it? | official +3 · expert +1 · new hire −0.5 · author left the company −1 |
-| 2. Freshness | Is it current? | −1 per topic half-life (max −2) · written before the rule changed −2.5 |
-| 3. Corroboration | Who agrees? | expert 👍 +0.5 each · colleague says the same +0.7 · corrected in a reply −1.5 |
-| 4. Consistency | Does it match the law? | matches +2 · contradicts −3 · client agreement that deviates: exception, +0.5 |
-| 5. Relevance | Does it fit this case? | client +1.5 · sector +1 · country +0.3 · other country or sector: set aside |
-| 6. Feedback | Did it work for others? | votes weighted by role, max ±2 · votes can't overrule the law |
-
-**Hard caps** stop a high sum from hiding a real problem: contradicts the law → max 20%, written before the current rule → max 30%, no expert or official source behind it → max 60%.
-
-**Which answer wins:** the most specific trusted claim (≥ 75%). A client's own agreement beats the sector rule, and when the law and a colleague say the same thing, the law is shown as the source. Two trusted claims with different values mean **experts disagree**, and the brain says so instead of guessing.
-
-**Worked example**: "What is the minimum company car benefit in 2026?" (Belgium)
-
-| Source | Says | Why | Score |
-|---|---|---|---|
-| Official notice 2026 | €1,650 | +3 official | **96%** ✓ answer |
-| Teams, Jan (expert) | €1,650 | +1 expert, +1 two expert 👍, +2 matches law | 98% backs it |
-| Official notice 2025 | €1,600 | +3 official, −2.5 old rule → capped | 30% |
-| Teams, Nora (new hire) | €1,600 | −0.5 new hire, −1.5 corrected by Jan, −3 contradicts law | 1% |
-| Company car guide | €1,600 | −1 author left, −2.5 old rule, −3 contradicts law | 0% |
-
-**Does it work?** `npm test` runs the engine on 24 test questions over 19 salary topics in [data/salary](data/salary) (official notices, SharePoint guides, Teams exports, client emails) and checks every answer. All 24 pass.
 
 ## Run it
 
@@ -162,24 +206,22 @@ Requires Node 20+.
 ```bash
 npm install
 npm run dev      # http://localhost:3000
-npm test         # trust engine tests
+npm test         # 70 tests: engine, data, sessions, access
 ```
 
-The app needs a login. Create demo accounts once (user ids must exist in the knowledge base, e.g. `sofie`, `anna`, `tom`):
+Without any setup you land as the demo persona Sofie. For your own accounts:
 
 ```bash
-node scripts/create-users.mjs sofie anna tom
+node scripts/create-users.mjs sofie jan anna tom
 ```
 
-It prints a password per user and two lines, `SESSION_SECRET` and `AUTH_USERS`. Put those two lines in `.env.local` (see `.env.example`) and share the passwords privately. Only scrypt hashes are stored, never plain passwords, and `.env.local` is not committed.
+It prints a password per user and two lines, `SESSION_SECRET` and `AUTH_USERS`. Put them in `.env.local` (see `.env.example`); only scrypt hashes are stored. Optional settings: `GEMINI_API_KEY` (free-text questions; without it keyword matching still works end to end), `SESSION_HOURS` (how long a sign-in lasts), `QUIET_HOURS` (when something heard from you counts as yours, default 24), `DEMO_PERSONAS` (default `sofie,jan`), `DEMO_SEED=off` (start the demo empty) and `GUEST_ACCESS=off` (no personas, no guest).
 
-Optional: put `GEMINI_API_KEY=...` in `.env.local` for free-text questions. Without a key the app falls back to keyword matching and still works end to end.
+**Jef, the desktop mascot:** `cd mascot && npm install && npm start` (macOS). Put `BRAIN_URL=http://localhost:3000`, `BRAIN_USER` and `BRAIN_PASSWORD` in the repo's `.env` to use a local server with your own account. `ELEVENLABS_API_KEY` enables listening and the voice. Details: [mascot/README.md](mascot/README.md).
 
-**Desktop mascot:** `cd mascot && npm install && npm start` (macOS). Put `BRAIN_URL=http://localhost:3000`, `BRAIN_USER` and `BRAIN_PASSWORD` in the repo's `.env` to use a local server with your own account (without them it is a read-only guest on the live demo). `ELEVENLABS_API_KEY` enables listening and the voice. Details and shortcuts: [mascot/README.md](mascot/README.md).
+**The 1-minute film:** [video/README.md](video/README.md) records it from the real app.
 
-**Live loop:** open http://localhost:3000/loop signed in as a real account (guests can read but not teach). Pick "Brouwerij De Kroon", keep the meeting transcript and click "Feed to the brain". Then sign in as `jan` and click "Still right" under his statement. Create the accounts with `node scripts/create-users.mjs sofie jan`. The full demo script is in [docs/context/12-live-loop.md](docs/context/12-live-loop.md).
-
-The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; run `vercel deploy --prod` from the repo folder. Environment variables (encrypted in the Vercel project): `SESSION_SECRET` and `AUTH_USERS` are required, otherwise every page redirects to a login that cannot succeed. Recommended: add Upstash Redis from the Vercel Marketplace, which sets `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Optional: `GEMINI_API_KEY`, and `GUEST_ACCESS=off` to disable guest access.
+**Deploy:** the live demo runs on Vercel. Set `SESSION_SECRET` and `AUTH_USERS`, and add Upstash Redis from the Vercel Marketplace (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`) so every server instance shares the same demo morning, votes and log.
 
 ## Security
 
@@ -187,7 +229,7 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 
 ### Security model
 
-- **Login: yes**, with a read-only guest mode for the jury. Users have their own client portfolio, and votes, learned claims and answers change what colleagues see, so without a login this would be broken access control.
+- **Login: yes**, with password-free demo personas for the jury (real roles, real rules). Users have their own client portfolio, and votes, learned claims and answers change what colleagues see, so without a login this would be broken access control.
 - **Roles** (from the server-side people list, never from the request): `guest` (shared demo visitor, read-only), `new` and `regular` consultants, and `expert`. People who left the company cannot sign in.
 - **Tenants:** clients. A consultant sees only the clients in their own portfolio; an expert sees every client in their own country; country-wide knowledge is visible to that country's team. Defined in `src/lib/access.ts`.
 
@@ -203,13 +245,13 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 - **Flows that change shared state:** voting, teaching the brain, asking a colleague to confirm, and answering a confirmation. All are rate-limited per user, refuse guests, check the case against the user's portfolio on the server, and are idempotent (the same vote or sentence twice counts once). There is no money, credit or booking flow.
 
 - **Login:** every page and API route needs a session, except the login page and "Continue as guest" (`src/proxy.ts`), and each route handler and data page checks it again (`currentUser()` in `src/lib/trust-server.ts`, `requireUser()` in `src/lib/session.ts`).
-- **Sessions:** signed cookie (HMAC-SHA256), `HttpOnly`, `SameSite=Strict`, `Secure` and the `__Host-` prefix in production, valid for 8 hours (`src/lib/auth.ts`). Logout revokes the session on the server, so a copied cookie stops working too. Changing a user's password ends all of their sessions.
+- **Sessions:** signed cookie (HMAC-SHA256), `HttpOnly`, `SameSite=Strict`, `Secure` and the `__Host-` prefix in production, valid for 8 hours by default (`SESSION_HOURS`, at most 30 days, for a demo machine) (`src/lib/auth.ts`). Logout revokes the session on the server, so a copied cookie stops working too. Changing a user's password ends all of their sessions.
 - **Passwords:** scrypt hashes only, constant-time comparison, same answer and timing for unknown users. Login input is a strict zod schema (unknown fields are refused). Every attempt is counted *before* the password check and refunded after a correct one, so parallel guesses cannot slip through and the real user is never locked out by their own correct login. Limits per 15 minutes: 5 per account + IP, 50 per IP, 100 per account from any IP (stops guessing with rotating IPs). The client IP is only trusted on Vercel, which overwrites `x-forwarded-for`.
 - **Voting:** the voter is always the signed-in user from the session, never a value sent by the browser. One vote per user per claim, and only for a case the source actually applies to, so nobody can hide a source for another country, sector or client. Users who left the company cannot sign in.
 - **Abuse limits:** 30 questions, 60 votes and 20 learn requests (`/api/brain/ingest`) per user per minute; request bodies over 10 KB are refused with 413 (`src/proxy.ts`, and again while reading in `readJson`), and text to learn from over 6,000 characters is refused, not cut. Bodies may only contain the route's own fields: an extra `userId`, `role` or `author` gives 400 instead of being ignored.
 - **Learning from work:** guests cannot teach the brain; only signed-in accounts can. For email and Teams the author is always the signed-in user, whatever the text says. A meeting statement is attributed to its speaker but stays capped at 50% until that speaker or an expert confirms it from their own account, so nobody can put trusted words in a colleague's mouth. Statements about a client are only learned when that client is in your portfolio, and the score history (`/api/brain/ledger`) only shows client entries to that client's consultants.
 - **Client access:** consultants only see their own client portfolio, experts every client in their own country (`src/lib/access.ts`). Checked in every route: asking, voting, opening a document and the brain map. Another client's agreements and emails are never sent to the browser. Asking about, voting on or opening another client's data gives 404, so the answer does not reveal that it exists.
-- **Guest:** "Continue as guest" gives a read-only demo session. Guest sessions, both from the button and the automatic one for visitors without a cookie, are rate-limited per IP. Guests can ask but not vote, and it can be switched off with `GUEST_ACCESS=off`.
+- **Demo personas and guest:** a visitor without a session is signed in as the first demo persona (`DEMO_PERSONAS`, default `sofie,jan`): a real, fictional colleague with that person's role and portfolio, nothing more. Demo sessions are marked, only valid while the persona is offered, and rate-limited per IP; "Reset the demo morning" works only from a demo session and a few times a minute. `GUEST_ACCESS=off` switches personas and guest off. The read-only guest (`/api/auth/guest`) remains for the desktop mascot.
 - **Shared state:** revoked sessions, rate limits, votes, learned claims and the score history live in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (Vercel Marketplace, free tier), so every server instance sees the same state (`src/lib/store.ts`). Locally they are kept in memory. In production without Upstash the store fails closed (sessions and rate-limited routes are refused) unless `ALLOW_MEMORY_STORE=true` is set on purpose. Rate limits and the logout check also fail closed when the store is down.
 - **CSRF:** POST routes refuse requests whose `Origin` does not match the `Host` header, and browser requests marked cross-site.
 - **Desktop mascot:** Electron renderer pages run sandboxed with `contextIsolation`, no `nodeIntegration`, a strict CSP and no navigation or new windows; every IPC message checks its sender and validates input; only the main process talks to the network, and only to `BRAIN_URL` and ElevenLabs. It never sends what you write on its own: one sentence is shared only on "Share for review", as the signed-in user, and capped until an expert other than the author approves it. Keys stay in `.env`.
@@ -219,29 +261,40 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 - **Tests:** `npm test` covers sessions, tampering, logout revocation, password change, the login limiter (parallel attempts, refund, IP rotation), trusted IP, CSRF, the Upstash store and client access (`src/lib/auth.test.ts`). `scripts/attack-tests.mjs` runs 74 attacks against a local production build (no cookie, forged and tampered sessions, CSRF, IDOR on another client's data, mass assignment, bad input, XSS, prompt injection in questions, Teams messages and meeting transcripts, 20 parallel votes, logout replay, parallel and IP-rotating login guesses, headers); how to run it is at the top of the file. The git history was scanned for keys and passwords: none found. CI (`.github/workflows/ci.yml`) runs lint, tests, `npm audit` and the build on every push, with a read-only token and actions pinned by commit SHA. Run it against a local server only, never the live demo.
 - **Known trade-offs:** `npm audit` reports a high advisory in `braces`, only through the dev-only lint tooling (`eslint-config-next`); `npm audit --omit=dev` is clean. The page CSP has no `script-src` (a nonce CSP would break static pages), so it does not stop XSS by itself; all user and model text is rendered as React text. The per-account login limit (100 per 15 minutes from any IP) means someone sending 100 wrong guesses can make a colleague wait up to 15 minutes; that is the price of stopping guessing with rotating IPs. Off Vercel the client IP is unknown, so only that per-account limit applies (no shared bucket that would lock everyone out); single sign-on would remove passwords altogether. When the shared store is down, rate-limited routes refuse with 429 rather than 503: still closed, only the status code is less precise.
 
+## Data
+
+All data is synthetic and fictional: people, clients, amounts, decrees and agreements.
+
+- **136 documents** in [data/salary](data/salary): official notices and decrees, old manuals, SharePoint guides, Teams exports, client emails, meeting transcripts and agreements, in English, Dutch and French.
+- **28 topics**, **153 claims**, **17 people**, **8 clients** across Belgium and the Netherlands.
+- **Planted flaws** the brain has to handle: outdated versions, guides whose owner has left, Teams messages corrected by an expert, drafts, the wrong country, duplicate "- Copy" files, client exceptions, and a decree that takes effect next year. They are listed per topic in [data/salary/README.md](data/salary/README.md).
+- **A demo morning** (`src/lib/demo-seed.ts`) runs through the real engine when the app starts, so "What changed today" is never empty.
+
 ## Structure
 
 | Path | What |
 |---|---|
-| `src/app/` | The demo page (ask → search → trust funnel → answer), the live loop page (`/loop`), the login page, and API routes under `api/trust/`, `api/brain/` and `api/auth/` |
-| `src/trust-engine/extract.ts`, `contacts.ts`, `src/lib/live.ts` | Live loop: claims from everyday text, who to contact first, learned claims and the score ledger |
-| `src/trust-engine/` | Scoring engine, weights in `config.ts`, tests |
-| `src/lib/auth.ts`, `src/proxy.ts` | Sessions, passwords and the login gate (tests in `src/lib/auth.test.ts`) |
-| `scripts/create-users.mjs` | Creates demo accounts |
-| `src/lib/gemini-match.ts` | Gemini question routing |
-| `mascot/` | Desktop mascot (Electron): email and meeting checks, "Hey SD Worx" conversation, fix my email, share for review ([README](mascot/README.md), [demo lines](mascot/DEMO.md)) |
-| `docs/` | Final case, pitch script, trust loop algorithm design, context library (`docs/context/`) |
-| `data/salary/` | Fictional source files (policies, Teams exports, emails). The engine reads claims from `sources.json` and quotes from the files. The test questions in `sources.json` run as part of `npm test` |
+| `src/app/` | Pages: Ask (`/`), Brain (`/brain`), Live loop (`/loop`), sign-in, and the API under `api/trust/`, `api/brain/`, `api/auth/` and `api/demo/` |
+| `src/trust-engine/` | The engine: scoring (`score.ts`, weights in `config.ts`), extraction from everyday text (`extract.ts`), documents (`document.ts`), who to contact (`contacts.ts`), the knowledge web (`graph.ts`), forecasts (`forecast.ts`), tests |
+| `src/lib/` | Server side: sessions and login (`auth.ts`), access rules (`access.ts`), learned claims and the log (`live.ts`), your own log (`mine.ts`), questions to colleagues (`questions.ts`), document intake (`intake.ts`), quiet consent (`consent.ts`), the demo morning (`demo-seed.ts`), shared store (`store.ts`) |
+| `src/app/trust-visuals.tsx` | The waterfall, the six checks and the forecast line |
+| `mascot/` | Jef, the desktop mascot (Electron): email and meeting checks, "Hey SD Worx", fix my email |
+| `video/` | The 1-minute film, recorded from the real app |
+| `data/salary/` | Fictional source files and the claims read from them |
+| `docs/` | Final case, pitch, trust loop design, context library, screenshots |
 
 ## Unfinished
 
-- The base knowledge is listed by hand in `data/salary/sources.json` (the quotes are read from the files). New claims are learned from meetings, Teams and email with fixed rules (value, known topic, unit, speaker, scope, hedges). The AI gates from [docs/trusted-tomorrow-algorithm.md](docs/trusted-tomorrow-algorithm.md) that would also catch corrections, questions and new topics are not built.
-- There is no real Teams, Outlook or meeting-tool integration (Microsoft Graph). The mascot reads Apple Mail drafts through macOS Accessibility and detects Teams, Meet and Zoom by the app in front; meeting speakers come from `Name:` labels in the transcript (`/loop`). The mascot's microphone hears only your side of a call.
-- The mascot is macOS only, and its check uses a fixed case (Belgium, PC 200) unless the text names a known client.
-- A learned claim waits for its speaker or an expert. Choosing who to ask, asking only when the answer would change the outcome, and a weekly question budget per person (lanes D4/D5 in the algorithm doc) are designed but not built. Best-before dates are not built either.
-- A wrongly extracted claim can only be voted down, not deleted.
-- Overtime and flexi-jobs have no data files yet and use mock claims from `src/trust-engine/mock/`. Sick leave has source files in `data/salary/sick-leave/` but its claims are not in `data/salary/sources.json` yet, so it still uses the mock claims.
-- Login uses demo accounts from an environment variable. In production this would be single sign-on with Microsoft Entra ID, which also gives each user's real role and team.
-- Without Upstash Redis configured, votes, rate limits, logouts, learned claims and the score history are kept in memory: they reset on restart and are not shared between server instances.
-- The client portfolio per consultant is a fixed demo list in `src/lib/access.ts`; in production it would come from SD Worx's portfolio system.
-- All people, clients, legal references and amounts are fictional.
+- **Extraction uses fixed rules** (value, known topic, unit, speaker, scope, hedges). The AI gates in [docs/trusted-tomorrow-algorithm.md](docs/trusted-tomorrow-algorithm.md) that would also catch new topics and subtler corrections are not built.
+- **No real Microsoft 365 integration** (Graph). Jef reads Apple Mail drafts through macOS Accessibility and recognises Teams, Meet and Zoom by the app in front; meeting speakers come from `Name:` labels. In the film the hand-off from the meeting to the brain is simulated.
+- **Jef is macOS only.**
+- **Documents:** text files only; PDF and scanned documents (OCR) are not read yet. Agreements loaded from the data files cannot be marked as signed, so the demo agreement arrives through the import.
+- **Track record** is shown (who was right before) but does not change the score yet; the score still uses the role.
+- **Quiet consent** means a line someone else typed in your name becomes yours after a day if you never look. It is visible in "For you", logged and reversible; limiting it to what Jef heard on your own device would be stricter.
+- **Accounts** come from an environment variable; in production this would be single sign-on (Microsoft Entra ID) with real roles and portfolios.
+- **Without Upstash Redis**, everything learned, voted and logged lives in memory: it resets on restart and differs per server instance.
+- **The client portfolio** per consultant is a fixed demo list in `src/lib/access.ts`.
+
+## Team
+
+Team **Aleida.ai**: Ilke Seynaeve, Isak Andersson and Noa Gradstock. Built at the Tectonic Hackathon final in Ghent, 20 October 2026, SD Worx track.

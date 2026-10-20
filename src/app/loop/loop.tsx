@@ -270,7 +270,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#3DBE9A] opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#3DBE9A]" />
             </span>
-            The mascot is listening · heard {heard} thing{heard === 1 ? "" : "s"} today
+            Jef is listening · heard {heard} thing{heard === 1 ? "" : "s"} today
             {waitingCount ? ` · ${waitingCount} waiting for a confirmation` : ""}
           </p>
         </div>
@@ -304,7 +304,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
           ) : entries.length === 0 ? (
             <div className="rounded-3xl bg-white p-8 text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
               <p className="font-serif text-2xl">Nothing heard yet</p>
-              <p className="mt-2 text-sm text-neutral-500">When the mascot hears a meeting, an email or a Teams message, it shows up here with what it changed.</p>
+              <p className="mt-2 text-sm text-neutral-500">When Jef hears a meeting, an email or a Teams message, it shows up here with what it changed.</p>
             </div>
           ) : (
             <>

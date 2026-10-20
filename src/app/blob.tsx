@@ -5,7 +5,7 @@ const BODY = { listening: "#3DBE9A", thinking: "#5AA6E8", warning: "#F2A33A" } a
 
 export default function Blob({ size = 64, mood = "listening" }: { size?: number; mood?: keyof typeof BODY }) {
   return (
-    <svg viewBox="0 0 160 160" width={size} height={size} aria-label="Company brain mascot" className="shrink-0">
+    <svg viewBox="0 0 160 160" width={size} height={size} aria-label="Jef, the Company brain mascot" className="shrink-0">
       <defs>
         <linearGradient id="blob-crown" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#2f4677" />

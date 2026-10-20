@@ -170,5 +170,5 @@ If we are behind at 13:00, cut scope, not quality.
 - Ask before big decisions (stack, scope, data model). Do not silently expand scope.
 - Simple, readable code. No abstractions we do not need today.
 - Never commit secrets. Check `git diff --staged` before every commit.
-- Everything user-facing in English: plain wording, no hype.
+- **Language:** chat with the team in whatever language they write in (often Swedish). **Everything that ends up in the repo or the product is in English**: UI text, the live site, code, comments, commit messages, README, docs, synthetic data, prompts, the demo video script and the pitch. Never write Swedish into a file. Plain wording, no hype.
 - Write unclear assumptions about the case into the README instead of guessing silently.

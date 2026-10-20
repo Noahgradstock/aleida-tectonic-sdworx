@@ -1,4 +1,5 @@
 import { buildKnowledgeGraph } from "@/trust-engine";
+import { applyQuietConsent } from "@/lib/consent";
 import { allFeedback, currentUser, now, unauthorized } from "@/lib/trust-server";
 import { liveKb, unconfirmedReport } from "@/lib/live";
 import { canReadClaim, clientsOf } from "@/lib/access";
@@ -10,6 +11,7 @@ import { allQuestions } from "@/lib/questions";
 export async function GET(request: Request) {
   const user = await currentUser(request);
   if (!user) return unauthorized();
+  await applyQuietConsent();
   const [k, feedback] = await Promise.all([liveKb(), allFeedback()]);
   const graph = buildKnowledgeGraph(k, feedback, now(), {
     canSee: (c) => canReadClaim(user, c, k),

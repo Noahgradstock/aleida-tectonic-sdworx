@@ -1,4 +1,5 @@
 import { currentUser, forbidden, kb, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
+import { applyQuietConsent } from "@/lib/consent";
 import { rateLimit, sameOrigin } from "@/lib/auth";
 import { canVote } from "@/lib/access";
 import { act, buildMine, type MineAction } from "@/lib/mine";
@@ -11,6 +12,7 @@ const name = (id: string | null) => (id ? (kb.people.find((p) => p.id === id)?.n
 export async function GET(request: Request) {
   const user = await currentUser(request);
   if (!user) return unauthorized();
+  await applyQuietConsent();
   if (!canVote(user)) return Response.json({ waiting: [], questions: [], documents: [], log: [] });
   try {
     const m = await buildMine(user);

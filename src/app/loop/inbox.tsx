@@ -23,14 +23,13 @@ type Item = {
   isAnswer: boolean;
   can: { confirm: boolean; correct: boolean; remove: boolean; restore: boolean; undo: boolean };
   correctedTo?: string | null;
+  countsFrom?: string | null;
 };
 type Question = { id: string; factLabel: string; value: string; quote: string; source: string; fromName: string; askedAt: string; caseName?: string };
 type Doc = { id: string; title: string; clientName: string; uploadedByName: string; uploadedAt: string; checks: { ok: boolean; label: string }[]; changes: string[] };
 type Mine = { waiting: Item[]; questions: Question[]; documents: Doc[]; log: Item[] };
 
 const CHANNEL: Record<string, string> = { agreement: "Agreement", meeting: "Meeting", email: "Email", teams: "Teams", sharepoint: "Document", official: "Official" };
-const pct = (n: number | null) => (n == null ? "" : `${Math.round(n * 100)}%`);
-const tone = (n: number | null) => (n == null ? "#a3a3a3" : n >= 0.75 ? "#0f8a4f" : n >= 0.5 ? "#9a6400" : "#c0392b");
 const when = (d: string) => {
   const t = Date.parse(d);
   if (d.length > 10) {
@@ -86,16 +85,21 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
     run(q.id, () => post("/api/brain/questions/answer", { id: q.id, answer: kind }), kind === "not_mine" ? "Passed on. You won't be asked about this topic again." : "Thanks, your answer now counts.");
 
   if (!mine) return null;
-  const inbox = mine.waiting.length + mine.questions.length + (mine.documents?.length ?? 0);
+  // Only real requests (a colleague's question, a document to approve) get the blue count; what was heard
+  // from you counts by itself after a day, so it is shown calmly.
+  const requests = mine.questions.length + (mine.documents?.length ?? 0);
+  const inbox = mine.waiting.length + requests;
   const log = showAll ? mine.log : mine.log.slice(0, 4);
 
   return (
     <section className="rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6" aria-label="Your inbox and log">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-serif text-3xl">Waiting for you</h2>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${inbox ? "bg-[#1463ff] text-white" : "bg-neutral-100 text-neutral-500"}`}>{inbox || "All clear"}</span>
+        <h2 className="font-serif text-3xl">For you</h2>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${requests ? "bg-[#1463ff] text-white" : "bg-neutral-100 text-neutral-500"}`}>
+          {requests ? `${requests} to answer` : "Nothing urgent"}
+        </span>
       </div>
-      <p className="mt-1 text-sm text-neutral-500">What you said, and questions from colleagues.</p>
+      <p className="mt-1 text-sm text-neutral-500">What the brain heard from you counts by itself after a day. Change it only if it&apos;s wrong.</p>
 
       {inbox > 0 && (
         <ul className="mt-4 space-y-3">
@@ -139,8 +143,8 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
             </li>
           ))}
           {mine.waiting.map((it) => (
-            <li key={it.id} className="rounded-2xl border border-[#1463ff]/20 bg-[#f5f8ff] p-4">
-              <Meta it={it} lead={`${it.reportedByName ?? "A colleague"} added this from a meeting`} />
+            <li key={it.id} className="rounded-2xl bg-[#fbfaf7] p-4">
+              <Meta it={it} lead={`heard by ${it.reportedByName ?? "a colleague"}`} />
               <p className="mt-2 text-sm">
                 You said <b className="font-serif text-lg">{it.value}</b> <span className="text-neutral-500">· {it.factLabel} · {it.scope}</span>
               </p>
@@ -148,20 +152,23 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
               {editing === it.id ? (
                 <Corrector value={draft} onChange={setDraft} onSave={() => mineAct(it, "correct", draft)} onCancel={() => setEditing(null)} busy={busy === it.id} />
               ) : note[it.id] ? null : (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Btn primary disabled={!!busy} onClick={() => mineAct(it, "confirm")}>
-                    <Icon name="check" size={14} />
-                    That&apos;s right
-                  </Btn>
-                  <Btn disabled={!!busy} onClick={() => (setEditing(it.id), setDraft(it.value))}>
-                    <Icon name="pencil" size={14} />
-                    Correct
-                  </Btn>
-                  <Btn ghost disabled={!!busy} onClick={() => mineAct(it, "remove")}>
-                    <Icon name="cross" size={14} />
-                    Not what I said
-                  </Btn>
-                </div>
+                <>
+                  <p className="mt-3 flex items-center gap-1.5 text-xs text-neutral-500">
+                    <Icon name="clock" size={13} />
+                    {it.countsFrom ? `Counts as yours ${countsWhen(it.countsFrom)} unless you change it` : "Counts as yours soon unless you change it"}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                    <TextBtn onClick={() => mineAct(it, "confirm")} disabled={!!busy} strong>
+                      Looks right
+                    </TextBtn>
+                    <TextBtn onClick={() => (setEditing(it.id), setDraft(it.value))} disabled={!!busy}>
+                      Correct
+                    </TextBtn>
+                    <TextBtn onClick={() => mineAct(it, "remove")} disabled={!!busy}>
+                      Not what I said
+                    </TextBtn>
+                  </div>
+                </>
               )}
               <Note n={note[it.id]} />
             </li>
@@ -230,14 +237,10 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
                     </div>
                     <div className="mt-0.5 truncate text-xs text-neutral-400">
                       {lead} · {when(it.date)}
-                      {removed ? (it.correctedTo ? " · corrected" : " · taken back") : it.isAnswer ? <span className="text-[#0f8a4f]"> · the answer people get</span> : null}
+                      {removed ? (it.correctedTo ? " · corrected" : " · taken back") : it.isAnswer ? <span className="text-[#0f8a4f]"> · used in the answer</span> : null}
                     </div>
                   </div>
-                  {!removed && it.score != null && (
-                    <span className="shrink-0 text-sm font-medium tabular-nums" style={{ color: tone(it.score) }}>
-                      {pct(it.score)}
-                    </span>
-                  )}
+                  {!removed && it.score != null && <Weight score={it.score} />}
                   {/* actions show on hover (and always on touch screens), so the list stays calm */}
                   <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                     {it.can.correct && (
@@ -336,4 +339,33 @@ function Corrector({ value, onChange, onSave, onCancel, busy }: { value: string;
       </button>
     </form>
   );
+}
+
+// How much a statement counts, in words; the exact score on hover.
+function Weight({ score }: { score: number }) {
+  const [label, cls] = score >= 0.75 ? ["Counts fully", "bg-[#eef7f1] text-[#0f8a4f]"] : score >= 0.5 ? ["Counts partly", "bg-[#fff4e0] text-[#9a6400]"] : ["Barely counts", "bg-neutral-100 text-neutral-500"];
+  return (
+    <span title={`Trust score ${Math.round(score * 100)}%`} className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function TextBtn({ children, onClick, disabled, strong }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; strong?: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled} className={`${strong ? "font-medium text-[#1463ff]" : "text-neutral-600"} hover:underline disabled:opacity-50`}>
+      {children}
+    </button>
+  );
+}
+
+// "tomorrow at 10:55", "today at 18:00", or "on 22 Oct"
+function countsWhen(iso: string) {
+  const d = new Date(iso);
+  const day = new Date();
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === day.toDateString()) return `today at ${time}`;
+  day.setDate(day.getDate() + 1);
+  if (d.toDateString() === day.toDateString()) return `tomorrow at ${time}`;
+  return `on ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`;
 }

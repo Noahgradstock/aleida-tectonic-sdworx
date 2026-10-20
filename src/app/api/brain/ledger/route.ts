@@ -1,4 +1,5 @@
 import { currentUser, unauthorized } from "@/lib/trust-server";
+import { applyQuietConsent } from "@/lib/consent";
 import { ctxOf, fullKb, ledger } from "@/lib/live";
 import { canUseContext } from "@/lib/access";
 
@@ -7,6 +8,7 @@ import { canUseContext } from "@/lib/access";
 export async function GET(request: Request) {
   const user = await currentUser(request);
   if (!user) return unauthorized();
+  await applyQuietConsent();
   const fact = new URL(request.url).searchParams.get("fact");
   if (fact !== null && !/^[a-z0-9-]{1,80}$/.test(fact)) return Response.json({ error: "Unknown fact" }, { status: 400 });
   try {

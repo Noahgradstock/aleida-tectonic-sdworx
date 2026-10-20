@@ -179,7 +179,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
               {ago(e.at, now)} · {scopeName(e)}
             </div>
           </div>
-          {waiting && <Pill tone="amber">{e.channel === "agreement" ? "Waiting for approval" : `Waiting for ${name(e.speaker).split(" ")[0]}`}</Pill>}
+          {waiting && <Pill tone="amber">{e.channel === "agreement" ? "Waiting for approval" : `${name(e.speaker).split(" ")[0]} can check`}</Pill>}
           {gone && <Pill tone="gray">Taken back</Pill>}
         </div>
 
@@ -244,7 +244,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
             </div>
           </div>
         )}
-        {me && waiting && e.channel !== "agreement" && e.speaker === me.id && <p className="mt-2 text-xs text-[#9a6400]">This is yours: confirm or correct it under “Waiting for you”.</p>}
+        {me && waiting && e.channel !== "agreement" && e.speaker === me.id && <p className="mt-2 text-xs text-[#9a6400]">This is yours. It counts after a day by itself; change it under “For you” if it is wrong.</p>}
       </li>
     );
   }

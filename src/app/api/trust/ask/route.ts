@@ -1,4 +1,5 @@
 import { ask, explainScore, forecast, lastUpdated, matchFact, parseContext, rankContacts, recentTrail } from "@/trust-engine";
+import { applyQuietConsent } from "@/lib/consent";
 import { matchFactWithGemini } from "@/lib/gemini-match";
 import { allFeedback, currentUser, forbidden, notYourClient, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
 import { liveKb, unconfirmedReport } from "@/lib/live";
@@ -12,6 +13,7 @@ export async function POST(request: Request) {
   if (!sameOrigin(request)) return forbidden();
   const user = await currentUser(request);
   if (!user) return unauthorized();
+  await applyQuietConsent();
   // Each question can cost a Gemini call: 30 per user per minute is plenty for a person, not for a script.
   if (!(await rateLimit(`ask:${user.id}`, 30, 60_000))) return tooManyRequests();
   const body = (await readJson(request, ["question", "context", "factKey"])) as { question?: unknown; context?: unknown; factKey?: unknown } | null;

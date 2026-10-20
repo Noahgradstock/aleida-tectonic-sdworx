@@ -16,7 +16,7 @@ const LEDGER_SIZE = 1000; // the ledger keeps the latest entries only
 
 // A learned claim remembers who fed it in. For meetings that can be someone else than the speaker,
 // so a reporter can never confirm what they reported (see reporterOf).
-export type LiveClaim = Claim & { reportedBy: string };
+export type LiveClaim = Claim & { reportedBy: string; heardAt?: string }; // heardAt: wall-clock time it came in
 
 export async function liveClaims(): Promise<LiveClaim[]> {
   return (await store.hvals("live-claims")).map((v) => JSON.parse(v) as LiveClaim);
@@ -48,8 +48,8 @@ export async function fullKb(): Promise<KnowledgeBase> {
 
 export const liveCount = (k: KnowledgeBase) => k.claims.length - kb.claims.length;
 
-export async function saveLiveClaim(claim: Claim, reporter: string): Promise<LiveClaim> {
-  const live: LiveClaim = { ...claim, reportedBy: reporter };
+export async function saveLiveClaim(claim: Claim, reporter: string, at?: Date): Promise<LiveClaim> {
+  const live: LiveClaim = { ...claim, reportedBy: reporter, heardAt: (at ?? new Date()).toISOString() };
   await store.hset("live-claims", claim.id, JSON.stringify(live));
   return live;
 }

@@ -41,7 +41,7 @@ async function heard(text: string, channel: Channel, writer: string, reporter: s
   const { extracted } = extractClaims(text, channel, { country: "BE", pc: "200" }, before, person(writer), now());
   for (const { claim } of extracted) {
     if (before.claims.some((c) => c.id === claim.id)) continue;
-    await saveLiveClaim(claim, reporter);
+    await saveLiveClaim(claim, reporter, at);
     const after = { ...before, claims: [...before.claims, claim] };
     await recordChange({ kind: "learned", actor: reporter, claim, before, after, now: now(), at });
     before = after;

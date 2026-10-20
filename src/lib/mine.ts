@@ -1,7 +1,8 @@
 import "server-only";
 import { evaluateFact, parseValue, unitOf, type Claim, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
 import { allFeedback, now, saveFeedback } from "@/lib/trust-server";
-import { ctxOf, fullKb, liveKb, recordChange, reporterOf, retractions, saveLiveClaim, type Retraction } from "@/lib/live";
+import { ctxOf, fullKb, liveKb, recordChange, reporterOf, retractions, saveLiveClaim, type LiveClaim, type Retraction } from "@/lib/live";
+import { countsFrom } from "@/lib/consent";
 import { allQuestions } from "@/lib/questions";
 import { store } from "@/lib/store";
 
@@ -26,6 +27,7 @@ export type MineItem = {
   isAnswer: boolean; // this claim is the answer people get right now
   can: { confirm: boolean; correct: boolean; remove: boolean; restore: boolean; undo: boolean };
   correctedTo?: string | null;
+  countsFrom?: string | null; // waiting items: when it counts as yours without you doing anything
 };
 
 const scopeName = (c: Claim, k: KnowledgeBase) => (c.scope.client ? (k.clients.find((x) => x.id === c.scope.client)?.name ?? c.scope.client) : [c.scope.country, c.scope.pc && `PC ${c.scope.pc}`].filter(Boolean).join(", "));
@@ -78,6 +80,7 @@ export async function buildMine(user: Person) {
         undo: false,
       },
       correctedTo: gone?.correctedTo ?? null,
+      countsFrom: state === "waiting" ? countsFrom((c as LiveClaim).heardAt) : null,
     });
   }
   for (const f of fb.filter((x) => x.userId === user.id && (x.kind === "correct" || x.kind === "wrong"))) {

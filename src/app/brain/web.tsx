@@ -563,6 +563,28 @@ function Panel({ graph, sel, lens, onSelect, docByFile, onOpenDoc }: PanelProps)
 
 function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; onSelect: (id: string) => void }) {
   const [allPeople, setAllPeople] = useState(false);
+  // Your own corner: what was heard from you, colleagues' questions, documents you could approve. Nothing is a must.
+  const [mine, setMine] = useState<{ label: string; detail: string }[]>([]);
+  useEffect(() => {
+    let stop = false;
+    fetch("/api/brain/mine")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((m) => {
+        if (stop || !m) return;
+        type W = { value: string; factLabel: string };
+        type Q = { fromName: string; factLabel: string; value: string };
+        type D = { title: string };
+        setMine([
+          ...(m.waiting as W[]).map((w) => ({ label: `You said ${w.value}`, detail: w.factLabel })),
+          ...(m.questions as Q[]).map((q) => ({ label: `${q.fromName.split(" ")[0]} asks: ${q.value}?`, detail: q.factLabel })),
+          ...((m.documents ?? []) as D[]).map((d) => ({ label: "A document to approve", detail: d.title })),
+        ]);
+      })
+      .catch(() => {});
+    return () => {
+      stop = true;
+    };
+  }, []);
   // What needs a human: disputed, unbacked, out of date, changing soon, or asked about. Everything else looks after itself.
   const attention = graph.nodes
     .filter((n) => n.kind === "concept")
@@ -577,20 +599,39 @@ function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; on
   // The reason and what to do about it, in plain words.
   const why = (t: TopicStatus, asked: number) =>
     t.status === "conflict"
-      ? { reason: "Sources disagree", action: "See who to ask" }
+      ? { reason: "Sources disagree", action: "Who knows" }
       : t.status === "orphan"
-        ? { reason: "Nobody backs it", action: "Find an expert" }
+        ? { reason: "Nobody backs it yet", action: "Find someone" }
         : t.status === "stale"
-          ? { reason: "Out of date", action: "Ask for a fresh check" }
+          ? { reason: "Could be out of date", action: "Ask for a check" }
           : changesSoon(t, graph.today)
             ? { reason: `Changes on ${t.forecast!.bestBefore!.date}`, action: "See the forecast" }
-            : { reason: `${asked} colleague${asked > 1 ? "s" : ""} asked`, action: "Answer it" };
+            : { reason: `${asked} colleague${asked > 1 ? "s" : ""} asked`, action: "Help answer" };
 
   return (
     <div>
-      <h2 className="font-serif text-2xl">Needs you</h2>
+      {mine.length > 0 && (
+        <div className="mb-6">
+          <h2 className="font-serif text-2xl">You could confirm</h2>
+          <ul className="mt-2 space-y-1.5">
+            {mine.slice(0, 3).map((x, i) => (
+              <li key={i}>
+                <a href="/loop" className="group flex items-center gap-3 rounded-xl bg-[#f5f8ff] px-3 py-2 hover:bg-[#eef3ff]">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{x.label}</span>
+                    <span className="block truncate text-xs text-neutral-500">{x.detail}</span>
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-[#1463ff] group-hover:underline">Open</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          {mine.length > 3 && <p className="mt-1.5 text-xs text-neutral-500">and {mine.length - 3} more in Live loop</p>}
+        </div>
+      )}
+      <h2 className="font-serif text-2xl">Worth a look</h2>
       <p className="mt-1 text-sm text-neutral-600">
-        <b>{attention.length}</b> topic{attention.length === 1 ? "" : "s"} need a human · <b>{total - attention.length}</b> look after themselves
+        <b>{attention.length}</b> topic{attention.length === 1 ? "" : "s"} could use a check · <b>{total - attention.length}</b> look after themselves
       </p>
       {attention.length > 0 && (
         <ul className="mt-3 space-y-2">

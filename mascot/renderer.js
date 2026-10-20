@@ -94,9 +94,6 @@ window.mascot.onTalk((on) => {
   setTalk(on);
   pill(on ? "Talking on · say “Hey SD Worx”" : "Talking off", 2500);
 });
-for (const b of document.querySelectorAll("#seg button")) {
-  b.addEventListener("click", () => window.mascot.setContext(b.dataset.mode));
-}
 
 function statusLine() {
   $("status-text").textContent = online ? `Online · ${CONTEXT_TEXT[context]}` : "Offline";
@@ -107,7 +104,6 @@ window.mascot.onContext(({ context: c, mode, talk }) => {
   const changed = c !== context;
   context = c;
   stage.dataset.ctx = c;
-  for (const b of document.querySelectorAll("#seg button")) b.classList.toggle("on", b.dataset.mode === mode);
   statusLine();
   if (changed && online) pill(c === "meeting" ? "Meeting · listening for mistakes" : "Email · checking what you write", 2500);
 });

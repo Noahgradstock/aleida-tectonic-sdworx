@@ -350,6 +350,12 @@ app.whenReady().then(() => {
   globalShortcut.register("CommandOrControl+Shift+E", openCompose);
   globalShortcut.register("CommandOrControl+Shift+L", () => setOnline(!online));
   globalShortcut.register("CommandOrControl+Shift+Space", toggleTalk);
+  // Demo only (no Teams on this machine): force the meeting setting on and off. Normally it is always automatic.
+  globalShortcut.register("CommandOrControl+Shift+T", () => {
+    contextMode = contextMode === "meeting" ? "auto" : "meeting";
+    if (contextMode === "meeting") lastMeetingSeen = 0;
+    updateContext();
+  });
   setInterval(() => online && updateContext(), 5000); // let the meeting setting expire
 });
 

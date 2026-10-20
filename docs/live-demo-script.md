@@ -18,7 +18,7 @@ Live on stage, no video. Two scenes, one fact travelling through the company:
 |---|---|---|
 | **Noah** | Narrator, then the colleague who asks the brain (scene 2) | Laptop B: Company brain web app on the projector |
 | **Ilke** | Payroll expert in the meeting. Owns the client Brouwerij De Kroon | Laptop A: the mascot, signed in as Ilke's demo account, microphone on |
-| **Isak** | New hire, first week, in the meeting | none, he just talks |
+| **Isak** | New hire, first week, in the meeting | none, only talks |
 
 Projector: laptop A (blob in front of a "Team meeting" screen) during scene 1, laptop B during scene 2. If only one input, run both on laptop A: the blob in the corner, the browser behind it.
 

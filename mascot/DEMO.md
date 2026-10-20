@@ -1,5 +1,22 @@
 # Demo cheat sheet
 
+## Live demo scripts (pitch)
+
+**Demo 1: the meeting (Teams in front, or `Cmd+Shift+T`)**
+1. Teammate: *"For the new hire at Brouwerij De Kroon, students can work 600 hours per year, right?"*
+   → Blob turns amber and says: *"Quick correction: 600 hours is outdated. … is 650 hours."*
+2. You: *"Hey SD Worx, where does that come from?"* → names the official source.
+3. You (no wake word, within 30 s): *"Who should I ask?"* → names the expert.
+
+**Demo 2: the email (Mail in front)**
+1. Type in a new Mail message: *"Hi Sofie, from April the telework allowance is €148.73 per month."* (then stop typing)
+   → Blob turns amber with the trusted value €154.74.
+2. You: *"Hey SD Worx, fix it."* → the draft is corrected to €154.74, blob goes calm.
+3. You: *"How sure are you?"* → "96 percent…"
+
+Backup if the wake word is missed: tap 🎙 and say the line without "Hey SD Worx". Before going on stage: switch the mascot **Online**, click into the Mail body once, and speak close to the microphone.
+
+
 The mascot loads every trusted fact from Company brain at start (Belgium, PC 200). Switch it **online**, then write these in an email (Apple Mail) or say them out loud. Wrong ones make it warn; right ones keep it calm.
 
 | Topic | Say or write (wrong) | Trusted value |

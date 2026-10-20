@@ -198,12 +198,12 @@ async function learn(text, channel) {
   if (!cookie) await signIn().catch(() => {});
   if (!me) return { learned: [], skipped: 0 }; // guest: read-only
   if (!(text.match(VALUE) || []).length) return { learned: [], skipped: 0 }; // no value, nothing to learn; saves the rate limit
-  // The listener only hears your own microphone, so in a meeting you are the speaker.
-  const body = channel === "meeting" ? `${me.name}: ${text}` : text;
+  // No speaker labels are added: the microphone cannot tell who is talking, so meeting text without
+  // speaker metadata is skipped by the server ("Speaker unknown") instead of being put in your name.
   const r = await call("/api/brain/ingest", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ channel, text: body.slice(0, 8000), context: CONTEXT }),
+    body: JSON.stringify({ channel, text: text.slice(0, 8000), context: CONTEXT }),
   });
   if (r.learned.length) {
     answerCache.clear(); // the next answer and check include what was just learned

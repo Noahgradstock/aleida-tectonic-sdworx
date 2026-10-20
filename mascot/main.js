@@ -169,7 +169,9 @@ function onLearned(r) {
   log("learned:", r.learned.map((l) => `${l.topic} ${l.value} (${l.score}%${l.waiting ? ", waiting" : ""})`).join("; "));
   send("mascot:learned", r.learned);
 }
-const LEARN_CHANNEL = { Mail: "email", email: "email", "Microsoft Teams": "teams", "Microsoft Teams (work or school)": "teams" };
+// Only text you wrote yourself: Apple Mail's outgoing message and the demo compose window.
+// Not other apps: the focused element there can contain messages written by others.
+const LEARN_CHANNEL = { Mail: "email", email: "email" };
 function learnFromWriting(text, where) {
   const channel = LEARN_CHANNEL[where];
   if (online && channel && text.trim()) brain.learnWhenSettled(text.slice(0, 8000), channel, onLearned);
@@ -279,9 +281,6 @@ async function onSegment(buffer, mime) {
     waitingForQuestion = true;
     return send("mascot:wake");
   }
-
-  const toMascot = waitingForQuestion || (inConversation() && (conversation.isAddressed(text) || FIX_COMMAND.test(text)));
-  if (online && activeContext === "meeting" && !toMascot) brain.learn(text, "meeting").then(onLearned, () => {});
 
   // In a meeting, a wrong value is corrected before anything else.
   if (activeContext === "meeting") {

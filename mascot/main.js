@@ -418,6 +418,69 @@ ipcMain.handle("mascot:share", async (event) => {
   }
 });
 
+// ---------- Demo on one computer: switch person, and approve questions in the mascot ----------
+const env = require("./env");
+const ACCOUNTS = String(env.DEMO_ACCOUNTS || "")
+  .split(";")
+  .map((x) => x.split(":"))
+  .filter((p) => p.length >= 3 && p[0] && p[1])
+  .map(([label, user, ...rest]) => ({ label, user, password: rest.join(":") }));
+let account = ACCOUNTS.find((a) => a.user === env.BRAIN_USER) || null;
+
+ipcMain.handle("mascot:accounts", (event) => {
+  if (!fromMascot(event)) return null;
+  return { list: ACCOUNTS.map((a) => a.label), current: account ? account.label : null };
+});
+
+ipcMain.handle("mascot:switch", async (event, label) => {
+  if (!fromMascot(event) || typeof label !== "string") return null;
+  const a = ACCOUNTS.find((x) => x.label === label);
+  if (!a) return null;
+  account = a;
+  brain.useAccount(a.user, a.password);
+  silence();
+  issue = null;
+  lastQuestions = "";
+  send("mascot:check", { ok: true });
+  await brain.warmUp();
+  const me = brain.whoAmI();
+  log("switched to", a.label, me ? `(${me.name})` : "(sign-in failed)");
+  pollQuestions();
+  if (lastMailText) checkWriting(lastMailText, "Mail");
+  return { label: a.label, name: me ? me.name : null };
+});
+
+let lastQuestions = "";
+async function pollQuestions() {
+  if (!online) return;
+  try {
+    const qs = await brain.questionsForMe();
+    const key = qs.map((q) => q.id).join("|");
+    if (key !== lastQuestions) {
+      lastQuestions = key;
+      // Stage names for the demo accounts ("Ilke" instead of the demo persona's name).
+      const stage = (q) => ({ ...q, fromName: (ACCOUNTS.find((a) => a.user === q.from) || {}).label || q.fromName });
+      send("mascot:questions", qs.map(stage));
+    }
+  } catch {
+    // Try again on the next tick.
+  }
+}
+setInterval(pollQuestions, 4000);
+
+ipcMain.handle("mascot:answer-question", async (event, id, answer) => {
+  if (!fromMascot(event) || !isText(id, 300) || !["correct", "wrong", "not_mine"].includes(answer)) return { ok: false };
+  try {
+    await brain.answerQuestion(id, answer);
+    log("answered question", id, answer);
+    lastQuestions = "";
+    pollQuestions();
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+});
+
 // "See in Company brain": the same question in the web app, in the browser.
 ipcMain.on("mascot:open-brain", (event, question, clientName) => {
   if (!fromMascot(event) || (question && !isText(question, 500))) return;

@@ -19,6 +19,11 @@
         </span>
       </div>
 
+      <div class="who" id="who" hidden>
+        <span>You are</span>
+        <div class="people" id="people"></div>
+      </div>
+
       <form id="ask-form" class="ask">
         <input id="question" type="text" maxlength="500" placeholder="Ask me anything…" autocomplete="off" />
         <button type="button" id="talk" class="talk" aria-label="Ask out loud" title="Ask out loud (or long-press the blob, ⌘⇧Space)">🎙</button>
@@ -42,6 +47,16 @@
           <button id="fix" class="primary">Fix it</button>
           <button id="share" title="Share this one sentence for review. A colleague approves it before it counts.">I know better</button>
           <button id="ignore">Ignore</button>
+        </div>
+      </div>
+
+      <div id="questions" class="approve" hidden>
+        <div class="warn-title">Can you approve this?</div>
+        <p id="q-text"></p>
+        <div class="actions">
+          <button id="q-yes" class="primary">Approve ✓</button>
+          <button id="q-no">Not right</button>
+          <button id="q-skip">Not my area</button>
         </div>
       </div>
 

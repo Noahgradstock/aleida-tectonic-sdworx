@@ -367,4 +367,40 @@ function webLink(question, clientName) {
   return `${BRAIN_URL}/?${q.toString()}`;
 }
 
-module.exports = { ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, findFactByText: (t) => findFact(t) };
+// ---------- Demo: switch person on one computer, and answer questions sent to you ----------
+
+function useAccount(user, password) {
+  env.BRAIN_USER = user;
+  env.BRAIN_PASSWORD = password;
+  cookie = null;
+  me = null;
+  answerCache.clear();
+  clientFacts.clear();
+  pendingShares.clear();
+  loadedAt = 0;
+  clients = [];
+  lastClient = null;
+}
+
+const whoAmI = () => me;
+
+// Questions colleagues' shares sent to you ("Can you approve this?").
+async function questionsForMe() {
+  if (!me) return [];
+  const r = await call("/api/brain/questions");
+  return (r.forMe || []).map((q) => ({ id: q.id, from: q.from, quote: q.quote, value: q.value, label: q.factLabel, caseName: q.caseName, fromName: q.fromName }));
+}
+
+async function answerQuestion(id, answer) {
+  const r = await call("/api/brain/questions/answer", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id, answer }),
+  });
+  answerCache.clear();
+  clientFacts.clear();
+  loadedAt = 0;
+  return r;
+}
+
+module.exports = { ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, useAccount, whoAmI, questionsForMe, answerQuestion, findFactByText: (t) => findFact(t) };

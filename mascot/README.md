@@ -45,6 +45,10 @@ The mascot remembers the topic of the last answer or warning, so follow-ups work
 
 At start the mascot loads every trusted fact from the engine (`/api/trust/facts`, refreshed every 5 minutes), so checks run locally and instantly. Deterministic, no AI in the decision: a sentence that states a value (€, %, hours, weeks, months, days, times) is matched to a fact by its keywords; if the fact is trusted and the stated value has the same unit but a different number, the mascot warns. In Apple Mail it reads the open compose window (macOS asks once for Automation permission); in other apps it reads the focused text field (Accessibility). "Fix it" in Mail copies the trusted value to the clipboard. See `DEMO.md` for sentences to try.
 
+## Demo on one computer
+
+Put `DEMO_ACCOUNTS=Ilke:jan:<password>;Isak:tom:<password>;Anna:anna:<password>` in the repo's `.env` (accounts from `node scripts/create-users.mjs jan tom anna`). The card then shows **You are: Ilke · Isak · Anna**; one click switches who the mascot is signed in as, with no restart. When the person you switch to has a question waiting ("Can you approve this?"), the card shows it with **Approve ✓ / Not right / Not my area**.
+
 ## Voice
 
 Listening uses voice-activity detection: an utterance is sent as soon as you pause (0.65 s of silence), silence is never sent, and the mascot stops listening while it is talking. Answers are cached for the session and the brain connection is warmed up at start.

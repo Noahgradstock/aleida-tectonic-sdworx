@@ -32,7 +32,7 @@ function pill(text, ms = 2500) {
 
 function show(section) {
   card.hidden = false;
-  for (const id of ["answer", "warning", "note"]) $(id).hidden = id !== section;
+  for (const id of ["answer", "warning", "note", "questions"]) $(id).hidden = id !== section;
 }
 
 function closeCard() {
@@ -230,6 +230,53 @@ $("fix").addEventListener("click", () => {
   closeCard();
 });
 $("ignore").addEventListener("click", closeCard);
+
+// ---------- Demo on one computer: switch person ----------
+async function loadPeople() {
+  const a = await window.mascot.accounts();
+  if (!a || !a.list.length) return;
+  $("who").hidden = false;
+  $("people").replaceChildren(
+    ...a.list.map((label) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.classList.toggle("on", label === a.current);
+      b.addEventListener("click", async () => {
+        for (const x of $("people").children) x.classList.toggle("on", x === b);
+        setMood("thinking");
+        const r = await window.mascot.switchAccount(label);
+        setMood("calm");
+        pill(r && r.name ? `You are ${label} now` : "Could not sign in", 2500);
+      });
+      return b;
+    }),
+  );
+}
+loadPeople();
+
+// ---------- Approve what a colleague shared ----------
+let openQuestion = null;
+window.mascot.onQuestions((qs) => {
+  openQuestion = qs[0] || null;
+  if (!openQuestion) {
+    if (!$("questions").hidden) closeCard();
+    return;
+  }
+  $("q-text").textContent = `${openQuestion.fromName} shared: “${openQuestion.quote}” (${openQuestion.label.toLowerCase()}: ${openQuestion.value}, ${openQuestion.caseName}). It counts once you approve it.`;
+  setMood("curious");
+  show("questions");
+  window.mascot.interactive(true);
+});
+async function answer(kind, text) {
+  if (!openQuestion) return;
+  const r = await window.mascot.answerQuestion(openQuestion.id, kind);
+  closeCard();
+  pill(r.ok ? text : "Could not save your answer", 3000);
+}
+$("q-yes").addEventListener("click", () => answer("correct", "Approved ✓ Everyone sees it now"));
+$("q-no").addEventListener("click", () => answer("wrong", "Marked as not right"));
+$("q-skip").addEventListener("click", () => answer("not_mine", "Passed on to someone else"));
 
 // Share one sentence for review: only after this click, never automatically.
 $("share").addEventListener("click", async () => {

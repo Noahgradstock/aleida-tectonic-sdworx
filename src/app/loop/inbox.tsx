@@ -86,7 +86,7 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
 
   if (!mine) return null;
   const inbox = mine.waiting.length + mine.questions.length;
-  const log = showAll ? mine.log : mine.log.slice(0, 6);
+  const log = showAll ? mine.log : mine.log.slice(0, 4);
 
   return (
     <section className="rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6" aria-label="Your inbox and log">
@@ -94,7 +94,7 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
         <h2 className="font-serif text-3xl">Waiting for you</h2>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${inbox ? "bg-[#1463ff] text-white" : "bg-neutral-100 text-neutral-500"}`}>{inbox || "All clear"}</span>
       </div>
-      <p className="mt-1 text-sm text-neutral-500">Things the brain heard from you, and questions from colleagues. One click each.</p>
+      <p className="mt-1 text-sm text-neutral-500">What you said, and questions from colleagues.</p>
 
       {inbox > 0 && (
         <ul className="mt-4 space-y-3">
@@ -164,68 +164,63 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
           <span className="text-xs text-neutral-400">Only you see this list</span>
         </div>
         {mine.log.length === 0 && <p className="mt-2 text-sm text-neutral-500">Nothing yet. What you say in meetings, emails and Teams shows up here.</p>}
-        <ol className="mt-3 space-y-2.5">
-          {log.map((it) => (
-            <li key={it.id} className={`rounded-xl px-3 py-2.5 ${it.state === "removed" ? "bg-neutral-50 opacity-60" : "bg-[#fbfaf7]"}`}>
-              <Meta
-                it={it}
-                lead={
-                  it.kind === "said"
-                    ? "You said"
-                    : it.kind === "added"
-                      ? `You added ${it.speakerName?.split(" ")[0] ?? "a colleague"}'s words`
-                      : it.kind === "confirmed"
-                        ? `You confirmed ${it.speakerName?.split(" ")[0] ?? "a source"}`
-                        : `You marked ${it.speakerName?.split(" ")[0] ?? "a source"} wrong`
-                }
-              />
-              <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-sm">
-                <b className={`font-serif text-base ${it.state === "removed" ? "line-through" : ""}`}>{it.value}</b>
-                <span className="text-neutral-500">{it.factLabel}</span>
-                {it.state === "removed" ? (
-                  <span className="text-xs text-neutral-500">{it.correctedTo ? "· corrected" : "· taken back, counts nowhere"}</span>
-                ) : (
-                  it.score != null && (
-                    <span className="text-xs font-medium" style={{ color: tone(it.score) }}>
-                      · {pct(it.score)}
-                      {it.isAnswer ? " · this is the answer people get" : ""}
+        <ol className="mt-2 divide-y divide-neutral-100">
+          {log.map((it) => {
+            const lead =
+              it.kind === "said"
+                ? "You said"
+                : it.kind === "added"
+                  ? `You added ${it.speakerName?.split(" ")[0] ?? "a colleague"}'s words`
+                  : it.kind === "confirmed"
+                    ? `You confirmed ${it.speakerName?.split(" ")[0] ?? "a source"}`
+                    : `You marked ${it.speakerName?.split(" ")[0] ?? "a source"} wrong`;
+            const removed = it.state === "removed";
+            return (
+              <li key={it.id} className={`group py-3 ${removed ? "opacity-55" : ""}`}>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3f1ec] text-neutral-600">
+                    <Icon name={channelIcon(it.channel)} size={15} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <b className={`shrink-0 font-serif text-lg leading-tight ${removed ? "line-through" : ""}`}>{it.value}</b>
+                      <span className="truncate text-sm text-neutral-600">{it.factLabel}</span>
+                    </div>
+                    <div className="mt-0.5 truncate text-xs text-neutral-400">
+                      {lead} · {when(it.date)}
+                      {removed ? (it.correctedTo ? " · corrected" : " · taken back") : it.isAnswer ? <span className="text-[#0f8a4f]"> · the answer people get</span> : null}
+                    </div>
+                  </div>
+                  {!removed && it.score != null && (
+                    <span className="shrink-0 text-sm font-medium tabular-nums" style={{ color: tone(it.score) }}>
+                      {pct(it.score)}
                     </span>
-                  )
-                )}
-              </div>
-              {editing === it.id ? (
-                <Corrector value={draft} onChange={setDraft} onSave={() => mineAct(it, "correct", draft)} onCancel={() => setEditing(null)} busy={busy === it.id} />
-              ) : (
-                <div className="mt-1.5 flex flex-wrap gap-3 text-xs">
-                  {it.can.correct && (
-                    <Link onClick={() => (setEditing(it.id), setDraft(it.value))} disabled={!!busy}>
-                      Correct
-                    </Link>
                   )}
-                  {it.can.remove && (
-                    <Link onClick={() => mineAct(it, "remove")} disabled={!!busy}>
-                      Remove
-                    </Link>
-                  )}
-                  {it.can.restore && (
-                    <Link onClick={() => mineAct(it, "restore")} disabled={!!busy}>
-                      Undo
-                    </Link>
-                  )}
-                  {it.can.undo && (
-                    <Link onClick={() => mineAct(it, "undo")} disabled={!!busy}>
-                      Withdraw
-                    </Link>
-                  )}
+                  {/* actions show on hover (and always on touch screens), so the list stays calm */}
+                  <div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+                    {it.can.correct && (
+                      <IconBtn icon="pencil" label="Correct" onClick={() => (setEditing(it.id), setDraft(it.value))} disabled={!!busy} />
+                    )}
+                    {it.can.remove && <IconBtn icon="cross" label="Remove" onClick={() => mineAct(it, "remove")} disabled={!!busy} />}
+                    {it.can.restore && <IconBtn icon="undo" label="Undo" onClick={() => mineAct(it, "restore")} disabled={!!busy} />}
+                    {it.can.undo && <IconBtn icon="undo" label="Withdraw" onClick={() => mineAct(it, "undo")} disabled={!!busy} />}
+                  </div>
                 </div>
-              )}
-              <Note n={note[it.id]} />
-            </li>
-          ))}
+                {editing === it.id && (
+                  <div className="pl-11">
+                    <Corrector value={draft} onChange={setDraft} onSave={() => mineAct(it, "correct", draft)} onCancel={() => setEditing(null)} busy={busy === it.id} />
+                  </div>
+                )}
+                <div className="pl-11">
+                  <Note n={note[it.id]} />
+                </div>
+              </li>
+            );
+          })}
         </ol>
-        {mine.log.length > 6 && (
+        {mine.log.length > 4 && (
           <button onClick={() => setShowAll((v) => !v)} className="mt-3 text-xs text-neutral-500 hover:text-neutral-900">
-            {showAll ? "Show less ▴" : `Show all ${mine.log.length} ▾`}
+            {showAll ? "Show less" : `Show all ${mine.log.length}`}
           </button>
         )}
       </div>
@@ -266,10 +261,10 @@ function Btn({ children, onClick, disabled, primary, ghost }: { children: React.
   );
 }
 
-function Link({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+function IconBtn({ icon, label, onClick, disabled }: { icon: "pencil" | "cross" | "undo"; label: string; onClick: () => void; disabled?: boolean }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="font-medium text-[#1463ff] hover:underline disabled:opacity-50">
-      {children}
+    <button onClick={onClick} disabled={disabled} title={label} aria-label={label} className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-[#1463ff] disabled:opacity-40">
+      <Icon name={icon} size={15} />
     </button>
   );
 }

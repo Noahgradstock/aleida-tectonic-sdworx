@@ -28,12 +28,12 @@ export default function Pipeline({ data }: { data: BrainData }) {
   const author = example?.author ? data.people.find((p) => p.id === example.author)?.name : "Official publication";
 
   return (
-    <section className="mt-16">
-      <h2 className="font-serif text-4xl leading-none">How the brain reads</h2>
-      <p className="mt-2 text-sm text-neutral-500">It connects to where knowledge lives, finds every document, reads it for what matters, and passes on who said what.</p>
+    <section>
+      <h2 className="font-serif text-2xl leading-none">How it works</h2>
+      <p className="mt-1.5 text-sm text-neutral-500">From what people say to a trusted answer, in four steps. Nobody has to write anything down.</p>
 
       <ol className="mt-6 grid gap-3 sm:grid-cols-4">
-        <Step n={1} title="Connects" text="Read-only, with each user's own access.">
+        <Step n={1} title="Hears" text="The mascot listens to meetings, Teams and email, read-only with your own access.">
           <div className="grid grid-cols-4 gap-x-1 gap-y-2">
             {SOURCES.map((s) => (
               <div key={s.name} className="flex flex-col items-center gap-1" title={`${s.name}: ${count(s.type)} statements`}>
@@ -44,7 +44,7 @@ export default function Pipeline({ data }: { data: BrainData }) {
           </div>
         </Step>
 
-        <Step n={2} title="Finds" text="Every document that mentions the topic.">
+        <Step n={2} title="Finds" text="Every document that already mentions the topic.">
           <div className="flex items-end gap-3">
             <div className="relative h-12 w-10">
               {[0, 1, 2].map((i) => (
@@ -62,7 +62,7 @@ export default function Pipeline({ data }: { data: BrainData }) {
           </div>
         </Step>
 
-        <Step n={3} title="Scans" text="Reads each one for the line that answers the question.">
+        <Step n={3} title="Reads" text="Picks out the exact line that answers the question.">
           <div className="relative overflow-hidden rounded-lg bg-[#f6f5f2] p-2.5 text-[10.5px] leading-relaxed text-neutral-500">
             <span className="scan-line absolute inset-x-0 h-[2px] bg-[#1463ff] shadow-[0_0_10px_rgba(20,99,255,0.5)]" />…a new illness within{" "}
             <mark className="rounded-sm bg-[#cfe0ff] px-0.5 text-[#161616]">{example?.value ?? "8 weeks"}</mark> after returning to work counts as the
@@ -70,7 +70,7 @@ export default function Pipeline({ data }: { data: BrainData }) {
           </div>
         </Step>
 
-        <Step n={4} title="Extracts" text="What it says, who said it and when, sent to the trust check.">
+        <Step n={4} title="Scores" text="What, who and when go through six questions and become a trust score.">
           {example && (
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 rounded-lg bg-[#f6f5f2] p-2.5 text-[11px]">
               <dt className="text-neutral-400">Says</dt>
@@ -92,13 +92,15 @@ function Step({ n, title, text, children }: { n: number; title: string; text: st
     <li className="relative flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
       <div>
         <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">0{n}</div>
-        <div className="mt-0.5 text-sm font-medium">{title}</div>
+        <div className="mt-0.5 text-base font-medium">{title}</div>
         <div className="text-xs text-neutral-500">{text}</div>
       </div>
       <div className="mt-auto">{children}</div>
       {n < 4 && (
         <span className="absolute -right-2.5 top-1/2 z-10 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[#f3f1ec] text-[11px] text-neutral-400 sm:flex">
-          →
+          <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
         </span>
       )}
     </li>

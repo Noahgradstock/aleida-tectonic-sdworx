@@ -408,7 +408,9 @@ export default function BrainMap({ data }: { data: BrainData }) {
         </aside>
       </section>
 
-      <Pipeline data={data} />
+      <div className="mt-16">
+        <Pipeline data={data} />
+      </div>
 
       {open && <Viewer doc={open} scores={data.scores} onClose={() => setOpen(null)} />}
     </main>

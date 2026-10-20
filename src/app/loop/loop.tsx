@@ -5,7 +5,7 @@ import Link from "next/link";
 import Blob from "../blob";
 import { channelIcon, Icon, type IconName } from "../icons";
 import YourInbox from "./inbox";
-import { ago, CHANNEL, color, Delta, Meter, pct, type Client, type Entry, type Me } from "./parts";
+import { ago, CHANNEL, color, Meter, pct, type Client, type Entry, type Me } from "./parts";
 
 // What changed today: a feed of everything the mascot heard (meetings, emails, Teams) and what it did
 // to the answers, across all topics, newest first. Your own inbox sits on the left.
@@ -44,7 +44,7 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
   return json as T;
 }
 
-export default function Loop() {
+export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [people, setPeople] = useState<Record<string, string>>({});
   const [clients, setClients] = useState<Record<string, Client>>({});
@@ -149,14 +149,16 @@ export default function Loop() {
 
     return (
       <li key={e.id} className={`rounded-2xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-5 ${isFresh ? "ring-2 ring-[#3DBE9A]/60" : ""} ${gone ? "opacity-60" : ""}`}>
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3f1ec] text-neutral-700">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f3f1ec] text-neutral-700">
             <Icon name={icon} />
           </span>
-          <div className="min-w-0 flex-1 text-sm">
-            <span className="font-medium text-neutral-900">{headline}</span>
-            {e.kind === "learned" && e.actor !== e.speaker && <span className="text-neutral-500"> · via {name(e.actor)}</span>}
-            <span className="text-neutral-400"> · {ago(e.at, now)}</span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-medium text-neutral-900">{headline}</div>
+            <div className="text-xs text-neutral-400">
+              {e.kind === "learned" && e.actor !== e.speaker ? `via ${name(e.actor)} · ` : ""}
+              {ago(e.at, now)} · {scopeName(e)}
+            </div>
           </div>
           {waiting && <Pill tone="amber">Waiting for {name(e.speaker).split(" ")[0]}</Pill>}
           {gone && <Pill tone="gray">Taken back</Pill>}
@@ -164,35 +166,32 @@ export default function Loop() {
 
         {e.kind === "learned" && (
           <p className="mt-3 text-[15px] leading-relaxed text-neutral-800">
-            <span className="text-neutral-500">{name(e.speaker)}:</span> “{e.quote}”
+            <span className="font-medium">{name(e.speaker).split(" ")[0]}:</span> “{e.quote}”
           </p>
         )}
 
-        <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
-          <span className="text-neutral-500">
-            {e.factLabel} · {scopeName(e)}
-          </span>
-          {changed ? (
-            <span>
-              <span className="text-neutral-400 line-through">{a.before.value ?? "nothing"}</span>
-              <Icon name="arrow" size={13} className="mx-1 inline align-[-2px] text-neutral-400" />
-              <b className="font-serif text-lg text-[#0f8a4f]">{a.after.value}</b>
+        {/* the result, as one line: what the answer is now, and how far this claim is trusted */}
+        <div className="mt-3 rounded-xl bg-[#fbfaf7] px-4 py-3">
+          <div className="text-xs text-neutral-500">{e.factLabel}</div>
+          <div className="mt-0.5 flex items-baseline justify-between gap-3">
+            {changed ? (
+              <span className="font-serif text-2xl leading-tight">
+                <span className="text-neutral-400 line-through">{a.before.value ?? "nothing"}</span>
+                <Icon name="arrow" size={16} className="mx-2 inline align-[-1px] text-neutral-400" />
+                <span className="text-[#0f8a4f]">{a.after.value}</span>
+              </span>
+            ) : (
+              <span className="font-serif text-2xl leading-tight text-neutral-800">
+                Still {a.after.value ?? "no answer"}
+              </span>
+            )}
+            <span className="shrink-0 text-sm text-neutral-500">
+              this claim <b className="font-medium tabular-nums" style={{ color: color(e.claimScore.after) }}>{pct(e.claimScore.after)}</b>
             </span>
-          ) : (
-            <span className="text-neutral-600">
-              answer stays <b className="font-medium">{a.after.value ?? "empty"}</b>
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3 flex items-center gap-3">
-          <div className="flex-1">
+          </div>
+          <div className="mt-2">
             <Meter from={e.claimScore.before} to={e.claimScore.after} animate={isFresh} cap={waiting ? 0.5 : null} />
           </div>
-          <span className="w-10 text-right text-sm font-medium tabular-nums" style={{ color: color(e.claimScore.after) }}>
-            {pct(e.claimScore.after)}
-          </span>
-          <Delta from={e.claimScore.before} to={e.claimScore.after} animate={isFresh} />
         </div>
 
         <button onClick={() => setOpen(expanded ? null : e.id)} className="mt-3 flex items-center gap-1 text-xs font-medium text-[#1463ff] hover:underline" aria-expanded={expanded}>
@@ -255,6 +254,8 @@ export default function Loop() {
           Paste text yourself
         </button>
       </header>
+
+      {howItWorks && <div className="mt-8">{howItWorks}</div>}
 
       {toast && (
         <p role="status" className="mt-4 rounded-xl bg-[#eef7f1] px-4 py-2 text-sm text-[#0f8a4f]">

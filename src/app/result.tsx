@@ -20,6 +20,8 @@ const VOTES: { kind: FeedbackKind; label: string }[] = [
 ];
 
 const levelWord = (s: number) => (s >= 0.75 ? "Trusted" : s >= 0.5 ? "Use with care" : "Don't rely on");
+const norm = (v: string) => v.toLowerCase().replace(/\s+/g, "");
+const SPOKEN = new Set<Claim["source"]["type"]>(["meeting", "teams"]);
 const sameValue = (a: string, b: string) => a.toLowerCase().replace(/\s+/g, "") === b.toLowerCase().replace(/\s+/g, "");
 
 function useNames(hit: Hit) {
@@ -56,6 +58,9 @@ export function Result({
   const backing = best ? [best, ...others.filter((c) => sameValue(c.claim.value, best.claim.value))] : [];
   const disagree = best ? others.filter((c) => !sameValue(c.claim.value, best.claim.value)) : [];
   const all = [...hit.claims.map((c) => c.claim), ...hit.excluded.map((e) => e.claim)];
+  // Like Wikipedia's "citation needed": only said in a meeting or on Teams, and no written source says the same.
+  const written = new Set(hit.claims.filter((c) => !SPOKEN.has(c.claim.source.type)).map((c) => norm(c.claim.value)));
+  const sourceNeeded = (c: Claim) => SPOKEN.has(c.source.type) && !written.has(norm(c.value));
   const searched = (["official", "teams", "sharepoint", "email"] as const)
     .map((t) => ({ t, n: all.filter((c) => c.source.type === t).length }))
     .filter((x) => x.n > 0)
@@ -113,13 +118,16 @@ export function Result({
             onClick={() => setOpen(best.claim.id)}
             className="group mt-3 block w-full rounded-2xl border border-neutral-100 p-4 text-left transition hover:bg-neutral-50"
           >
-            <p className="text-[15px] leading-relaxed text-neutral-800">“{best.claim.text}”</p>
+            <p className="text-[15px] leading-relaxed text-neutral-800">
+              “{best.claim.text}”{sourceNeeded(best.claim) && <SourceNeeded />}
+            </p>
             <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
               <SourceIcon c={best.claim} />
               <span className="truncate">{best.claim.source.title}</span>
               <span className="ml-auto shrink-0 font-medium text-[#1463ff] group-hover:underline">Open document →</span>
             </div>
           </button>
+          <ViewHistory factKey={best.claim.factKey} claims={all} name={name} people={hit.people} />
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <Votes onVote={(k) => onVote(best.claim.id, k)} />
@@ -151,7 +159,7 @@ export function Result({
           {backing.length > 0 && (
             <Group title="Backs this answer" hint={backing.length > 1 ? `${backing.length} sources agree` : undefined}>
               {backing.map((c) => (
-                <SourceRow key={c.claim.id} claim={c.claim} score={c.score} name={name(c.claim)} onOpen={() => setOpen(c.claim.id)} />
+                <SourceRow key={c.claim.id} claim={c.claim} score={c.score} name={name(c.claim)} needsSource={sourceNeeded(c.claim)} onOpen={() => setOpen(c.claim.id)} />
               ))}
             </Group>
           )}
@@ -165,6 +173,7 @@ export function Result({
                   name={name(c.claim)}
                   value={c.claim.value}
                   reason={why(c, best!)}
+                  needsSource={sourceNeeded(c.claim)}
                   onOpen={() => setOpen(c.claim.id)}
                 />
               ))}
@@ -270,6 +279,7 @@ function SourceRow({
   reason,
   onOpen,
   muted,
+  needsSource,
 }: {
   claim: Claim;
   score?: number;
@@ -278,12 +288,16 @@ function SourceRow({
   reason?: string;
   onOpen: () => void;
   muted?: boolean;
+  needsSource?: boolean;
 }) {
   return (
     <button onClick={onOpen} className={`flex items-center gap-3 px-4 py-3 text-left transition hover:bg-neutral-50 ${muted ? "opacity-60" : ""}`}>
       <SourceIcon c={claim} />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium">{claim.source.title}</div>
+        <div className="truncate text-sm font-medium">
+          {claim.source.title}
+          {needsSource && <SourceNeeded />}
+        </div>
         <div className="truncate text-xs text-neutral-500">
           {[CHANNEL[claim.source.type], name, claim.effectiveFrom ?? claim.date].filter(Boolean).join(" · ")}
           {reason && <span className="text-[#9a6400]"> · {reason}</span>}
@@ -679,6 +693,89 @@ function AskToConfirm({ claimId, context, expertName, note }: { claimId: string;
       </button>
       {!q && note && <span className="text-[11px] text-neutral-400">{note}</span>}
       {error && <span className="text-xs text-[#c0392b]">{error}</span>}
+    </div>
+  );
+}
+
+// Wikipedia's "citation needed", for something only said out loud.
+function SourceNeeded() {
+  return (
+    <sup
+      title="Only said in a meeting or on Teams. No written source or law backs it yet."
+      className="ml-0.5 cursor-help whitespace-nowrap text-[10px] font-normal not-italic text-[#1463ff]"
+    >
+      [source needed]
+    </sup>
+  );
+}
+
+type HistoryEntry = { id: string; at: string; explain: string; kind: string; value: string; speaker: string | null; claimScore: { before: number | null; after: number } };
+const HISTORY_KIND: Record<string, string> = {
+  learned: "Added",
+  confirmed: "Confirmed",
+  rejected: "Marked wrong",
+  outdated: "Marked outdated",
+  removed: "Taken back",
+  corrected: "Corrected",
+  restored: "Restored",
+};
+
+// Wikipedia's "View history": every change to this answer, newest first, with the sources' own dates underneath.
+// The server only returns changes for cases this user may see.
+function ViewHistory({ factKey, claims, name, people }: { factKey: string; claims: Claim[]; name: (c: Claim) => string | undefined; people: Hit["people"] }) {
+  const [open, setOpen] = useState(false);
+  const [entries, setEntries] = useState<HistoryEntry[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!open || entries) return;
+    fetch(`/api/brain/ledger?fact=${encodeURIComponent(factKey)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { entries: HistoryEntry[] }) => setEntries(d.entries))
+      .catch(() => setFailed(true));
+  }, [open, entries, factKey]);
+
+  const rows = [
+    ...(entries ?? []).map((e) => ({
+      id: e.id,
+      at: e.at,
+      text: `${HISTORY_KIND[e.kind] ?? "Changed"} · ${e.speaker && people[e.speaker] ? `${people[e.speaker].name}: ` : ""}${e.value}`,
+      detail: e.explain,
+      change: e.claimScore.before === null ? `${pct(e.claimScore.after)}%` : `${pct(e.claimScore.before)}% → ${pct(e.claimScore.after)}%`,
+      live: true,
+    })),
+    ...claims.map((c) => ({
+      id: c.id,
+      at: c.effectiveFrom ?? c.date,
+      text: `${CHANNEL[c.source.type]}${name(c) ? ` · ${name(c)}` : ""}: ${c.value} in “${c.source.title}”`,
+      detail: undefined,
+      change: null,
+      live: false,
+    })),
+  ].sort((a, b) => b.at.localeCompare(a.at));
+  const when = (iso: string) =>
+    iso.length > 10 ? new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+  return (
+    <div className="mt-2 text-right">
+      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-xs text-neutral-500 hover:text-[#1463ff] hover:underline">
+        {open ? "Hide history" : "View history"}
+      </button>
+      {open && (
+        <ol className="mt-2 max-h-64 overflow-y-auto rounded-2xl border border-neutral-100 text-left text-xs">
+          {failed && <li className="px-4 py-2 text-neutral-500">Could not load the changes right now. The sources are below.</li>}
+          {!entries && !failed && <li className="px-4 py-2 text-neutral-400">Loading…</li>}
+          {rows.map((r) => (
+            <li key={r.id} className="flex gap-3 border-b border-neutral-100 px-4 py-2 last:border-0">
+              <span className="w-28 shrink-0 tabular-nums text-neutral-400">{when(r.at)}</span>
+              <span title={r.detail} className={`min-w-0 flex-1 ${r.live ? "text-neutral-800" : "text-neutral-500"}`}>
+                {r.text}
+              </span>
+              {r.change && <span className="shrink-0 tabular-nums text-neutral-500">{r.change}</span>}
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

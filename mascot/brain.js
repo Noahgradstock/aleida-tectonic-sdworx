@@ -1,9 +1,14 @@
 // Talks to the Company brain trust engine (the deployed web app). Runs in the main process only.
+// All trusted facts are loaded at start and refreshed every few minutes, so checks run locally and instantly.
 const env = require("./env");
+
 const BRAIN_URL = env.BRAIN_URL || "https://tavling-eight.vercel.app";
 const CONTEXT = { country: "BE", pc: "200" }; // demo case: a Belgian PC 200 employer
+const REFRESH_MS = 5 * 60 * 1000;
 
 let cookie = null;
+let facts = []; // [{ key, label, keywords, status, value, score, source }]
+let loadedAt = 0;
 
 async function signIn() {
   const res = await fetch(`${BRAIN_URL}/api/auth/guest`, { method: "POST" });
@@ -11,68 +16,124 @@ async function signIn() {
   cookie = (res.headers.get("set-cookie") || "").split(";")[0];
 }
 
-async function post(path, body, retry = true) {
+async function call(path, init = {}, retry = true) {
   if (!cookie) await signIn();
-  const res = await fetch(`${BRAIN_URL}${path}`, {
-    method: "POST",
-    headers: { "content-type": "application/json", cookie },
-    body: JSON.stringify(body),
-  });
+  const res = await fetch(`${BRAIN_URL}${path}`, { ...init, headers: { ...(init.headers || {}), cookie } });
   if (res.status === 401 && retry) {
     cookie = null;
-    return post(path, body, false);
+    return call(path, init, false);
   }
   if (!res.ok) throw new Error(`Brain error (${res.status})`);
   return res.json();
 }
 
-// The fields the mascot shows. Never pass raw server data to the page.
-function summarise(r) {
-  if (!r.matched) return { matched: false, message: r.message };
-  const best = r.best;
-  return {
-    matched: true,
-    label: r.fact.label,
-    status: r.status,
-    value: best ? best.claim.value : null,
-    score: best ? Math.round(best.score * 100) : null,
-    source: best ? best.claim.source.title : null,
-    expert: r.expert ? r.expert.name : null,
-  };
+async function loadFacts() {
+  const q = new URLSearchParams(CONTEXT).toString();
+  const data = await call(`/api/trust/facts?${q}`);
+  facts = data.facts.map((f) => ({
+    key: f.fact.key,
+    label: f.fact.label,
+    keywords: f.fact.keywords.map((k) => k.toLowerCase()),
+    status: f.status,
+    value: f.best ? f.best.claim.value : null,
+    score: f.best ? Math.round(f.best.score * 100) : null,
+    source: f.best ? f.best.claim.source.title : null,
+  }));
+  loadedAt = Date.now();
+  return facts.length;
 }
 
-const cache = new Map();
+async function ensureFacts() {
+  if (!facts.length || Date.now() - loadedAt > REFRESH_MS) {
+    try {
+      await loadFacts();
+    } catch {
+      // Keep the last known facts.
+    }
+  }
+}
+
+// The fact a sentence is about: the most keyword hits, then the longest keyword.
+function findFact(text) {
+  const t = ` ${text.toLowerCase()} `;
+  let best = null;
+  for (const f of facts) {
+    const hits = f.keywords.filter((k) => t.includes(k));
+    if (!hits.length) continue;
+    const score = hits.length * 100 + Math.max(...hits.map((k) => k.length));
+    if (!best || score > best.score) best = { fact: f, score };
+  }
+  return best ? best.fact : null;
+}
+
+// ---------- Values: "€1,650", "8.91 euros", "50%", "18 weeks", "650 hours", "3 times", "20th" ----------
+
+const VALUE = /€\s?\d[\d.,]*|\d[\d.,]*\s?(?:%|percent\b|euros?\b|eur\b|hours?\b|weeks?\b|months?\b|days?\b|times\b)|\b\d{1,2}(?:st|nd|rd|th)\b/gi;
+
+function parse(v) {
+  const s = v.toLowerCase();
+  const unit = /€|euro|eur\b/.test(s) ? "eur" : /%|percent/.test(s) ? "pct" : (s.match(/hour|week|month|day|time/) || [/(st|nd|rd|th)\b/.test(s) ? "ord" : ""])[0];
+  let digits = (s.match(/\d[\d.,]*/) || [""])[0].replace(/[.,]$/, "");
+  digits = /,\d{3}(?!\d)/.test(digits) && !/\.\d+,/.test(digits) ? digits.replace(/,/g, "") : digits.replace(",", ".");
+  return { unit, n: parseFloat(digits) };
+}
+
+const sameValue = (a, b) => a.unit === b.unit && Math.abs(a.n - b.n) < 1e-9;
+
+// ---------- Public API ----------
+
+const answerCache = new Map();
+
+// Full answer with the expert, from the engine. Cached for the session.
 async function ask(question) {
   const key = question.toLowerCase().replace(/[^a-z0-9€%.,\s]/g, "").replace(/\s+/g, " ").trim();
-  if (cache.has(key)) return cache.get(key);
-  const r = summarise(await post("/api/trust/ask", { question: question.slice(0, 500), context: CONTEXT }));
-  if (cache.size > 200) cache.clear();
-  cache.set(key, r);
-  return r;
+  if (answerCache.has(key)) return answerCache.get(key);
+  const r = await call("/api/trust/ask", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question: question.slice(0, 500), context: CONTEXT }),
+  });
+  const best = r.matched ? r.best : null;
+  const out = !r.matched
+    ? { matched: false, message: r.message }
+    : {
+        matched: true,
+        label: r.fact.label,
+        status: r.status,
+        value: best ? best.claim.value : null,
+        score: best ? Math.round(best.score * 100) : null,
+        source: best ? best.claim.source.title : null,
+        expert: r.expert ? r.expert.name : null,
+      };
+  if (answerCache.size > 200) answerCache.clear();
+  answerCache.set(key, out);
+  return out;
 }
 
-const norm = (s) => s.toLowerCase().replace(/€|euros?|eur\b/g, "").replace(/\s+/g, "").replace(",", ".");
-const VALUE = /€\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s?(?:%|percent\b|euros?\b|eur\b)|\d+\s?(?:weeks?|months?|days?)\b/gi;
-
-// Checks each sentence that states a value against the trusted answer for its topic.
+// Checks every sentence that states a value against the trusted facts. Local and deterministic.
 async function check(text) {
-  const sentences = text.slice(0, 4000).split(/(?<=[.!?\n])\s+/).filter((s) => (s.match(VALUE) || []).length > 0);
+  await ensureFacts();
+  const sentences = text.slice(0, 4000).split(/(?<=[.!?\n])\s+/);
   for (const sentence of sentences) {
-    const values = sentence.match(VALUE) || [];
-    const r = await ask(sentence);
-    if (!r.matched || !r.value || r.status !== "trusted") continue;
-    if (values.some((v) => norm(v) === norm(r.value))) continue;
-    return { ok: false, said: values[0].trim(), ...r };
+    const said = sentence.match(VALUE);
+    if (!said) continue;
+    const fact = findFact(sentence);
+    if (!fact || fact.status !== "trusted" || !fact.value || !/\d/.test(fact.value)) continue;
+    const trusted = parse(fact.value);
+    const sameUnit = said.map((v) => ({ raw: v.trim().replace(/[.,]$/, ""), ...parse(v) })).filter((v) => v.unit === trusted.unit);
+    if (!sameUnit.length || sameUnit.some((v) => sameValue(v, trusted))) continue;
+    return { ok: false, said: sameUnit[0].raw, sentence: sentence.trim(), ...fact };
   }
   return { ok: true };
 }
 
-// Signs in and wakes the deployment up front, so the first real question is fast.
+// Signs in and loads all facts up front, so the first check and question are fast.
 async function warmUp() {
   try {
-    await ask("meal voucher");
-  } catch {
-    // Offline: the first question will retry.
+    const n = await loadFacts();
+    console.log(`brain: ${n} facts loaded`);
+  } catch (e) {
+    console.log("brain: could not load facts:", e.message);
   }
 }
 

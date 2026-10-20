@@ -1,5 +1,5 @@
 // Company brain mascot: an always-on-top blob that watches two settings, email and meetings.
-const { app, BrowserWindow, globalShortcut, ipcMain, screen, session, systemPreferences } = require("electron");
+const { app, BrowserWindow, clipboard, globalShortcut, ipcMain, screen, session, systemPreferences } = require("electron");
 const path = require("node:path");
 const brain = require("./brain");
 const voice = require("./voice");
@@ -73,7 +73,16 @@ async function checkWriting(text, where) {
   }
 }
 
-const watcher = createWatcher((appName, text) => checkWriting(text, appName));
+const watcher = createWatcher(
+  (appName, text) => {
+    log("writing in", appName, `(${text.length} chars)`);
+    checkWriting(text, appName);
+  },
+  (error) => {
+    log("watcher error:", error);
+    send("mascot:heard", { error: "Allow access to Mail in System Settings → Privacy & Security (Automation and Accessibility)" });
+  },
+);
 
 // ---------- Setting 2: meetings (microphone → speech-to-text → check or answer) ----------
 
@@ -208,6 +217,11 @@ ipcMain.on("compose:changed", (event, text) => {
 ipcMain.on("mascot:fix", (event, from, to) => {
   if (!fromMascot(event) || !isText(from, 40) || !isText(to, 40)) return;
   if (compose && !compose.isDestroyed()) compose.webContents.send("compose:replace", from, to);
+});
+
+// "Fix it" in a native app: put the trusted value on the clipboard, ready to paste.
+ipcMain.on("mascot:copy", (event, text) => {
+  if (fromMascot(event) && isText(text, 40)) clipboard.writeText(text);
 });
 
 ipcMain.on("listener:segment", (event, buffer, mime) => {

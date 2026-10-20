@@ -8,7 +8,7 @@ let online = false;
 let mood = "calm";
 
 const STATUS_TEXT = { trusted: "Trusted", conflict: "Sources disagree", stale: "Needs a check", orphan: "No expert backing" };
-const WHERE = { email: "in your email", meeting: "just now" };
+const WHERE = { email: "in your email", meeting: "just now", Mail: "in your email" };
 
 function setMood(next) {
   mood = next;
@@ -68,7 +68,6 @@ function toggleCard() {
 }
 
 $("close").addEventListener("click", closeCard);
-$("open-compose").addEventListener("click", () => window.mascot.openCompose());
 $("online").addEventListener("change", (e) => window.mascot.setOnline(e.target.checked));
 
 window.mascot.onOnline((on) => {
@@ -120,7 +119,7 @@ window.mascot.onCheck((r) => {
     return;
   }
   const spoken = r.where === "meeting";
-  pendingFix = r.where === "email" ? { from: r.said, to: r.value } : null;
+  pendingFix = r.where === "meeting" ? null : { from: r.said, to: r.value, native: r.where !== "email" };
   $("w-text").textContent = `You ${spoken ? "said" : "wrote"} ${r.said} for "${r.label.toLowerCase()}" ${WHERE[r.where] ?? `in ${r.where}`}. The trusted value is ${r.value}.`;
   $("w-chip").textContent = `Trusted · ${r.score}%`;
   $("w-source").textContent = r.source;
@@ -154,6 +153,12 @@ window.mascot.onSpeak(({ audio: b64 }) => {
 });
 
 $("fix").addEventListener("click", () => {
+  if (pendingFix && pendingFix.native) {
+    const { from, to } = pendingFix;
+    window.mascot.copy(to);
+    closeCard();
+    return pill(`Copied ${to}. Paste it over ${from}`, 4000);
+  }
   if (pendingFix) window.mascot.fix(pendingFix.from, pendingFix.to);
   closeCard();
 });

@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("mascot", {
   openCompose: () => ipcRenderer.send("mascot:open-compose"),
   setOnline: (enabled) => ipcRenderer.send("mascot:set-online", Boolean(enabled)),
   fix: (from, to) => ipcRenderer.send("mascot:fix", String(from), String(to)),
+  copy: (text) => ipcRenderer.send("mascot:copy", String(text)),
   onToggleAsk: on("mascot:toggle-ask"),
   onThinking: on("mascot:thinking"),
   onCheck: on("mascot:check"),

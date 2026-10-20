@@ -227,6 +227,22 @@ It prints a password per user and two lines, `SESSION_SECRET` and `AUTH_USERS`. 
 
 Built for the checks of the Aikido AI Code Audit: authentication, authorization, IDOR and business logic.
 
+### What Aikido found, and what we fixed
+
+How we treat a finding: fix the cause rather than hide the warning, keep the fix small enough to review, and re-run the tests and the demo before pushing. Security is built in from the first commit (the model below); the scan is how we check we did not miss anything.
+
+The first Aikido scan of this repo (20 Oct 2026) found three issues. All three are fixed in commit `fb0a257`:
+
+<img src="docs/screenshots/aikido-before.jpg" alt="Aikido scan before the fixes: Next.js (critical), document write methods in stage.html (high), file inclusion via reading files in trust.mjs and brain-data.ts (high)" width="100%">
+
+| Finding | Severity | Fix |
+|---|---|---|
+| Next.js 16.3.8: two CVEs (code injection, denial of service) | Critical | Upgraded to Next.js 16.4.1, the fixed version. |
+| `video/stage.html` (the page that records the demo film) wrote markup with `innerHTML` | High | Markup is parsed inertly and rebuilt from an allowlist of tags with only a `class` attribute; anything else becomes plain text. |
+| `trust.mjs` and `brain-data.ts` read files from a path held in a variable | High | `trust.mjs` reads only a fixed list of its own JSON files. `brain-data.ts` only lists files under `data/salary`, checks each path stays inside it and skips symlinks. No path ever came from a request; now the code proves it. |
+
+After the fixes: type check clean, 70 of 70 tests pass, production build passes, `npm audit --omit=dev` reports 0 vulnerabilities.
+
 ### Security model
 
 - **Login: yes**, with password-free demo personas for the jury (real roles, real rules). Users have their own client portfolio, and votes, learned claims and answers change what colleagues see, so without a login this would be broken access control.

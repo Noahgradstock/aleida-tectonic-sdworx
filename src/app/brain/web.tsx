@@ -16,7 +16,7 @@ type N = GraphNode & SimulationNodeDatum;
 type E = Omit<GraphEdge, "source" | "target"> & SimulationLinkDatum<N> & { source: string | N; target: string | N };
 type Sel = { kind: GraphNode["kind"]; id: string } | null;
 type Lens = "people" | "sources";
-type TopicStatus = { status: "trusted" | "conflict" | "stale" | "orphan" | "empty"; answer: string | null; score: number | null; forecast: Forecast | null };
+type TopicStatus = { status: "trusted" | "conflict" | "stale" | "orphan" | "empty"; answer: string | null; score: number | null; forecast: Forecast | null; exceptions?: { client: string; value: string; score: number }[] };
 type BrainGraph = KnowledgeGraph & { topics: Record<string, TopicStatus>; reference: string; asked?: Record<string, number>; today?: string };
 
 // An answer that stops being trusted within this many days gets a clock ring: it will need attention soon.
@@ -260,9 +260,6 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
         <div>
           <h1 className="font-serif text-4xl leading-tight tracking-tight sm:text-5xl">Who knows what</h1>
           <p className="mt-1 text-[15px] text-neutral-600">Every topic, how far you can trust it, and who to ask. Click anything to see why.</p>
-          {graph && (
-            <span className="mt-2 inline-block rounded-full bg-white px-3 py-1 text-xs text-neutral-600 ring-1 ring-neutral-200">Answers for {graph.reference}</span>
-          )}
         </div>
         <div className="relative w-full max-w-xs">
           <input
@@ -678,7 +675,22 @@ function Topic({ node, graph, onSelect, docByFile, onOpenDoc }: { node: GraphNod
           </span>
         </div>
       )}
-      <p className="mt-1 text-xs text-neutral-500">Scored for {graph.reference}</p>
+      <p className="mt-1 text-xs text-neutral-500">For {graph.reference}, unless a client has its own agreement</p>
+      {t?.exceptions && t.exceptions.length > 0 && (
+        <div className="mt-3 rounded-xl bg-[#fff8ec] px-3 py-2">
+          <p className="text-xs font-medium text-[#9a6400]">Own agreements</p>
+          <ul className="mt-1 space-y-0.5 text-sm">
+            {t.exceptions.map((x) => (
+              <li key={x.client} className="flex items-baseline justify-between gap-2">
+                <span className="truncate">{x.client}</span>
+                <span className="shrink-0">
+                  <b className="font-serif text-base">{x.value}</b> <span className="text-xs text-neutral-500">{pct(x.score)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {t?.forecast && (
         <div className="mt-3 rounded-xl bg-[#fbfaf7] px-3 py-2">
           <ForecastLine forecast={t.forecast} compact />

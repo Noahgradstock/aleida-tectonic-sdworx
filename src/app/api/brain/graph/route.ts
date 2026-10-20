@@ -1,7 +1,7 @@
 import { buildKnowledgeGraph } from "@/trust-engine";
 import { allFeedback, currentUser, now, unauthorized } from "@/lib/trust-server";
 import { liveKb, unconfirmedReport } from "@/lib/live";
-import { canReadClaim } from "@/lib/access";
+import { canReadClaim, clientsOf } from "@/lib/access";
 import { referenceContext, topicStatuses } from "@/lib/brain-data";
 import { allQuestions } from "@/lib/questions";
 
@@ -19,5 +19,5 @@ export async function GET(request: Request) {
   // Doubt as a signal: how many colleagues are waiting for a confirmation on each topic. Counts only, no names.
   const asked: Record<string, number> = {};
   for (const q of await allQuestions()) if (q.status === "open") asked[q.factKey] = (asked[q.factKey] ?? 0) + 1;
-  return Response.json({ ...graph, topics: topicStatuses(k, ctx, feedback), reference: label, asked, today: now().toISOString().slice(0, 10) });
+  return Response.json({ ...graph, topics: topicStatuses(k, ctx, feedback, clientsOf(user, k)), reference: label, asked, today: now().toISOString().slice(0, 10) });
 }

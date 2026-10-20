@@ -1,7 +1,7 @@
 import "server-only";
 import { readdirSync } from "node:fs";
 import path from "node:path";
-import { evaluateFact, forecast, type Context, type Feedback, type Forecast, type KnowledgeBase, type Person } from "@/trust-engine";
+import { evaluateFact, forecast, type Client, type Context, type Feedback, type Forecast, type KnowledgeBase, type Person } from "@/trust-engine";
 import { allFeedback, now } from "@/lib/trust-server";
 import { liveKb } from "@/lib/live";
 import { canReadClaim, clientsOf, countriesOf } from "@/lib/access";
@@ -10,10 +10,9 @@ import type { BrainData } from "@/app/brain/brain-map";
 
 // Everything the Brain views show, built once on the server from the live knowledge base.
 
-// Topics are scored for this client, so the brain shows what a BE PC 200 consultant would get.
-const REFERENCE_CLIENT = "brouwerij-de-kroon";
 
-export type TopicStatus = { status: BrainData["topics"][number]["status"]; answer: string | null; score: number | null; forecast: Forecast | null };
+export type Exception = { client: string; value: string; score: number };
+export type TopicStatus = { status: BrainData["topics"][number]["status"]; answer: string | null; score: number | null; forecast: Forecast | null; exceptions: Exception[] };
 
 function listFiles(dir: string, base = dir): string[] {
   try {
@@ -25,22 +24,33 @@ function listFiles(dir: string, base = dir): string[] {
   }
 }
 
-// The case the topics are scored for: the reference client if this user works on it, else their first client or country.
+// The topics are scored at the general level a consultant works at: their country, sector PC 200.
+// Clients with their own agreement show up as exceptions on the topic, not as the default.
 export function referenceContext(user: Person, k: KnowledgeBase): { ctx: Context; label: string } {
-  const mine = clientsOf(user, k);
-  const client = mine.find((c) => c.id === REFERENCE_CLIENT) ?? mine[0] ?? null;
-  const ctx = client ? { country: client.country, pc: client.pc, client: client.id } : { country: countriesOf(user)[0] ?? "BE" };
-  const label = client ? `${client.name} (${[client.country, client.pc && `PC ${client.pc}`].filter(Boolean).join(", ")})` : ctx.country;
-  return { ctx, label };
+  void k;
+  const country = countriesOf(user)[0] ?? "BE";
+  return { ctx: { country, pc: "200" }, label: `${country === "BE" ? "Belgium" : country === "NL" ? "the Netherlands" : country}, PC 200` };
 }
 
-export function topicStatuses(k: KnowledgeBase, ctx: Context, feedback: Feedback[]): Record<string, TopicStatus> {
+// clients: the ones this user works on; a client whose own trusted agreement gives another answer is an exception.
+export function topicStatuses(k: KnowledgeBase, ctx: Context, feedback: Feedback[], clients: Client[] = []): Record<string, TopicStatus> {
   return Object.fromEntries(
     k.facts.map((fact) => {
       const r = evaluateFact(fact, k, ctx, feedback, now());
+      const exceptions = clients.flatMap((c) => {
+        const own = evaluateFact(fact, k, { country: c.country, pc: c.pc, client: c.id }, feedback, now());
+        const best = own.best;
+        return best && best.relevance === "client" && own.status === "trusted" && best.claim.value !== r.best?.claim.value ? [{ client: c.name, value: best.claim.value, score: best.score }] : [];
+      });
       return [
         fact.key,
-        { status: r.best ? r.status : ("empty" as const), answer: r.best?.claim.value ?? null, score: r.best?.score ?? null, forecast: r.best ? forecast(fact, k, ctx, feedback, now()) : null },
+        {
+          status: r.best ? r.status : ("empty" as const),
+          answer: r.best?.claim.value ?? null,
+          score: r.best?.score ?? null,
+          forecast: r.best ? forecast(fact, k, ctx, feedback, now()) : null,
+          exceptions,
+        },
       ];
     }),
   );

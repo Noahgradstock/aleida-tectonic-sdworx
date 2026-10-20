@@ -171,12 +171,12 @@ async function checkWriting(text, where) {
             ? `Quick note: for ${result.client.replace(/\s+(NV|BV)$/, "")} it's ${conversation.speakable(result.value)}, not ${conversation.speakable(result.said)}.`
             : `Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`,
         );
-      } else if (inConversation() && where === "Mail") {
+      } else if (where === "Mail" || where === "email") {
         offerUntil = Date.now() + 60000;
         say(
           result.client
             ? `For ${result.client.replace(/\s+(NV|BV)$/, "")} it's ${conversation.speakable(result.value)}. Want me to fix your email?`
-            : `${conversation.speakable(result.said)} looks off. Want me to fix your email?`,
+            : `Heads up: ${conversation.speakable(result.said)} is outdated. It's ${conversation.speakable(result.value)} now. Want me to fix your email?`,
         );
       }
     }

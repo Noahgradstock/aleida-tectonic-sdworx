@@ -70,6 +70,37 @@ Setup: local server `npm run dev` (accounts in `.env.local`); mascot `.env`: `BR
 | 5 | Same | Say *"Hey SD Worx, how do you know?"* → let it finish |
 | 6 | Any | 5 s of the calm blob on a clean desktop |
 
+## The two emails (tested: each triggers exactly one reaction)
+
+Paste everything except the **bold** sentence before recording, then type the bold sentence on camera and stop typing.
+
+**Shot 1 · Isak** (You are: Isak). To: Sofie Maes · Subject: Meal vouchers for a new hire
+> Hi Sofie,
+>
+> Quick question from the new guy. I am setting up meal vouchers for a new hire and I want to get it right.
+>
+> **The employer part of the meal voucher is €6.91 per day, right?**
+>
+> Thanks a lot,
+> Isak
+
+→ amber *€6.91 → €8.91*; "Hey SD Worx, fix it" → *€8.91*.
+
+**Shot 2 · Ilke** (You are: Ilke). To: Jan van Damme, Brouwerij De Kroon · Subject: Holiday days 2026
+> Dear Mr Van Damme,
+>
+> Thank you for the good meeting yesterday.
+>
+> **As agreed, your employees get 22 holiday days this year at Brouwerij De Kroon.**
+>
+> I will update your payroll file this week.
+>
+> Kind regards,
+> Ilke
+> Payroll expert, SD Worx
+
+→ blue card *Not in the Company brain for De Kroon yet (general rule 20 days)* → **Share for review**.
+
 Embed in PowerPoint (Insert → Video, start *On click*). Bring a USB stick with the deck, the video file and a PDF.
 
 ## Q&A prep (5 minutes)

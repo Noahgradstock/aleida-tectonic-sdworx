@@ -1,0 +1,7 @@
+{
+  "name": "demo-film",
+  "private": true,
+  "type": "module",
+  "scripts": { "preview": "PREVIEW=1 node make-film.mjs", "film": "node make-film.mjs" },
+  "dependencies": { "ffmpeg-static": "5.2.0", "playwright": "1.50.1" }
+}

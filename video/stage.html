@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1440px; height: 810px; overflow: hidden; background: #0b0b0e; font-family: Geist, -apple-system, sans-serif; }
+  #bg { position: absolute; inset: 0; background: #efece5; overflow: hidden; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; }
+  #b1 { width: 720px; height: 720px; background: #b9ccff; }
+  #b2 { width: 620px; height: 620px; background: #ffd9c2; }
+  #b3 { width: 520px; height: 520px; background: #d8f0e4; }
+  #grain { position: absolute; inset: 0; opacity: .05; background-image: radial-gradient(#000 1px, transparent 1px); background-size: 3px 3px; }
+  #persp { position: absolute; inset: 0; perspective: 2200px; }
+  #win { position: absolute; left: 0; top: 0; width: 1280px; height: 756px; border-radius: 16px; overflow: hidden; background: #f3f1ec;
+    box-shadow: 0 60px 120px -30px rgba(20, 24, 60, .45), 0 0 0 1px rgba(0,0,0,.06); will-change: transform; }
+  .bar { height: 36px; background: #fbfaf7; border-bottom: 1px solid #e6e3db; display: flex; align-items: center; padding: 0 14px; gap: 8px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .url { margin: 0 auto; transform: translateX(-30px); background: #efece5; border-radius: 8px; padding: 4px 60px; font: 12px Geist, sans-serif; color: #6b6860; }
+  iframe { width: 1280px; height: 720px; border: 0; display: block; background: #f3f1ec; }
+  #fx { position: absolute; inset: 0; pointer-events: none; }
+  .sp { position: absolute; will-change: transform, opacity, filter; }
+  .w { display: inline-block; will-change: transform, opacity, filter; }
+  .title { white-space: nowrap; font-family: "Instrument Serif", serif; font-size: 76px; line-height: 1.02; color: #121214; letter-spacing: -1px; }
+  .title.light { color: #fff; }
+  .title.xl { font-size: 128px; letter-spacing: -2px; }
+  .lower { background: rgba(14, 14, 18, .88); color: #fff; border-radius: 18px; padding: 16px 24px; font-size: 26px; font-weight: 500; letter-spacing: -.2px;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,.5); white-space: nowrap; }
+  .lower small { display: block; font-size: 14px; font-weight: 400; color: #a9a6ff; letter-spacing: .6px; text-transform: uppercase; margin-bottom: 4px; }
+  .pill { background: #fff; border-radius: 999px; padding: 12px 20px 12px 16px; font-size: 21px; font-weight: 500; color: #161616; white-space: nowrap;
+    box-shadow: 0 18px 40px -16px rgba(0,0,0,.35); display: flex; align-items: center; gap: 12px; }
+  .pill i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .pill span { color: #7b776e; font-weight: 400; font-size: 17px; }
+  .key { background: #fff; border-radius: 16px; padding: 12px 20px; font: 600 30px Geist, sans-serif; color: #161616; box-shadow: 0 6px 0 #d8d4ca, 0 20px 40px -12px rgba(0,0,0,.35); }
+  .tick { font-size: 30px; font-weight: 500; color: #121214; white-space: nowrap; }
+  .tick b { font-family: "Geist Mono", monospace; font-weight: 400; font-size: 15px; color: #1f5cff; margin-right: 14px; vertical-align: 4px; }
+  #dark, #black { position: absolute; inset: 0; opacity: 0; }
+  #dark { background: radial-gradient(1200px 700px at 75% 20%, #1c2a66 0%, #0c0d14 55%); }
+  #black { background: #08080a; }
+  .row { font-size: 30px; color: #fff; font-weight: 500; white-space: nowrap; }
+  .row span { display: block; font-size: 18px; color: #9a9ab0; font-weight: 400; margin-top: 4px; }
+  .row b { display: inline-block; width: 38px; height: 38px; border-radius: 50%; background: #1f5cff; color: #fff; font-size: 17px; text-align: center; line-height: 38px; margin-right: 16px; vertical-align: 2px; }
+  .mask { font-family: "Geist Mono", monospace; font-size: 22px; line-height: 1.55; color: #d6d6e6; width: 560px; white-space: normal; }
+  .mask em { font-style: normal; color: #7fa2ff; background: rgba(31, 92, 255, .22); border-radius: 6px; padding: 0 4px; }
+  .lbl { font: 13px "Geist Mono", monospace; letter-spacing: 1.5px; color: #8a8aa6; text-transform: uppercase; }
+  .team { font-size: 20px; color: #a8a49a; text-align: center; line-height: 1.7; white-space: nowrap; }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="bg"><div class="blob" id="b1"></div><div class="blob" id="b2"></div><div class="blob" id="b3"></div><div id="grain"></div></div>
+<div id="persp">
+  <div id="win">
+    <div class="bar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><div class="url" id="url">Team meeting · Payroll BE</div></div>
+    <iframe id="app" src="/__meeting"></iframe>
+  </div>
+</div>
+<div id="dark"></div>
+<div id="black"></div>
+<div id="fx"></div>
+<div id="flash"></div>
+<script>
+  const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+  const easeOut = (x) => 1 - Math.pow(1 - x, 4);
+  const easeIO = (x) => (x < 0.5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2);
+  const lerp = (a, b, k) => a + (b - a) * k;
+
+  // ---- camera: point P of the window (window px) lands on screen point S at zoom z ----
+  let cam = { px: 640, py: 378, sx: 720, sy: 430, z: 0.62, rx: 18, ry: -10, y: 260, o: 0 };
+  let move = null; // { from, to, t0, dur }
+  window.__cam = (to, t0, dur) => {
+    const cur = camAt(t0);
+    move = { from: cur, to: { ...cur, ...to }, t0, dur };
+  };
+  function camAt(t) {
+    if (!move) return cam;
+    const k = easeIO(clamp((t - move.t0) / move.dur));
+    const r = {};
+    for (const key in move.from) r[key] = lerp(move.from[key], move.to[key], k);
+    return r;
+  }
+
+  // ---- sprites: anything that enters and leaves on time ----
+  const sprites = [];
+  const fx = document.getElementById("fx");
+  window.__add = (s) => {
+    const el = document.createElement("div");
+    el.className = "sp " + (s.cls || "");
+    // Titles animate word by word.
+    if (s.words) el.innerHTML = s.html.split(" ").map((w) => `<span class="w">${w}</span>`).join(" ");
+    else el.innerHTML = s.html;
+    el.style.left = s.x + "px";
+    el.style.top = s.y + "px";
+    if (s.align === "center") el.style.transform = "translateX(-50%)";
+    (s.layer ? document.getElementById(s.layer) : fx).appendChild(el);
+    sprites.push({ ...s, el, words: s.words ? [...el.querySelectorAll(".w")] : null });
+  };
+  window.__out = (id, t) => sprites.filter((s) => s.id === id).forEach((s) => (s.until = t));
+
+  function drawSprite(s, t) {
+    const inK = s.dur === 0 ? 1 : clamp((t - s.at) / (s.dur ?? 0.55));
+    const outK = s.until != null ? clamp((t - s.until) / 0.35) : 0;
+    const base = s.align === "center" ? "translateX(-50%) " : "";
+    if (s.words) {
+      s.el.style.opacity = t < s.at ? 0 : 1 - outK;
+      s.words.forEach((w, i) => {
+        const k = easeOut(clamp((t - s.at - i * (s.stagger ?? 0.07)) / 0.6));
+        w.style.opacity = k;
+        w.style.transform = `translateY(${(1 - k) * 40}px)`;
+        w.style.filter = `blur(${(1 - k) * 14}px)`;
+      });
+      s.el.style.transform = base + `translateY(${-outK * 20}px)`;
+      s.el.style.filter = outK ? `blur(${outK * 10}px)` : "";
+      return;
+    }
+    const k = easeOut(inK);
+    const pop = s.pop ? 1 + Math.sin(clamp((t - s.at) / 0.45) * Math.PI) * 0.08 : 1;
+    s.el.style.opacity = t < s.at ? 0 : k * (1 - outK);
+    s.el.style.transform = base + `translate(${(1 - k) * (s.dx ?? 0)}px, ${(1 - k) * (s.dy ?? 30) - outK * 16}px) scale(${(0.92 + 0.08 * k) * pop})`;
+    s.el.style.filter = `blur(${(1 - k) * 10 + outK * 8}px)`;
+  }
+
+  // ---- layers that fade by time ----
+  const fades = { dark: [], black: [], flash: [] };
+  window.__fade = (layer, from, to, t0, dur) => fades[layer].push({ from, to, t0, dur });
+  function fadeAt(layer, t, init) {
+    let v = init;
+    for (const f of fades[layer]) if (t >= f.t0) v = lerp(f.from, f.to, easeIO(clamp((t - f.t0) / f.dur)));
+    return v;
+  }
+
+  const win = document.getElementById("win");
+  window.__render = (t) => {
+    const c = camAt(t);
+    win.style.transformOrigin = `${c.px}px ${c.py}px`;
+    win.style.transform = `translate(${c.sx - c.px}px, ${c.sy - c.py + c.y}px) rotateX(${c.rx}deg) rotateY(${c.ry}deg) scale(${c.z})`;
+    win.style.opacity = 1 - c.o;
+    // slow drifting light
+    const b = (id, x, y) => (document.getElementById(id).style.transform = `translate(${x}px, ${y}px)`);
+    b("b1", -120 + Math.sin(t / 7) * 140, -260 + Math.cos(t / 9) * 90);
+    b("b2", 900 + Math.cos(t / 8) * 160, 280 + Math.sin(t / 6) * 110);
+    b("b3", 380 + Math.sin(t / 10) * 200, 420 + Math.cos(t / 7) * 80);
+    document.getElementById("dark").style.opacity = fadeAt("dark", t, 0);
+    document.getElementById("black").style.opacity = fadeAt("black", t, 1);
+    document.getElementById("flash").style.opacity = fadeAt("flash", t, 0);
+    for (const s of sprites) drawSprite(s, t);
+  };
+</script>
+</body>
+</html>

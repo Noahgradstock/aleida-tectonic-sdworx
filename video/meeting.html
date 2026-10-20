@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; background: #1b1c22; font-family: Geist, -apple-system, system-ui, sans-serif; color: #fff; }
+  .top { height: 56px; display: flex; align-items: center; padding: 0 22px; gap: 14px; border-bottom: 1px solid #2a2b33; }
+  .top b { font-weight: 600; font-size: 15px; }
+  .top .t { color: #9a9bab; font-size: 13px; font-family: "Geist Mono", monospace; }
+  .top .rec { margin-left: auto; display: flex; gap: 8px; align-items: center; font-size: 12px; color: #c9cad6; background: #2a2b33; padding: 6px 12px; border-radius: 999px; }
+  .top .rec i { width: 8px; height: 8px; border-radius: 50%; background: #e5484d; }
+  .grid { position: absolute; left: 22px; right: 22px; top: 76px; height: 470px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .tile { position: relative; border-radius: 18px; background: #2a2c36; display: grid; place-items: center; outline: 3px solid transparent; transition: outline-color .25s; }
+  .tile.on { outline-color: #7f85f5; }
+  .av { width: 132px; height: 132px; border-radius: 50%; display: grid; place-items: center; font-size: 46px; font-weight: 600; }
+  .tile.on .av { box-shadow: 0 0 0 10px rgba(127,133,245,.18); }
+  .name { position: absolute; left: 16px; bottom: 14px; font-size: 14px; background: rgba(0,0,0,.45); padding: 5px 10px; border-radius: 8px; }
+  .name small { color: #b9bacb; margin-left: 6px; }
+  .cap { position: absolute; left: 22px; right: 390px; top: 566px; min-height: 72px; background: #101116; border-radius: 14px; padding: 14px 18px; font-size: 21px; line-height: 1.35; opacity: 0; transition: opacity .2s; }
+  .cap.on { opacity: 1; }
+  .cap span { display: block; font-size: 12px; color: #9a9bab; margin-bottom: 4px; letter-spacing: .4px; text-transform: uppercase; }
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: flex; justify-content: center; gap: 12px; align-items: center; }
+  .bar div { width: 44px; height: 44px; border-radius: 12px; background: #2a2b33; }
+  .bar .end { background: #c4314b; width: 64px; }
+  .toast { position: absolute; left: 50%; top: 250px; transform: translateX(-50%); background: #fff; color: #1b1c22; border-radius: 14px; padding: 14px 22px; font-size: 17px; font-weight: 500; box-shadow: 0 20px 50px rgba(0,0,0,.5); opacity: 0; transition: opacity .3s; white-space: nowrap; }
+  .toast.on { opacity: 1; }
+  .toast span { color: #6b6c7a; font-weight: 400; margin-left: 8px; }
+  #m { position: absolute; right: 6px; bottom: 6px; width: 360px; height: 480px; border: 0; background: transparent; }
+</style>
+</head>
+<body>
+  <div class="top"><b>Payroll BE · weekly</b><span class="t" id="clock">10:02</span><span class="rec"><i></i>Transcript on</span></div>
+  <div class="grid">
+    <div class="tile" id="tom"><div class="av" style="background:#c79a5b">TC</div><div class="name">Tom Claes<small>new hire</small></div></div>
+    <div class="tile" id="jan"><div class="av" style="background:#4f7bd9">JW</div><div class="name">Jan Wouters<small>payroll expert</small></div></div>
+  </div>
+  <div class="cap" id="cap"><span id="who"></span><div id="said"></div></div>
+  <div class="bar"><div></div><div></div><div></div><div class="end"></div></div>
+  <div class="toast" id="toast">Meeting ended<span>Transcript saved with speaker names</span></div>
+  <iframe id="m" src="/__mascot/index.html" allowtransparency="true"></iframe>
+<script>
+  const $ = (id) => document.getElementById(id);
+  // who: "tom" | "jan" | null; text shown so far (live caption)
+  window.__say = (who, text) => {
+    for (const id of ["tom", "jan"]) $(id).classList.toggle("on", id === who);
+    $("cap").classList.toggle("on", !!who);
+    if (who) { $("who").textContent = who === "tom" ? "Tom Claes" : "Jan Wouters"; $("said").textContent = text; }
+  };
+  window.__toast = (on) => $("toast").classList.toggle("on", on);
+  window.__mascot = (ch, data) => $("m").contentWindow.__emit(ch, data);
+</script>
+</body>
+</html>

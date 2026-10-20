@@ -17,7 +17,7 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 |---|---|---|
 | 0:00 the blob lands | | *(silent)* |
 | 0:04 "01 · The new hire" | **ISAK** | Day one. I was told a meal voucher is €6.91. |
-| 0:16 the blob turns amber | **ISAK** | Company brain checks me as I type. The law changed this year: it's €8.91. It shows me the source, and I fix it in one click. |
+| 0:16 the blob turns amber | **ISAK** | Company brain checks me as I type. It's €8.91 now. One click, fixed. |
 | 0:21 €8.91, fixed | **ISAK** | But where does that knowledge come from? |
 | 0:23 "02 · The expert" | **ILKE** | From people like me. |
 | 0:29 Ilke's email | **ILKE** | I just agreed 22 holiday days with this client. That isn't written in any document. |
@@ -46,7 +46,7 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 ### Isak
 1. *(title slide)* "Hello, I'm Isak, the newest hire at SD Worx. Follow my first week, and see how I tap into SD Worx's knowledge: what's already known, and what nobody wrote down yet. Meet my colleagues Noah and Ilke."
 2. *(0:04)* "Day one. I was told a meal voucher is €6.91."
-3. *(0:16, amber)* "Company brain checks me as I type. The law changed this year: it's €8.91. It shows me the source, and I fix it in one click."
+3. *(0:16, amber)* "Company brain checks me as I type. It's €8.91 now. One click, fixed."
 4. *(0:21)* "But where does that knowledge come from?"
 
 ### Ilke

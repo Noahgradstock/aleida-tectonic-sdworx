@@ -1,0 +1,17 @@
+import { buildKnowledgeGraph } from "@/trust-engine";
+import { allFeedback, currentUser, now, unauthorized } from "@/lib/trust-server";
+import { liveKb, unconfirmedReport } from "@/lib/live";
+import { canReadClaim } from "@/lib/access";
+
+// GET -> "who knows what": people, concepts, documents and clients, with a knowledge CV per person.
+// Built from the same claims as the answers; another client's agreements never leave the server.
+export async function GET(request: Request) {
+  const user = await currentUser(request);
+  if (!user) return unauthorized();
+  const [k, feedback] = await Promise.all([liveKb(), allFeedback()]);
+  const graph = buildKnowledgeGraph(k, feedback, now(), {
+    canSee: (c) => canReadClaim(user, c, k),
+    isHearsay: (c) => unconfirmedReport(c, feedback, k.people),
+  });
+  return Response.json(graph);
+}

@@ -24,6 +24,13 @@ const RELEVANCE_TAG: Record<Relevance, string> = { client: "Client-specific", se
 export const sameValue = (a: string, b: string) =>
   a.toLowerCase().replace(/\s+/g, "").replace(",", ".") === b.toLowerCase().replace(/\s+/g, "").replace(",", ".");
 
+// A meeting claim is hearsay until the speaker or an expert confirms it in writing:
+// until then it must not lend weight to anything else (agreement, expert backing).
+const vouched = (c: Claim, feedback: Feedback[], people: Map<string, Person>) =>
+  c.source.type !== "meeting" ||
+  (c.reactions ?? []).some((id) => people.get(id)?.role === "expert") ||
+  feedback.some((f) => f.claimId === c.id && f.kind === "correct" && (f.userId === c.author || people.get(f.userId)?.role === "expert"));
+
 // The official claim in force today that is most specific to the asker's case.
 function officialReference(relevant: { claim: Claim; relevance: Relevance }[], now: Date): Claim | null {
   const inForce = relevant.filter(
@@ -86,7 +93,10 @@ function scoreClaim(
   if (thumbs) add("corroboration", `${thumbs}× expert 👍`, `👍 from ${thumbs} expert${thumbs > 1 ? "s" : ""}`, thumbs * POINTS.expertReaction);
   const agreeing = isOfficial ? 0 : new Set(
     siblings
-      .filter((c) => c.id !== claim.id && c.source.type !== "official" && c.author !== claim.author && sameValue(c.value, claim.value))
+      .filter(
+        (c) =>
+          c.id !== claim.id && c.source.type !== "official" && c.author !== claim.author && sameValue(c.value, claim.value) && vouched(c, feedback, people),
+      )
       .map((c) => c.author),
   ).size;
   const agreements = Math.min(agreeing, POINTS.maxAgreements);
@@ -114,7 +124,9 @@ function scoreClaim(
   if (claim.source.type === "meeting" && !confirmed && !matchesRef) {
     caps.push({ label: "said in a meeting, not confirmed yet", max: CAPS.unconfirmedMeeting });
   }
-  if (!isOfficial && author?.role !== "expert" && thumbs === 0 && !matchesRef && !isException) {
+  // A curated client agreement may deviate from the law on its own; something a consultant just wrote or said may not.
+  const curatedException = isException && !claim.id.startsWith("live-");
+  if (!isOfficial && author?.role !== "expert" && thumbs === 0 && !matchesRef && !curatedException) {
     caps.push({ label: "no expert or official source backs it", max: CAPS.noExpertBacking });
   }
 
@@ -180,10 +192,10 @@ export function evaluateFact(fact: Fact, kb: KnowledgeBase, ctx: Context, feedba
     claims.splice(claims.indexOf(best), 1);
     claims.unshift(best);
   }
-  return { fact, status: statusOf(best, claims, people), best, claims, excluded };
+  return { fact, status: statusOf(best, claims, people, feedback), best, claims, excluded };
 }
 
-function statusOf(best: ScoredClaim | null, claims: ScoredClaim[], people: Map<string, Person>): FactStatus {
+function statusOf(best: ScoredClaim | null, claims: ScoredClaim[], people: Map<string, Person>, feedback: Feedback[]): FactStatus {
   if (!best) return "orphan";
   // A more specific claim (e.g. a client agreement) overriding a general one is an exception, not a conflict.
   const rival = claims.find(
@@ -196,7 +208,7 @@ function statusOf(best: ScoredClaim | null, claims: ScoredClaim[], people: Map<s
   const backed = claims.some(
     (c) =>
       c.claim.source.type === "official" ||
-      (c.claim.author && people.get(c.claim.author)?.role === "expert") ||
+      (c.claim.author && people.get(c.claim.author)?.role === "expert" && vouched(c.claim, feedback, people)) ||
       (c.claim.reactions ?? []).some((id) => people.get(id)?.role === "expert"),
   );
   if (!backed) return "orphan";

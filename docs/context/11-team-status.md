@@ -1,6 +1,6 @@
 # Team status: what exists, what is planned, what is open
 
-Snapshot of 20 Oct 2026, late morning. Update this file (pull, edit, push) whenever something lands, so every Claude session starts from the real state.
+Snapshot of 20 Oct 2026, early afternoon. Update this file (pull, edit, push) whenever something lands, so every Claude session starts from the real state.
 
 ## The product in one line
 
@@ -12,13 +12,16 @@ It answers the final case: "Can your solution stay trusted without becoming anot
 
 | Piece | Where | State |
 |---|---|---|
-| Company brain web app + trust engine (qualifier) | `src/`, `data/salary/` | Works. Six layers, hard caps, login, per-client access, 33 tests pass. Deployed at https://tavling-eight.vercel.app (Vercel project `tavling`). |
+| Company brain web app + trust engine (qualifier) | `src/`, `data/salary/` | Works. Six layers, hard caps, login, per-client access. Deployed at https://tavling-eight.vercel.app (Vercel project `tavling`). |
 | **Desktop mascot** (Isak) | `mascot/` | Works. Electron, always on top, blob in an SD Worx cap. States: calm, thinking, warning. Click to ask a question; `Cmd+Shift+E` opens a demo email. Writing a wrong value (e.g. meal voucher €6.91) turns it amber with "Fix it". Talks to the deployed brain through a read-only guest session (`BRAIN_URL` to override). Hardened: contextIsolation, sandbox, CSP, IPC sender checks. |
 | Email check | `mascot/brain.js` | Deterministic: sentences containing a value (€, %, days, weeks, months) are sent to `/api/trust/ask`; warns if the trusted value differs. No AI in the decision. |
 | Context library | `docs/context/` (start at `README.md`) | Event, SD Worx, round 1, AI patterns, research on routing and cascades, Belgian payroll domain, playbook, final task analysis, our round 1 solution. |
-| Trust loop algorithm (proposal v2) | `docs/trusted-tomorrow-algorithm.md` | Design only, not built. See below. |
+| **Live loop** | `src/trust-engine/extract.ts`, `contacts.ts`, `src/lib/live.ts`, `/api/brain/ingest`, `/api/brain/ledger` | Works. Meeting transcript, Teams message or email in → deterministic extraction (value, topic, unit check, speaker, scope, hedges, verbatim quote) → live claims in the shared store → same six layers → ledger entry with every score before/after. Meeting claims −0.3 and capped at 50% until the speaker or an expert confirms; hedges −1; guests cannot teach; client claims only inside your portfolio. Answers now include "who to contact first" (scope, track record, confirmations, role, recency) and "last updated". 40 tests pass. Reference: `docs/context/12-live-loop.md`. |
+| **`/loop` page** | `src/app/loop/` | Works. Feed text in, see the answer, who to contact, and why each score moved; one-click "Still right" for the speaker or an expert. Demo data: `data/salary/sources-holiday-days.json`. |
+| Mascot → ingest | `mascot/brain.js` (Isak) | Not wired yet. Needs a real account (ingest refuses guests). Ready-made `learn()` snippet in `docs/context/12-live-loop.md`. |
+| Trust loop algorithm (proposal v2) | `docs/trusted-tomorrow-algorithm.md` | Partly built: the meeting setting (S1), track record for contacts, the ledger. Not built: AI gates A1–A4, best-before, lanes D1–D5, verification budget. |
 
-## The trust loop (planned, from `docs/trusted-tomorrow-algorithm.md`)
+## The trust loop (full design, from `docs/trusted-tomorrow-algorithm.md`; the live loop above is the first built slice)
 
 Rule: **AI at the edges, determinism in the core.** The model only reads; code decides; people confirm only when it changes the outcome.
 
@@ -34,10 +37,13 @@ Build order: `forecast.ts` → `lanes.ts` → `verifiers.ts` → setting profile
 
 ## Demo story (current draft)
 
-1. Consultant writes a client email with an outdated value. The mascot stays quiet while typing, then turns amber: trusted value, score, source, expert. "Fix it".
-2. Consultant clicks "I know better": nothing is overwritten; the code checks whether an expert's answer would change the outcome, and sends one Teams-style card to the best verifier.
-3. The expert clicks once; the click becomes quoted evidence and resets freshness.
-4. Brain health line: "1,240 facts · 1,236 maintain themselves · 4 needed a human".
+Built today on `/loop` (topic: annual leave days, client Brouwerij De Kroon, signed in as Sofie):
+
+1. The answer is 20 days (Belgian law, 96%). Who to contact: Anna. Set aside: Koen (left the company), Lukas (spoke about it in a meeting, but about Germany).
+2. A meeting transcript goes in. Jan: "For Brouwerij De Kroon we agreed 22 holiday days…" becomes a client claim, capped at 50% and waiting for Jan. Tom's "I think everyone gets 25 days" is learned at about 1% (new hire, hedged, contradicts the law).
+3. Jan clicks "Still right" once: his claim goes from 50% to about 97%, De Kroon's answer becomes 22 days, and Jan is now the first person to contact. The ledger shows exactly which points moved.
+
+In the mascot (Isak): the email check turns amber on a wrong value with "Fix it"; next step is the mascot feeding meetings and emails to the same ingest route.
 
 ## Feedback principles (agreed in chat)
 
@@ -50,7 +56,7 @@ Build order: `forecast.ts` → `lanes.ts` → `verifiers.ts` → setting profile
 
 ## Open decisions
 
-- Who builds the trust loop core (`forecast.ts`, `lanes.ts`, `verifiers.ts`). Isak dropped his claim on it.
+- Who builds the rest of the trust loop core (`forecast.ts`, `lanes.ts`, AI gates), or do we stop at the live loop.
 - Who owns the pitch deck (PPT/PDF, 3 minutes). We cannot use our own device, so the demo must be a recording or screenshots inside the slides.
 - Does the demo show the loop in the web app, in the mascot, or both.
 - Aikido baseline: not yet run on this repo.

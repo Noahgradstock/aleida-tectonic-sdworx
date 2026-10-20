@@ -18,6 +18,20 @@ A client asks an urgent payroll question. The answer is spread across a policy, 
 
 Company brain takes the consultant from *"I found something"* to *"I understand why I can rely on it"*.
 
+## Live loop (final)
+
+The final case asks: *"Can your solution stay trusted without becoming another task?"* and *"Could your solution learn from signals already created through everyday work?"* In the qualifier, claims were entered by hand and votes were the only feedback. Now the brain learns from work that already happens:
+
+1. **Everyday work goes in.** A meeting transcript, a Teams message or an email (`POST /api/brain/ingest`; on `/loop` you paste it, and the desktop mascot in `mascot/` is being connected to send it in the background).
+2. **Code extracts claims, no AI.** A sentence becomes a claim only if it states a value, matches a known topic and uses the right unit. The quote is the sentence verbatim; the speaker, the scope (client, sector, country) and hedges ("I think…") are recorded.
+3. **The same six layers score it**, with new rules: something said in a meeting gets −0.3 and stays **capped at 50% until the speaker or an expert confirms it** with one click; hedged speech gets −1.
+4. **Every score change is logged** with the score before and after, for the claim and for the answer, and the exact points that moved it (`GET /api/brain/ledger`).
+5. **Answers show who to contact first**, computed from work that already happened: does this person work on your case, were they right before on this topic, did they confirm others, and how recently did they deal with it. People who left, or who only spoke about another country, are set aside with the reason. Nobody maintains an expert list.
+
+Example on `/loop`: Jan says in a meeting "For Brouwerij De Kroon we agreed 22 holiday days". The brain learns it for that client only, at 50%, and waits for Jan. Jan clicks "Still right" once: 50% → about 97%, the client's answer becomes 22 days, and Jan becomes the first person to contact. The Belgian answer for everyone else stays 20 days.
+
+Technical reference, API and demo script: [docs/context/12-live-loop.md](docs/context/12-live-loop.md).
+
 ## How it works
 
 ```mermaid
@@ -98,6 +112,8 @@ It prints a password per user and two lines, `SESSION_SECRET` and `AUTH_USERS`. 
 
 Optional: put `GEMINI_API_KEY=...` in `.env.local` for free-text questions. Without a key the app falls back to keyword matching and still works end to end.
 
+**Live loop:** open http://localhost:3000/loop signed in as a real account (guests can read but not teach). Pick "Brouwerij De Kroon", keep the meeting transcript and click "Feed to the brain". Then sign in as `jan` and click "Still right" under his statement. Create the accounts with `node scripts/create-users.mjs sofie jan`. The full demo script is in [docs/context/12-live-loop.md](docs/context/12-live-loop.md).
+
 The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; run `vercel deploy --prod` from the repo folder. Environment variables (encrypted in the Vercel project): `SESSION_SECRET` and `AUTH_USERS` are required, otherwise every page redirects to a login that cannot succeed. Recommended: add Upstash Redis from the Vercel Marketplace, which sets `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Optional: `GEMINI_API_KEY`, and `GUEST_ACCESS=off` to disable guest access.
 
 ## Security
@@ -108,10 +124,11 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 - **Sessions:** signed cookie (HMAC-SHA256), `HttpOnly`, `SameSite=Strict`, `Secure` in production, valid for 8 hours (`src/lib/auth.ts`). Logout revokes the session on the server, so a copied cookie stops working too. Changing a user's password ends all of their sessions.
 - **Passwords:** scrypt hashes only, constant-time comparison. 5 failed attempts block that account from that IP for 15 minutes (so nobody can lock a colleague out), 50 per IP overall.
 - **Voting:** the voter is always the signed-in user from the session, never a value sent by the browser. One vote per user per claim, and only for a case the source actually applies to, so nobody can hide a source for another country, sector or client. Users who left the company cannot sign in.
-- **Abuse limits:** 30 questions and 60 votes per user per minute; request bodies over 10 KB are refused.
+- **Abuse limits:** 30 questions, 60 votes and 20 learn requests (`/api/brain/ingest`) per user per minute; request bodies over 10 KB are refused, and text to learn from is cut at 8,000 characters.
+- **Learning from work:** guests cannot teach the brain; only signed-in accounts can. For email and Teams the author is always the signed-in user, whatever the text says. A meeting statement is attributed to its speaker but stays capped at 50% until that speaker or an expert confirms it from their own account, so nobody can put trusted words in a colleague's mouth. Statements about a client are only learned when that client is in your portfolio, and the score history (`/api/brain/ledger`) only shows client entries to that client's consultants.
 - **Client access:** consultants only see their own client portfolio, experts every client in their own country (`src/lib/access.ts`). Checked in every route: asking, voting, opening a document and the brain map. Another client's agreements and emails are never sent to the browser.
 - **Guest:** "Continue as guest" gives a read-only demo session. Guests can ask but not vote, and it can be switched off with `GUEST_ACCESS=off`.
-- **Shared state:** revoked sessions, rate limits and votes live in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (Vercel Marketplace, free tier), so every server instance sees the same state (`src/lib/store.ts`). Without them they are kept in memory.
+- **Shared state:** revoked sessions, rate limits, votes, learned claims and the score history live in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (Vercel Marketplace, free tier), so every server instance sees the same state (`src/lib/store.ts`). Without them they are kept in memory.
 - **CSRF:** POST routes refuse requests from another origin.
 - **AI privacy:** names, clients, ages and identifiers are masked before a question is sent to Gemini (`src/lib/privacy.ts`), and Gemini never sees the sources or scores anything.
 - **Headers:** `X-Frame-Options`, `Content-Security-Policy: frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS (`next.config.ts`).
@@ -121,7 +138,8 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 
 | Path | What |
 |---|---|
-| `src/app/` | The demo page (ask → search → trust funnel → answer), the login page, and API routes under `api/trust/` and `api/auth/` |
+| `src/app/` | The demo page (ask → search → trust funnel → answer), the live loop page (`/loop`), the login page, and API routes under `api/trust/`, `api/brain/` and `api/auth/` |
+| `src/trust-engine/extract.ts`, `contacts.ts`, `src/lib/live.ts` | Live loop: claims from everyday text, who to contact first, learned claims and the score ledger |
 | `src/trust-engine/` | Scoring engine, weights in `config.ts`, tests |
 | `src/lib/auth.ts`, `src/proxy.ts` | Sessions, passwords and the login gate (tests in `src/lib/auth.test.ts`) |
 | `scripts/create-users.mjs` | Creates demo accounts |
@@ -130,9 +148,12 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 
 ## Unfinished
 
-- Claims are listed by hand in `data/salary/sources.json` (the quotes are read from the files). Extracting claims from new documents automatically with an LLM is not built yet.
+- The base knowledge is listed by hand in `data/salary/sources.json` (the quotes are read from the files). New claims are learned from meetings, Teams and email with fixed rules (value, known topic, unit, speaker, scope, hedges). The AI gates from [docs/trusted-tomorrow-algorithm.md](docs/trusted-tomorrow-algorithm.md) that would also catch corrections, questions and new topics are not built.
+- There is no real Teams, Outlook or meeting-tool integration (Microsoft Graph). Text comes from the `/loop` page (connecting the desktop mascot is in progress); meeting speakers come from `Name:` labels in the transcript.
+- A learned claim waits for its speaker or an expert. Choosing who to ask, asking only when the answer would change the outcome, and a weekly question budget per person (lanes D4/D5 in the algorithm doc) are designed but not built. Best-before dates are not built either.
+- A wrongly extracted claim can only be voted down, not deleted.
 - Overtime and flexi-jobs have no data files yet and use mock claims from `src/trust-engine/mock/`. Sick leave has source files in `data/salary/sick-leave/` but its claims are not in `data/salary/sources.json` yet, so it still uses the mock claims.
 - Login uses demo accounts from an environment variable. In production this would be single sign-on with Microsoft Entra ID, which also gives each user's real role and team.
-- Without Upstash Redis configured, votes, rate limits and logouts are kept in memory: they reset on restart and are not shared between server instances.
+- Without Upstash Redis configured, votes, rate limits, logouts, learned claims and the score history are kept in memory: they reset on restart and are not shared between server instances.
 - The client portfolio per consultant is a fixed demo list in `src/lib/access.ts`; in production it would come from SD Worx's portfolio system.
 - All people, clients, legal references and amounts are fictional.

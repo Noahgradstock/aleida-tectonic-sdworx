@@ -7,6 +7,7 @@ const TABS = [
   { href: "/", label: "Ask" },
   { href: "/brain", label: "Brain map" },
   { href: "/loop", label: "Live loop" },
+  { href: "/graph", label: "Who knows what" },
 ];
 
 export default function Nav() {

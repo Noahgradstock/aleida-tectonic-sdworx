@@ -1,7 +1,7 @@
 import { ask, lastUpdated, matchFact, parseContext, rankContacts } from "@/trust-engine";
 import { matchFactWithGemini } from "@/lib/gemini-match";
 import { allFeedback, currentUser, forbidden, notYourClient, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
-import { liveKb } from "@/lib/live";
+import { liveKb, unconfirmedReport } from "@/lib/live";
 import { maskPersonalData } from "@/lib/privacy";
 import { rateLimit, sameOrigin } from "@/lib/auth";
 import { canReadClaim, canUseContext } from "@/lib/access";
@@ -39,6 +39,10 @@ export async function POST(request: Request) {
   if (!result.matched) return Response.json({ ...result, matchedBy, privacy });
   // "Set aside" sources can be another client's agreement: only show those to that client's consultants.
   result.excluded = result.excluded.filter((e) => canReadClaim(user, e.claim, kb));
-  const contacts = rankContacts(result, ctx, kb, feedback, now());
+  // Who to contact is built from claim authors. A meeting line someone else typed in under a colleague's
+  // name only counts once that colleague (or an expert) confirmed it, so nobody can raise or ruin a
+  // colleague's track record by putting words in their mouth.
+  const vouched = { ...kb, claims: kb.claims.filter((c) => !unconfirmedReport(c, feedback, kb.people)) };
+  const contacts = rankContacts(result, ctx, vouched, feedback, now());
   return Response.json({ ...result, contacts, lastUpdated: lastUpdated(result), matchedBy, privacy });
 }

@@ -68,7 +68,7 @@ export async function buildMine(user: Person) {
       quote: c.text,
       speaker: c.author,
       reportedBy: reporterOf(c),
-      date: gone?.at ?? c.date,
+      date: gone?.at ?? (c as LiveClaim).heardAt ?? c.date, // when it was heard, for learned claims
       scope: scopeName(c, all),
       state,
       ...scored(c),

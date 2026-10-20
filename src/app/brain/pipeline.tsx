@@ -86,23 +86,46 @@ export default function Pipeline({ data }: { data: BrainData }) {
         </Step>
 
         <Step n={3} title="Reads" text="Picks out the exact line that answers the question.">
-          <div className="relative overflow-hidden rounded-lg bg-[#f6f5f2] p-2.5 text-[10.5px] leading-relaxed text-neutral-500">
-            <span className="scan-line absolute inset-x-0 h-[2px] bg-[#1463ff] shadow-[0_0_10px_rgba(20,99,255,0.5)]" />…a new illness within{" "}
-            <mark className="rounded-sm bg-[#cfe0ff] px-0.5 text-[#161616]">{example?.value ?? "8 weeks"}</mark> after returning to work counts as the
-            same illness…
+          {/* a small page: grey lines, and the one line that answers, highlighted as the scan passes */}
+          <div className="relative overflow-hidden rounded-xl bg-white p-3 shadow-[0_1px_4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-neutral-600">
+              <span className="h-2.5 w-2 rounded-[2px] bg-[#1463ff]" />
+              <span className="truncate">{example?.title ?? "Sick leave policy"}</span>
+            </div>
+            <div className="mt-2 space-y-1">
+              <span className="block h-1 w-11/12 rounded bg-neutral-200" />
+              <span className="block h-1 w-4/5 rounded bg-neutral-200" />
+            </div>
+            <p className="relative mt-1.5 rounded-md bg-[#eef3ff] px-1.5 py-1 text-[10.5px] leading-snug text-neutral-700">
+              …a new illness within <mark className="rounded-sm bg-[#cfe0ff] px-0.5 font-medium text-[#161616]">{example?.value ?? "8 weeks"}</mark> after returning
+              counts as the same illness…
+            </p>
+            <div className="mt-1.5 space-y-1">
+              <span className="block h-1 w-3/4 rounded bg-neutral-200" />
+            </div>
+            <span className="scan-line absolute inset-x-0 h-[2px] bg-[#1463ff] shadow-[0_0_10px_rgba(20,99,255,0.5)]" />
           </div>
+          <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-[#1463ff]">
+            <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+            Kept word for word
+          </span>
         </Step>
 
         <Step n={4} title="Scores" text="What, who and when go through six questions and become a trust score.">
           {example && (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 rounded-lg bg-[#f6f5f2] p-2.5 text-[11px]">
-              <dt className="text-neutral-400">Says</dt>
-              <dd className="font-medium">{example.value}</dd>
-              <dt className="text-neutral-400">Who</dt>
-              <dd className="truncate">{author}</dd>
-              <dt className="text-neutral-400">When</dt>
-              <dd>{example.date}</dd>
-            </dl>
+            <div className="flex items-center gap-3 rounded-xl bg-[#f6f5f2] p-3">
+              <ScoreRing score={example.score ?? 0} />
+              <dl className="grid min-w-0 grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 text-[11px]">
+                <dt className="text-neutral-400">Says</dt>
+                <dd className="font-medium">{example.value}</dd>
+                <dt className="text-neutral-400">Who</dt>
+                <dd className="truncate">{author}</dd>
+                <dt className="text-neutral-400">When</dt>
+                <dd>{example.date}</dd>
+              </dl>
+            </div>
           )}
         </Step>
       </ol>
@@ -127,5 +150,28 @@ function Step({ n, title, text, children }: { n: number; title: string; text: st
         </span>
       )}
     </li>
+  );
+}
+
+// The score as a ring: green from 75%, amber from 50%, red below.
+function ScoreRing({ score }: { score: number }) {
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  const tone = score >= 0.75 ? "#0f8a4f" : score >= 0.5 ? "#c98a00" : "#c0392b";
+  return (
+    <div className="flex shrink-0 flex-col items-center">
+      <div className="relative h-14 w-14">
+        <svg viewBox="0 0 56 56" className="h-14 w-14 -rotate-90" aria-hidden>
+          <circle cx="28" cy="28" r={r} fill="none" stroke="#e7e5df" strokeWidth="5" />
+          <circle cx="28" cy="28" r={r} fill="none" stroke={tone} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - score)} />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center font-serif text-xl" style={{ color: tone }}>
+          {Math.round(score * 100)}
+        </span>
+      </div>
+      <span className="mt-1 text-[10px] font-medium" style={{ color: tone }}>
+        {score >= 0.75 ? "Trusted" : score >= 0.5 ? "Use with care" : "Don't rely on"}
+      </span>
+    </div>
   );
 }

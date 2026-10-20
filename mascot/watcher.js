@@ -2,35 +2,48 @@
 // macOS asks once for permission. Nothing is stored; only sentences that state a value are checked.
 const { execFile } = require("node:child_process");
 
-// Apple Mail: the open compose windows are "outgoing messages"; take the newest one.
-const MAIL = `
-tell application "System Events" to set front to name of first application process whose frontmost is true
-if front is not "Mail" then return front & "<<SEP>>"
-tell application "Mail"
-  if (count of outgoing messages) is 0 then return "Mail<<SEP>>"
-  set m to item -1 of outgoing messages
-  return "Mail<<SEP>>" & (subject of m) & linefeed & (content of m)
-end tell`;
-
-// Any other app: the focused text field through Accessibility.
-const FOCUSED = `
+// One script for every read. In Mail it reads the body of the compose window in front by its fixed path
+// (group > group > scroll area > web area), wherever the cursor is. In other apps: the focused text field.
+const READ = `
 tell application "System Events"
-  set p to first application process whose frontmost is true
-  set n to name of p
+  set n to name of first application process whose frontmost is true
+  set p to application process n
+  set w to ""
   set v to ""
   set r to ""
-  set w to ""
   try
-    set w to name of front window of p
+    set w to name of window 1 of p
   end try
-  try
-    set f to value of attribute "AXFocusedUIElement" of p
-    set r to role of f
+  if n is "Mail" then
+    -- The compose window you are in; otherwise the first open compose window.
+    set cands to {}
     try
-      set v to value of attribute "AXValue" of f
+      set end of cands to value of attribute "AXFocusedWindow" of p
     end try
-    if v is missing value or v is "" then
-      set parts to {}
+    try
+      set cands to cands & (windows of p)
+    end try
+    repeat with cw in cands
+      try
+        set f to UI element 1 of scroll area 1 of group 1 of group 1 of cw
+        set r to role of f
+        set w to name of cw
+        exit repeat
+      end try
+    end repeat
+  else
+    try
+      set f to value of attribute "AXFocusedUIElement" of p
+      set r to role of f
+      try
+        set v to value of attribute "AXValue" of f
+      end try
+    end try
+  end if
+  if v is missing value then set v to ""
+  if r is "AXWebArea" and v is "" then
+    set parts to {}
+    try
       repeat with a in UI elements of f
         if role of a is "AXStaticText" then
           set end of parts to (value of a as text)
@@ -46,10 +59,10 @@ tell application "System Events"
           end repeat
         end if
       end repeat
-      set AppleScript's text item delimiters to linefeed
-      set v to parts as text
-    end if
-  end try
+    end try
+    set AppleScript's text item delimiters to linefeed
+    set v to parts as text
+  end if
 end tell
 return n & "<<SEP>>" & v & "<<ROLE>>" & r & "<<WIN>>" & w`;
 
@@ -69,24 +82,12 @@ const split = (out) => {
 };
 
 async function readWriting() {
-  const first = await run(FOCUSED);
-  if (first.out) {
-    const r = split(first.out);
-    if (r.text || r.app !== "Mail") return r;
-  }
-  const mail = await run(MAIL);
-  if (mail.out) {
-    const r = split(mail.out);
-    if (r.app === "Mail" && r.text) return r;
-    if (r.app !== "Mail") {
-      const any = await run(FOCUSED);
-      return any.out ? split(any.out) : { error: any.error };
-    }
-  }
-  const any = await run(FOCUSED);
-  if (any.out) return split(any.out);
-  return { error: mail.error || any.error };
+  const r = await run(READ);
+  return r.out ? split(r.out) : { error: r.error };
 }
+
+// Only a real permission problem should ask the user to change settings.
+const isPermissionError = (e) => /-1743|-25211|not allowed|assistive|inte behörig|tillåtelse/i.test(e || "");
 
 function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Electron", "Company brain"]) {
   let timer = null;
@@ -100,7 +101,7 @@ function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Elect
         const r = await readWriting();
         onDebug(r);
         if (r.error) {
-          if (!reported) onError(r.error);
+          if (!reported && isPermissionError(r.error)) onError(r.error);
           reported = true;
           return;
         }

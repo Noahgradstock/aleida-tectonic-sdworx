@@ -1,44 +1,38 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Contact, Evidence } from "@/trust-engine";
+import {
+  ago,
+  CHANNEL,
+  color,
+  Contacts,
+  CountUp,
+  country,
+  Delta,
+  History,
+  LedgerRow,
+  Meter,
+  pct,
+  possessive,
+  statusWord,
+  tone,
+  waitsForConfirm,
+  capOf,
+  type Answer,
+  type Client,
+  type Ctx,
+  type Entry,
+  type Me,
+  type Scope,
+  type Snapshot,
+} from "./parts";
 
 // The live loop: everyday work goes in (a meeting, a Teams message, an email), the brain learns,
 // and every score change is logged with the exact points that moved it.
 
-type Ctx = { client?: string; country?: string; pc?: string };
-type Me = { id: string; name: string; role: string };
-type Snapshot = { value: string | null; score: number | null; status: string };
-type Entry = {
-  id: string;
-  at: string;
-  kind: "learned" | "confirmed" | "rejected" | "outdated";
-  actor: string;
-  channel: string;
-  factKey: string;
-  factLabel: string;
-  claimId: string;
-  value: string;
-  quote: string;
-  speaker: string | null;
-  scope: { country: string; pc?: string; client?: string };
-  claimScore: { before: number | null; after: number };
-  answer: { before: Snapshot; after: Snapshot };
-  evidence: Evidence[];
-  caps: string[];
-};
-type Answer = {
-  matched: boolean;
-  fact?: { key: string; label: string };
-  status?: string;
-  best?: { claim: { value: string; source: { title: string } }; score: number } | null;
-  contacts?: { ranked: Contact[]; setAside: { person: { id: string; name: string }; reason: string }[] };
-  lastUpdated?: { date: string; source: string; by: string | null } | null;
-};
-
 const CASES: { label: string; ctx: Ctx }[] = [
   { label: "Brouwerij De Kroon (BE, PC 200)", ctx: { client: "brouwerij-de-kroon" } },
-  { label: "Belgium · PC 200", ctx: { country: "BE", pc: "200" } },
+  { label: "Belgium, PC 200", ctx: { country: "BE", pc: "200" } },
 ];
 
 const DEMO: Record<"meeting" | "teams" | "email", string> = {
@@ -50,14 +44,11 @@ const DEMO: Record<"meeting" | "teams" | "email", string> = {
   teams: "Reminder for the team: a full-time employee in a five-day week gets 20 days of annual leave.",
   email: "Dear client, your employees are entitled to 24 days of annual leave this year.",
 };
+const CHANNEL_TAB: Record<keyof typeof DEMO, string> = { meeting: "Meeting transcript", teams: "Teams message", email: "Email draft" };
 
-const pct = (n: number | null | undefined) => (n == null ? "–" : `${Math.round(n * 100)}%`);
-const color = (s: number | null | undefined) => (s == null ? "#a3a3a3" : s >= 0.75 ? "#0f8a4f" : s >= 0.5 ? "#9a6400" : "#c0392b");
-const ago = (iso: string) => {
-  const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
-  return s < 60 ? "just now" : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : new Date(iso).toLocaleDateString("en-GB");
-};
-const KIND: Record<Entry["kind"], string> = { learned: "Learned", confirmed: "Confirmed", rejected: "Rejected", outdated: "Outdated" };
+const POLL_MS = 6000;
+
+type View = { key: string; answer: Answer | null; entries: Entry[]; fresh: string[] };
 
 async function api<T>(url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : undefined);
@@ -66,48 +57,68 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
   return json as T;
 }
 
+const sameSnap = (a: Snapshot, b: Snapshot) => a.value === b.value && a.status === b.status && Math.round((a.score ?? -1) * 100) === Math.round((b.score ?? -1) * 100);
+
 export default function Loop() {
   const [me, setMe] = useState<Me | null>(null);
   const [people, setPeople] = useState<Record<string, string>>({});
+  const [clients, setClients] = useState<Record<string, Client>>({});
   const [facts, setFacts] = useState<{ key: string; label: string }[]>([]);
   const [caseIdx, setCaseIdx] = useState(0);
   const [factKey, setFactKey] = useState("annual-leave-days");
   const [channel, setChannel] = useState<keyof typeof DEMO>("meeting");
   const [text, setText] = useState(DEMO.meeting);
   const [busy, setBusy] = useState(false);
+  const [voting, setVoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fed, setFed] = useState<{ learned: Entry[]; skipped: { sentence: string; reason: string }[] } | null>(null);
-  const [answer, setAnswer] = useState<Answer | null>(null);
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [view, setView] = useState<View>({ key: "", answer: null, entries: [], fresh: [] });
+  const [now, setNow] = useState(0);
 
   const ctx = CASES[caseIdx].ctx;
 
   useEffect(() => {
     api<{ user: Me }>("/api/auth/me").then((r) => setMe(r.user)).catch(() => {});
-    api<{ people: { id: string; name: string }[]; facts: { key: string; label: string }[] }>("/api/trust/meta")
+    api<{ people: { id: string; name: string }[]; clients: Client[]; facts: { key: string; label: string }[] }>("/api/trust/meta")
       .then((m) => {
         setPeople(Object.fromEntries(m.people.map((p) => [p.id, p.name])));
+        setClients(Object.fromEntries((m.clients ?? []).map((c) => [c.id, c])));
         setFacts(m.facts);
       })
       .catch(() => {});
   }, []);
 
-  const refresh = useCallback(async () => {
-    try {
-      const label = facts.find((f) => f.key === factKey)?.label ?? factKey;
-      const [a, l] = await Promise.all([
-        api<Answer>("/api/trust/ask", { question: label, context: ctx, factKey }),
-        api<{ entries: Entry[] }>(`/api/brain/ledger?fact=${encodeURIComponent(factKey)}`),
-      ]);
-      setAnswer(a);
-      setEntries(l.entries);
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [factKey, facts, ctx]);
+  const refresh = useCallback(
+    async (quiet = false) => {
+      const key = `${factKey}|${caseIdx}`;
+      try {
+        const label = facts.find((f) => f.key === factKey)?.label ?? factKey;
+        const [a, l] = await Promise.all([
+          api<Answer>("/api/trust/ask", { question: label, context: CASES[caseIdx].ctx, factKey }),
+          api<{ entries: Entry[] }>(`/api/brain/ledger?fact=${encodeURIComponent(factKey)}`),
+        ]);
+        setNow(Date.now());
+        // Remember which ledger entries arrived since the last look: those play the score animation once.
+        setView((v) => {
+          const firstLoad = v.key !== key;
+          const old = new Set(v.entries.map((e) => e.id));
+          const added = l.entries.filter((e) => !old.has(e.id)).map((e) => e.id);
+          return { key, answer: a, entries: l.entries, fresh: firstLoad ? l.entries.slice(0, 1).map((e) => e.id) : [...v.fresh, ...added] };
+        });
+      } catch (e) {
+        if (!quiet) setError((e as Error).message);
+      }
+    },
+    [factKey, facts, caseIdx],
+  );
 
   useEffect(() => {
-    void Promise.resolve().then(refresh);
+    void Promise.resolve().then(() => refresh());
+    // Changes made elsewhere (Jan confirming from his own laptop) show up here on their own.
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") void refresh(true);
+    }, POLL_MS);
+    return () => clearInterval(t);
   }, [refresh]);
 
   async function feed() {
@@ -127,58 +138,117 @@ export default function Loop() {
 
   async function vote(entry: Entry, kind: "correct" | "wrong") {
     setError(null);
+    setVoting(true);
     try {
       await api("/api/trust/feedback", { claimId: entry.claimId, kind, context: entry.scope.client ? { client: entry.scope.client } : entry.scope });
       await refresh();
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setVoting(false);
     }
   }
 
-  const name = (id: string | null) => (id ? (people[id] ?? id) : "Unknown");
+  const name = (id: string | null) => (id ? (people[id] ?? id) : "Unknown speaker");
   const canConfirm = (e: Entry) => !!me && (me.id === e.speaker || me.role === "expert");
-  const confirmed = new Set(entries.filter((e) => e.kind === "confirmed").map((e) => e.claimId));
+  const scopeLabel = (sc: Scope) => (sc.client ? (clients[sc.client]?.name ?? sc.client) : `${country(sc.country)}${sc.pc ? `, PC ${sc.pc}` : ""}`);
+  const caseName = ctx.client ? (clients[ctx.client]?.name ?? CASES[caseIdx].label) : CASES[caseIdx].label;
+
+  // Which ledger entries are about this case. Exact scope for the history (its snapshots are per scope);
+  // broader rules count too when asking "does something still wait for a confirmation here?".
+  const here = ctx.client ? clients[ctx.client] : undefined;
+  const ctxCountry = here?.country ?? ctx.country ?? "BE";
+  const ctxPc = here?.pc ?? ctx.pc;
+  const sameScope = (sc: Scope) => (ctx.client ? sc.client === ctx.client : !sc.client && sc.country === ctxCountry && (!sc.pc || sc.pc === ctxPc));
+  const applies = (sc: Scope) => sameScope(sc) || (!sc.client && sc.country === ctxCountry && (!sc.pc || sc.pc === ctxPc));
+
+  const { answer, entries } = view;
+  const fresh = new Set(view.fresh);
+  const latestPerClaim = new Map<string, Entry>();
+  for (const e of entries) if (!latestPerClaim.has(e.claimId)) latestPerClaim.set(e.claimId, e);
+  const isPending = (e: Entry) => latestPerClaim.get(e.claimId)?.id === e.id && e.kind !== "rejected" && waitsForConfirm(e.caps);
+
+  const best = answer?.matched ? answer.best : null;
+  const current: Snapshot | null = best ? { value: best.claim.value, score: best.score, status: answer?.status ?? "trusted" } : null;
+  const latestHere = entries.find((e) => sameScope(e.scope)) ?? entries.find((e) => applies(e.scope)) ?? null;
+  const heroFresh = !!latestHere && fresh.has(latestHere.id) && latestHere.answer.after.value === current?.value;
+  const pendingHere = [...latestPerClaim.values()].filter((e) => isPending(e) && applies(e.scope) && e.value !== current?.value).slice(0, 2);
+
+  // The answer for this case over time, oldest to newest, without repeats.
+  const history: Snapshot[] = [];
+  const scoped = entries.filter((e) => sameScope(e.scope)).reverse();
+  if (scoped[0]) history.push(scoped[0].answer.before);
+  for (const e of scoped) history.push(e.answer.after);
+  if (current) history.push(current);
+  const steps = history.filter((p, i) => p.value != null && (i === 0 || !sameSnap(p, history[i - 1])));
+
+  const freshness = latestHere
+    ? `Last updated ${ago(latestHere.at, now)} from ${CHANNEL[latestHere.channel] ?? latestHere.channel}. ${
+        latestHere.kind === "learned"
+          ? `${name(latestHere.actor)} added it.`
+          : latestHere.kind === "confirmed"
+            ? `${name(latestHere.actor)} confirmed it.`
+            : `${name(latestHere.actor)} marked it ${latestHere.kind === "rejected" ? "wrong" : "outdated"}.`
+      }`
+    : answer?.lastUpdated
+      ? `Last updated on ${new Date(answer.lastUpdated.date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} from ${answer.lastUpdated.source}${answer.lastUpdated.by ? `, by ${name(answer.lastUpdated.by)}` : ""}.`
+      : null;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-24 pt-20">
-      <header className="mb-8">
-        <p className="text-xs uppercase tracking-widest text-neutral-500">Live loop</p>
-        <h1 className="mt-1 font-serif text-4xl tracking-tight">The brain learns from work that already happens</h1>
-        <p className="mt-2 max-w-2xl text-sm text-neutral-600">
-          A meeting, a Teams message or an email goes in. Code pulls out each statement with its exact quote, scores it with the same
-          six layers, and logs how every score moved. Spoken claims stay capped at 50% until the speaker or an expert confirms them.
-          All people, clients and documents are fictional.
-        </p>
+    <main className="mx-auto w-full max-w-7xl px-4 pb-24 pt-20 sm:px-6">
+      <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+        <div className="max-w-3xl">
+          <h1 className="font-serif text-4xl leading-tight tracking-tight sm:text-5xl">The brain learns from work that already happens</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-neutral-600">
+            A meeting, a Teams message or an email goes in. Code pulls out each statement with its exact quote, scores it with six visible rules, and
+            logs how every score moved. Something said in a meeting counts for at most 50% until the speaker or an expert confirms it.
+          </p>
+        </div>
+        <p className="rounded-full bg-white/70 px-3 py-1 text-sm text-neutral-600 ring-1 ring-neutral-200">All people, clients and documents are fictional</p>
       </header>
 
-      <div className="mb-6 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-neutral-500">Case</span>
+      <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-neutral-600">Case</span>
         {CASES.map((c, i) => (
-          <button key={c.label} onClick={() => setCaseIdx(i)} className={`rounded-full px-3 py-1 ${i === caseIdx ? "bg-[#161616] text-white" : "bg-white text-neutral-700 shadow-sm"}`}>
+          <button
+            key={c.label}
+            onClick={() => setCaseIdx(i)}
+            aria-pressed={i === caseIdx}
+            className={`rounded-full px-3.5 py-1.5 ${i === caseIdx ? "bg-[#161616] text-white" : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:ring-neutral-400"}`}
+          >
             {c.label}
           </button>
         ))}
-        {me && <span className="ml-auto text-neutral-500">Signed in as {me.name}</span>}
+        {me && (
+          <span className="ml-auto text-neutral-500">
+            Signed in as <span className="text-neutral-800">{me.name}</span>
+          </span>
+        )}
       </div>
 
-      {error && <p className="mb-4 rounded-lg bg-[#fdecea] px-3 py-2 text-sm text-[#c0392b]">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-4 rounded-xl bg-[#fdecea] px-4 py-2.5 text-sm text-[#c0392b]">
+          {error}
+        </p>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        {/* 1. Everyday work goes in */}
-        <section className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-          <h2 className="font-serif text-2xl">1. Everyday work</h2>
-          <div className="mt-3 flex gap-1 text-xs">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        {/* Everyday work goes in */}
+        <section className="self-start rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6 lg:sticky lg:top-20">
+          <h2 className="font-serif text-3xl">Everyday work</h2>
+          <div role="group" aria-label="Kind of work" className="mt-3 flex flex-wrap gap-1 text-sm">
             {(Object.keys(DEMO) as (keyof typeof DEMO)[]).map((c) => (
               <button
                 key={c}
+                aria-pressed={c === channel}
                 onClick={() => {
                   setChannel(c);
                   setText(DEMO[c]);
                   setFed(null);
                 }}
-                className={`rounded-full px-3 py-1 capitalize ${c === channel ? "bg-[#161616] text-white" : "bg-neutral-100 text-neutral-700"}`}
+                className={`rounded-full px-3 py-1 ${c === channel ? "bg-[#161616] text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"}`}
               >
-                {c === "meeting" ? "Meeting transcript" : c === "teams" ? "Teams message" : "Email draft"}
+                {CHANNEL_TAB[c]}
               </button>
             ))}
           </div>
@@ -188,38 +258,61 @@ export default function Loop() {
             maxLength={8000}
             rows={7}
             aria-label="Text to feed to the brain"
-            className="mt-3 w-full resize-y rounded-xl border border-neutral-200 p-3 font-mono text-xs leading-relaxed focus:border-neutral-400 focus:outline-none"
+            className="mt-3 w-full resize-y rounded-2xl border border-neutral-200 bg-[#fcfbf9] p-3.5 font-mono text-[13px] leading-relaxed focus:border-neutral-500 focus:outline-none"
           />
-          <button onClick={feed} disabled={busy || !text.trim()} className="mt-3 rounded-full bg-[#161616] px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-40">
-            {busy ? "Learning…" : "Feed to the brain"}
-          </button>
-          <p className="mt-2 text-xs text-neutral-500">In the product the desktop mascot does this in the background. Nobody pastes anything.</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              onClick={feed}
+              disabled={busy || !text.trim()}
+              className="rounded-full bg-[#161616] px-5 py-2.5 text-sm font-medium text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-40"
+            >
+              {busy ? "Learning…" : "Feed to the brain"}
+            </button>
+            <span className="text-sm text-neutral-500">In the product the desktop mascot does this in the background.</span>
+          </div>
 
           {fed && (
-            <div className="mt-5 space-y-2 text-sm">
+            <div className="mt-5 border-t border-neutral-100 pt-4 text-sm">
               <p className="font-medium">
-                Learned {fed.learned.length} · ignored {fed.skipped.length}
+                Learned {fed.learned.length} {fed.learned.length === 1 ? "statement" : "statements"}, ignored {fed.skipped.length}
               </p>
-              {fed.learned.map((e) => (
-                <div key={e.id} className="rounded-lg bg-[#eef7f1] px-3 py-2">
-                  <span className="font-medium">{name(e.speaker)}</span>: “{e.quote}” → <b>{e.value}</b> on {e.factLabel.toLowerCase()}
-                </div>
-              ))}
-              {fed.skipped.map((s, i) => (
-                <div key={i} className="rounded-lg bg-neutral-50 px-3 py-2 text-neutral-600">
-                  “{s.sentence}” <span className="text-neutral-400">· {s.reason}</span>
-                </div>
-              ))}
+              <ul className="mt-2 space-y-2">
+                {fed.learned.map((e) => {
+                  const cap = capOf(e.caps);
+                  return (
+                    <li key={e.id} className="rounded-xl bg-[#eef7f1] px-3.5 py-2.5">
+                      <span className="text-neutral-600">{name(e.speaker)}: </span>“{e.quote}”
+                      <span className="mt-1 block text-neutral-700">
+                        Learned <b>{e.value}</b> for {scopeLabel(e.scope)}, starts at{" "}
+                        <b style={{ color: color(e.claimScore.after) }}>{pct(e.claimScore.after)}</b>
+                        {cap != null ? ` (capped until confirmed)` : ""}.
+                      </span>
+                    </li>
+                  );
+                })}
+                {fed.skipped.map((x, i) => (
+                  <li key={i} className="rounded-xl bg-neutral-50 px-3.5 py-2.5 text-neutral-500">
+                    “{x.sentence}” <span className="block text-neutral-400">Ignored: {x.reason.charAt(0).toLowerCase() + x.reason.slice(1)}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </section>
 
-        {/* 2. The answer, who to ask, and the ledger */}
-        <section className="space-y-6">
-          <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-serif text-2xl">2. The answer now</h2>
-              <select value={factKey} onChange={(e) => setFactKey(e.target.value)} aria-label="Topic" className="rounded-full bg-neutral-100 px-3 py-1 text-sm">
+        <div className="min-w-0 space-y-6">
+          {/* The answer now */}
+          <section className="rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-sm text-neutral-600">
+                The answer now for <span className="font-medium text-neutral-900">{caseName}</span>
+              </h2>
+              <select
+                value={factKey}
+                onChange={(e) => setFactKey(e.target.value)}
+                aria-label="Topic"
+                className="max-w-full rounded-full bg-neutral-100 px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-[#161616]"
+              >
                 {facts.map((f) => (
                   <option key={f.key} value={f.key}>
                     {f.label}
@@ -227,122 +320,139 @@ export default function Loop() {
                 ))}
               </select>
             </div>
-            {answer?.matched && answer.best ? (
+
+            {best && current ? (
               <>
-                <div className="mt-3 flex items-end gap-4">
-                  <div className="font-serif text-5xl leading-none tracking-tight">{answer.best.claim.value}</div>
-                  <div className="pb-1 text-sm">
-                    <span className="font-medium" style={{ color: color(answer.best.score) }}>
-                      {pct(answer.best.score)} {answer.status}
-                    </span>
-                    <span className="text-neutral-500"> · from {answer.best.claim.source.title}</span>
+                <div className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+                  <div className="min-w-0">
+                    <p className="font-serif text-6xl leading-none tracking-tight sm:text-7xl">{best.claim.value}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-serif text-6xl leading-none tabular-nums sm:text-7xl" style={{ color: tone(current) }}>
+                      <CountUp key={`${latestHere?.id}-${best.score}`} from={latestHere?.answer.before.score ?? best.score} to={best.score} animate={heroFresh} />
+                    </p>
+                    <p className="mt-1 text-[15px] font-medium" style={{ color: tone(current) }}>
+                      {statusWord(current.status)}
+                    </p>
                   </div>
                 </div>
-                {answer.lastUpdated && (
-                  <p className="mt-2 text-xs text-neutral-500">
-                    Last thing the brain learned on this topic: {answer.lastUpdated.date} · {answer.lastUpdated.source}
-                    {answer.lastUpdated.by ? ` · ${name(answer.lastUpdated.by)}` : ""}
+
+                {freshness && (
+                  <p className="mt-4 flex items-start gap-2 text-[15px] text-neutral-700">
+                    <span aria-hidden className="mt-[7px] h-2 w-2 shrink-0 rounded-full" style={{ background: tone(current) }} />
+                    <span>
+                      {freshness} <span className="text-neutral-500">Based on: {best.claim.source.title}.</span>
+                    </span>
                   </p>
                 )}
 
-                <h3 className="mt-5 text-sm font-medium">Who to contact first</h3>
-                <ol className="mt-2 space-y-2">
-                  {answer.contacts?.ranked.slice(0, 3).map((c, i) => (
-                    <li key={c.person.id} className={`rounded-xl px-3 py-2 text-sm ${i === 0 ? "bg-[#eef3ff]" : "bg-neutral-50"}`}>
-                      <div className="flex items-baseline justify-between">
-                        <span className="font-medium">
-                          {i + 1}. {c.person.name}
-                        </span>
-                        <span className="tabular-nums text-xs text-neutral-500">{c.points > 0 ? "+" : ""}{c.points} pts</span>
-                      </div>
-                      <div className="mt-0.5 text-xs text-neutral-600">{c.reasons.join(" · ")}</div>
-                    </li>
-                  ))}
-                  {answer.contacts?.setAside.map((s) => (
-                    <li key={s.person.id} className="px-3 text-xs text-neutral-400">
-                      Not {s.person.name}: {s.reason}
-                    </li>
-                  ))}
-                </ol>
-              </>
-            ) : (
-              <p className="mt-3 text-sm text-neutral-500">Nothing in the brain applies to this case yet.</p>
-            )}
-          </div>
-
-          <div className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <h2 className="font-serif text-2xl">3. Why the score moved</h2>
-            {entries.length === 0 && <p className="mt-3 text-sm text-neutral-500">No changes yet. Feed something to the brain.</p>}
-            <ol className="mt-3 space-y-4">
-              {entries.map((e) => (
-                <li key={e.id} className="border-l-2 pl-4" style={{ borderColor: color(e.claimScore.after) }}>
-                  <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-neutral-500">
-                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-medium text-neutral-700">{KIND[e.kind]}</span>
-                    <span>{ago(e.at)}</span>
-                    <span>· {e.channel}</span>
-                    <span>· by {name(e.actor)}</span>
-                    {e.scope.client && <span>· {e.scope.client}</span>}
-                  </div>
-                  <p className="mt-1 text-sm">
-                    <span className="font-medium">{name(e.speaker)}</span>: “{e.quote}”
-                  </p>
-                  <div className="mt-2 flex items-center gap-3 text-sm">
-                    <span className="w-24 text-xs text-neutral-500">This claim</span>
-                    <Bar from={e.claimScore.before} to={e.claimScore.after} />
-                    <span className="tabular-nums" style={{ color: color(e.claimScore.after) }}>
-                      {e.claimScore.before == null ? "new" : pct(e.claimScore.before)} → {pct(e.claimScore.after)}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-3 text-sm">
-                    <span className="w-24 text-xs text-neutral-500">The answer</span>
-                    <span>
-                      {e.answer.before.value ?? "–"} ({pct(e.answer.before.score)}) → <b>{e.answer.after.value ?? "–"}</b> ({pct(e.answer.after.score)}, {e.answer.after.status})
-                    </span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {e.evidence.map((ev, i) => (
-                      <span key={i} title={ev.label} className={`rounded-full px-2 py-0.5 text-[11px] ${ev.points >= 0 ? "bg-[#eef7f1] text-[#0f8a4f]" : "bg-[#fdecea] text-[#c0392b]"}`}>
-                        {ev.tag} {ev.points > 0 ? "+" : ""}
-                        {ev.points}
-                      </span>
-                    ))}
-                    {e.caps.map((c) => (
-                      <span key={c} className="rounded-full bg-[#fff4e0] px-2 py-0.5 text-[11px] text-[#9a6400]">
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                  {e.kind === "learned" && e.channel === "meeting" && !confirmed.has(e.claimId) && (
-                    <div className="mt-2 flex items-center gap-2 text-xs">
+                {/* Something waits for one click: the only time this page asks a person for anything. */}
+                {pendingHere.map((e) => (
+                  <div key={e.id} className="mt-5 rounded-2xl bg-[#fff6e6] p-4 sm:p-5">
+                    <p className="text-[15px] leading-relaxed text-neutral-800">
+                      <span className="font-medium">{name(e.speaker)}</span> said <span className="font-medium">{e.value}</span> in {CHANNEL[e.channel] ?? e.channel}{" "}
+                      {ago(e.at, now)}. Until {e.speaker ? name(e.speaker).split(" ")[0] : "the speaker"} or an expert confirms it, it counts for at most{" "}
+                      {pct(capOf(e.caps))}, so the answer stays {best.claim.value}.
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       {canConfirm(e) ? (
                         <>
-                          <button onClick={() => vote(e, "correct")} className="rounded-full bg-[#161616] px-3 py-1 text-white">
+                          <button
+                            onClick={() => vote(e, "correct")}
+                            disabled={voting}
+                            className="rounded-full bg-[#161616] px-4 py-2 text-sm font-medium text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-40"
+                          >
                             ✓ Still right
                           </button>
-                          <button onClick={() => vote(e, "wrong")} className="rounded-full bg-neutral-100 px-3 py-1">
+                          <button
+                            onClick={() => vote(e, "wrong")}
+                            disabled={voting}
+                            className="rounded-full bg-white px-4 py-2 text-sm ring-1 ring-neutral-300 hover:ring-neutral-500 disabled:opacity-40"
+                          >
                             ✗ Wrong
                           </button>
+                          <span className="text-sm text-neutral-600">{me?.id === e.speaker ? "You said this." : "You are an expert on this topic."}</span>
                         </>
                       ) : (
-                        <span className="text-neutral-500">Waiting for {name(e.speaker)} or an expert to confirm with one click.</span>
+                        <p className="text-sm font-medium text-[#9a6400]">Waiting for {name(e.speaker)}. One click from them settles it.</p>
                       )}
                     </div>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
+                  </div>
+                ))}
+                {pendingHere.length === 0 && current.status === "conflict" && (
+                  <p className="mt-5 rounded-2xl bg-[#fff6e6] p-4 text-[15px] text-neutral-800">Sources disagree on this. Check with the person below before you answer.</p>
+                )}
+
+                {/* What just changed: the score moving, in one line */}
+                {latestHere && (
+                  <div className="mt-6 border-t border-neutral-100 pt-5">
+                    <p className="text-[15px] text-neutral-700">
+                      What changed {ago(latestHere.at, now)}:{" "}
+                      {latestHere.kind === "learned"
+                        ? `the brain learned ${latestHere.value} from ${CHANNEL[latestHere.channel] ?? latestHere.channel}.`
+                        : latestHere.kind === "confirmed"
+                          ? `${name(latestHere.actor)} confirmed ${latestHere.value}.`
+                          : `${name(latestHere.actor)} marked ${latestHere.value} ${latestHere.kind === "rejected" ? "wrong" : "outdated"}.`}
+                    </p>
+                    <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2">
+                      <span className="col-span-2 text-sm text-neutral-600">
+                        {latestHere.speaker ? `${possessive(name(latestHere.speaker))} claim` : "The claim"}, {latestHere.value}
+                      </span>
+                      <Meter key={latestHere.id} from={latestHere.claimScore.before} to={latestHere.claimScore.after} animate={fresh.has(latestHere.id)} cap={capOf(latestHere.caps)} tall />
+                      <span className="flex items-center gap-3">
+                        <span className="text-base tabular-nums text-neutral-500">{latestHere.claimScore.before == null ? "new" : pct(latestHere.claimScore.before)} →</span>
+                        <span className="min-w-[3ch] text-right font-serif text-4xl tabular-nums leading-none" style={{ color: color(latestHere.claimScore.after) }}>
+                          <CountUp key={latestHere.id} from={latestHere.claimScore.before ?? 0} to={latestHere.claimScore.after} animate={fresh.has(latestHere.id)} />
+                        </span>
+                        <Delta key={latestHere.id} from={latestHere.claimScore.before} to={latestHere.claimScore.after} animate={fresh.has(latestHere.id)} big />
+                      </span>
+                    </div>
+                    {latestHere.answer.before.value !== latestHere.answer.after.value && (
+                      <p className="mt-3 text-[15px] text-neutral-700">
+                        The answer changed from <span className="line-through decoration-neutral-400">{latestHere.answer.before.value ?? "nothing"}</span> to{" "}
+                        <span className="font-semibold" style={{ color: tone(latestHere.answer.after) }}>
+                          {latestHere.answer.after.value}
+                        </span>
+                        .
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {steps.length > 1 && <History points={steps} label={`How this answer changed, oldest to newest. Dashed line: 75%, the bar for trusted.`} />}
+              </>
+            ) : (
+              <p className="mt-4 text-[15px] text-neutral-500">Nothing in the brain applies to this case yet. Feed it a meeting, a message or an email.</p>
+            )}
+          </section>
+
+          {/* Who to contact */}
+          {best && answer?.contacts && (
+            <section className="rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6">
+              <h2 className="font-serif text-3xl">Who to contact</h2>
+              <p className="mt-1 text-sm text-neutral-500">Ranked on who was right before on this topic, how recently they dealt with it, and whether it was about this country.</p>
+              <Contacts ranked={answer.contacts.ranked} setAside={answer.contacts.setAside} me={me} />
+            </section>
+          )}
+
+          {/* The ledger */}
+          <section className="rounded-3xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6">
+            <h2 className="font-serif text-3xl">Why the score moved</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              Every change on this topic, newest first. Each chip is one rule and the points it added or took away.
+            </p>
+            {entries.length === 0 ? (
+              <p className="mt-4 text-[15px] text-neutral-500">No changes yet. Feed something to the brain.</p>
+            ) : (
+              <ol className="mt-4 space-y-3">
+                {entries.map((e, i) => (
+                  <LedgerRow key={e.id} e={e} name={name} scopeLabel={scopeLabel} latest={i === 0} fresh={fresh.has(e.id)} pending={isPending(e)} now={now} />
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
       </div>
     </main>
-  );
-}
-
-function Bar({ from, to }: { from: number | null; to: number }) {
-  return (
-    <span className="relative h-1.5 w-32 overflow-hidden rounded-full bg-neutral-100">
-      {from != null && <span className="absolute inset-y-0 left-0 bg-neutral-300" style={{ width: `${from * 100}%` }} />}
-      <span className="absolute inset-y-0 left-0 transition-all duration-700" style={{ width: `${to * 100}%`, background: color(to), opacity: 0.85 }} />
-    </span>
   );
 }

@@ -1,0 +1,31 @@
+/* The one orchestrated moment on this page: when a score moves, the bar grows from its old value,
+   the number counts up with it, then the delta lands. Everything else stays still. */
+
+.grow {
+  animation: grow 1200ms cubic-bezier(0.2, 0.8, 0.2, 1) 250ms both;
+}
+@keyframes grow {
+  from { width: var(--from); }
+  to { width: var(--to); }
+}
+
+.land {
+  animation: land 450ms cubic-bezier(0.2, 0.8, 0.2, 1) 1350ms both;
+}
+@keyframes land {
+  from { opacity: 0; transform: translateY(6px) scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A new ledger entry glows once in the colour of its change, then settles. */
+.arrive {
+  animation: arrive 3200ms ease-out both;
+}
+@keyframes arrive {
+  0%, 30% { box-shadow: 0 0 0 2px var(--flash); background-color: var(--flash-bg); }
+  100% { box-shadow: 0 0 0 2px transparent; background-color: var(--rest-bg, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grow, .land, .arrive { animation: none; }
+}

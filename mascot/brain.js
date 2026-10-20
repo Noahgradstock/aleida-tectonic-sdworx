@@ -80,6 +80,38 @@ function parse(v) {
 
 const sameValue = (a, b) => a.unit === b.unit && Math.abs(a.n - b.n) < 1e-9;
 
+// The evidence behind an answer, in plain words, for "how did you get this?".
+function explainDetail(r) {
+  const best = r.best;
+  const name = (id) => (id && r.people[id] ? r.people[id].name : null);
+  const same = r.claims.filter((c) => c !== best && c.claim.value === best.claim.value && c.claim.author);
+  const other = r.claims.filter((c) => c.claim.value !== best.claim.value);
+  const reasonFor = (c) => {
+    const tags = c.evidence.map((e) => e.tag);
+    const why = [];
+    if (tags.includes("Old rule")) why.push("written before the current rule");
+    if (tags.includes("Contradicts law")) why.push("contradicts the official source");
+    if (tags.includes("Corrected")) why.push("corrected by an expert");
+    if (tags.includes("No owner")) why.push("its author has left");
+    return why.length ? why.join(", ") : "less trusted";
+  };
+  return {
+    sourceType: best.claim.source.type,
+    official: best.claim.source.type === "official",
+    date: best.claim.date,
+    effectiveFrom: best.claim.effectiveFrom || null,
+    evidence: best.evidence.map((e) => e.label),
+    supporters: [...new Set(same.map((c) => name(c.claim.author)).filter(Boolean))],
+    setAside: other.slice(0, 3).map((c) => ({
+      value: c.claim.value,
+      source: c.claim.source.title,
+      by: name(c.claim.author),
+      score: Math.round(c.score * 100),
+      why: reasonFor(c),
+    })),
+  };
+}
+
 // ---------- Public API ----------
 
 const answerCache = new Map();
@@ -104,6 +136,8 @@ async function ask(question) {
         score: best ? Math.round(best.score * 100) : null,
         source: best ? best.claim.source.title : null,
         expert: r.expert ? r.expert.name : null,
+        expertTeam: r.expert ? r.expert.team : null,
+        detail: best ? explainDetail(r) : null,
       };
   if (answerCache.size > 200) answerCache.clear();
   answerCache.set(key, out);
@@ -137,4 +171,4 @@ async function warmUp() {
   }
 }
 
-module.exports = { ask, check, warmUp };
+module.exports = { ask, check, warmUp, findFactByText: (t) => findFact(t) };

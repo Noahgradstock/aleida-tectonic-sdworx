@@ -2,7 +2,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const KEYS = ["BRAIN_URL", "ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"];
+const KEYS = ["BRAIN_URL", "ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY"];
 
 function load() {
   const out = {};

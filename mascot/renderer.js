@@ -6,14 +6,17 @@ const audio = $("audio");
 let pendingFix = null;
 let online = false;
 let mood = "calm";
+let context = "email";
 
 const STATUS_TEXT = { trusted: "Trusted", conflict: "Sources disagree", stale: "Needs a check", orphan: "No expert backing" };
-const WHERE = { email: "in your email", meeting: "just now", Mail: "in your email" };
+const WHERE = { email: "in your email", meeting: "in the meeting", Mail: "in your email" };
+const CONTEXT_TEXT = { email: "Email", meeting: "Meeting" };
 
 function setMood(next) {
   mood = next;
   const base = !online && next === "calm" ? "offline" : next;
   stage.className = `stage ${base}${next === "warning" ? " warning-mode" : ""}`;
+  stage.dataset.ctx = context;
 }
 
 function pill(text, ms = 2500) {
@@ -44,7 +47,16 @@ for (const el of document.querySelectorAll(".hit")) {
 // Drag the blob to move the window; a click without movement opens the card.
 const blob = $("mascot");
 let drag = null;
-blob.addEventListener("mousedown", (e) => (drag = { x: e.screenX, y: e.screenY, moved: 0 }));
+let pressTimer = null;
+blob.addEventListener("mousedown", (e) => {
+  drag = { x: e.screenX, y: e.screenY, moved: 0, ptt: false };
+  pressTimer = setTimeout(() => {
+    if (drag && drag.moved < 4) {
+      drag.ptt = true;
+      window.mascot.pushToTalk();
+    }
+  }, 450);
+});
 window.addEventListener("mousemove", (e) => {
   if (!drag) return;
   const dx = e.screenX - drag.x;
@@ -55,7 +67,8 @@ window.addEventListener("mousemove", (e) => {
   window.mascot.move(dx, dy);
 });
 window.addEventListener("mouseup", () => {
-  if (drag && drag.moved < 4) toggleCard();
+  clearTimeout(pressTimer);
+  if (drag && drag.moved < 4 && !drag.ptt) toggleCard();
   drag = null;
 });
 
@@ -69,30 +82,45 @@ function toggleCard() {
 
 $("close").addEventListener("click", closeCard);
 $("online").addEventListener("change", (e) => window.mascot.setOnline(e.target.checked));
+$("talk").addEventListener("click", () => window.mascot.pushToTalk());
+for (const b of document.querySelectorAll("#seg button")) {
+  b.addEventListener("click", () => window.mascot.setContext(b.dataset.mode));
+}
+
+function statusLine() {
+  $("status-text").textContent = online ? `Online · ${CONTEXT_TEXT[context]}` : "Offline";
+}
+
+window.mascot.onContext(({ context: c, mode }) => {
+  const changed = c !== context;
+  context = c;
+  stage.dataset.ctx = c;
+  for (const b of document.querySelectorAll("#seg button")) b.classList.toggle("on", b.dataset.mode === mode);
+  statusLine();
+  if (changed && online) pill(c === "meeting" ? "Meeting · listening for mistakes" : "Email · checking what you write", 2500);
+});
 
 window.mascot.onOnline((on) => {
   online = on;
   $("online").checked = on;
-  $("status-text").textContent = on ? "Online" : "Offline";
-  pill(on ? "Online · say “Hey SD Worx”" : "Offline");
+  statusLine();
+  pill(on ? "Online · long-press me to ask" : "Offline");
   setMood("calm");
 });
 
 function renderAnswer(r) {
-  if (r.chat) {
-    $("note").textContent = r.chat;
+  const a = r.answer;
+  if (!a || !a.matched || !a.value) {
+    $("note").textContent = r.text || "I don't know that one yet.";
     return show("note");
   }
-  if (r.error || !r.matched) {
-    $("note").textContent = typeof r.error === "string" ? r.error : r.message || "I don't know that one yet.";
-    return show("note");
-  }
-  $("a-label").textContent = r.label;
-  $("a-value").textContent = r.value ?? "No answer for this case";
-  $("a-chip").textContent = `${STATUS_TEXT[r.status] ?? r.status}${r.score != null ? ` · ${r.score}%` : ""}`;
-  $("a-chip").className = `chip ${r.status}`;
-  $("a-source").textContent = r.source ?? "";
-  $("a-expert").textContent = r.expert ? `Expert to ask: ${r.expert}` : "";
+  $("a-reply").textContent = r.text || "";
+  $("a-label").textContent = a.label;
+  $("a-value").textContent = a.value;
+  $("a-chip").textContent = `${STATUS_TEXT[a.status] ?? a.status}${a.score != null ? ` · ${a.score}%` : ""}`;
+  $("a-chip").className = `chip ${a.status}`;
+  $("a-source").textContent = a.source ?? "";
+  $("a-expert").textContent = a.expert ? `Expert to ask: ${a.expert}` : "";
   show("answer");
 }
 
@@ -103,6 +131,7 @@ $("ask-form").addEventListener("submit", async (e) => {
   setMood("thinking");
   const r = await window.mascot.ask(question);
   setMood("calm");
+  $("question").value = "";
   renderAnswer(r);
 });
 
@@ -122,7 +151,9 @@ window.mascot.onCheck((r) => {
   }
   const spoken = r.where === "meeting";
   pendingFix = r.where === "meeting" ? null : { from: r.said, to: r.value, native: r.where !== "email" };
-  $("w-text").textContent = `You ${spoken ? "said" : "wrote"} ${r.said} for "${r.label.toLowerCase()}" ${WHERE[r.where] ?? `in ${r.where}`}. The trusted value is ${r.value}.`;
+  $("w-text").textContent = spoken
+    ? `That last thing you said was off: ${r.said} for "${r.label.toLowerCase()}". The trusted value is ${r.value}.`
+    : `You wrote ${r.said} for "${r.label.toLowerCase()}" ${WHERE[r.where] ?? `in ${r.where}`}. The trusted value is ${r.value}.`;
   $("w-chip").textContent = `Trusted · ${r.score}%`;
   $("w-source").textContent = r.source;
   $("fix").hidden = !pendingFix;
@@ -134,9 +165,9 @@ window.mascot.onHeard(({ error }) => {
   if (error) pill(error, 4000);
 });
 
-window.mascot.onWake(() => {
-  setMood("wake");
-  pill("Yes? I'm listening…", 6000);
+window.mascot.onWake((d) => {
+  setMood(d && d.ptt ? "ptt" : "wake");
+  pill("Yes? Ask your question…", 9000);
 });
 
 window.mascot.onAnswer((r) => {

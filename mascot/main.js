@@ -4,7 +4,7 @@ const path = require("node:path");
 const brain = require("./brain");
 const voice = require("./voice");
 const { createWatcher } = require("./watcher");
-const { smallTalk } = require("./smalltalk");
+const conversation = require("./conversation");
 
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -63,6 +63,29 @@ function openCompose() {
 
 // ---------- Setting 1: email (demo window, plus opt-in reading of the app in front) ----------
 
+// ---------- Settings: which app you are in decides what the mascot does ----------
+const MEETING_APPS = ["Microsoft Teams", "Microsoft Teams (work or school)", "Teams", "zoom.us", "FaceTime", "Webex", "Slack"];
+const MEETING_LINGER_MS = 2 * 60 * 1000;
+let contextMode = "auto"; // auto | email | meeting
+let activeContext = "email";
+let frontApp = "";
+let lastMeetingSeen = 0;
+let pttUntil = 0;
+
+function updateContext() {
+  if (MEETING_APPS.includes(frontApp)) lastMeetingSeen = Date.now();
+  const next =
+    contextMode !== "auto" ? contextMode : Date.now() - lastMeetingSeen < MEETING_LINGER_MS ? "meeting" : "email";
+  if (next !== activeContext) {
+    activeContext = next;
+    log("context:", next, `(${frontApp})`);
+  }
+  const wantMic = online && (activeContext === "meeting" || Date.now() < pttUntil);
+  if (wantMic) startMeeting();
+  else if (listener) stopMeeting();
+  send("mascot:context", { context: activeContext, mode: contextMode, app: frontApp });
+}
+
 // The current warning stays until the same place (Mail, the meeting, the demo email) says it is fixed.
 let issue = null;
 
@@ -81,10 +104,14 @@ async function checkWriting(text, where) {
   } catch {
     result = { ok: true };
   }
+  log("check", where, result.ok ? "ok" : `WRONG ${result.said} (trusted ${result.value})`, "| issue:", issue ? `${issue.where} ${issue.said}` : "none");
   if (!result.ok) {
     const same = issue && issue.where === where && issue.said === result.said && issue.key === result.key;
     issue = { ...result, where };
-    if (!same) send("mascot:check", issue);
+    if (!same) {
+      send("mascot:check", issue);
+      conversation.rememberWarning(issue);
+    }
     return;
   }
   if (issue && issue.where !== where) return; // something else is still wrong
@@ -104,6 +131,10 @@ const watcher = createWatcher(
   (() => {
     let lastLine = "";
     return (r) => {
+      if (r.app && !["Electron", "Company brain"].includes(r.app) && r.app !== frontApp) {
+        frontApp = r.app;
+        updateContext();
+      }
       const line = r.error ? `error: ${r.error}` : `${r.app} role=${r.role || "-"} chars=${(r.text || "").length}`;
       if (line !== lastLine) log("watch:", line);
       lastLine = line;
@@ -141,25 +172,16 @@ async function say(text) {
 
 async function answerAloud(question) {
   log("question:", question);
-  const chat = smallTalk(question);
-  if (chat) {
-    send("mascot:answer", { question, chat });
-    return say(chat);
-  }
   send("mascot:thinking");
   let r;
   try {
-    r = await brain.ask(question);
+    r = await conversation.converse(question);
   } catch {
-    r = { error: true };
+    r = { text: "Sorry, I can't reach the brain right now." };
   }
-  const spoken = r.error
-    ? "Sorry, I can't reach the brain right now."
-    : !r.matched || !r.value
-      ? "I don't have a trusted answer for that yet. I'll flag it for an expert."
-      : `${r.label}: ${r.value.replace(/€\s?([\d.,]+)/, "$1 euros")}. ${r.score} percent trusted, from ${r.source}.${r.expert ? ` ${r.expert} is the expert.` : ""}`;
-  send("mascot:answer", { question, ...r });
-  await say(spoken);
+  log("reply:", r.text);
+  send("mascot:answer", r);
+  await say(conversation.speakable(r.text));
 }
 
 async function onSegment(buffer, mime) {
@@ -174,6 +196,16 @@ async function onSegment(buffer, mime) {
   }
   if (!text) return;
   send("mascot:heard", { text });
+
+  // Push-to-talk: the next thing you say is a question.
+  if (Date.now() < pttUntil) {
+    pttUntil = 0;
+    waitingForQuestion = false;
+    const wakeInPtt = text.match(WAKE);
+    await answerAloud(wakeInPtt && wakeInPtt[1].trim().length > 3 ? wakeInPtt[1].trim() : text);
+    return updateContext();
+  }
+  if (activeContext !== "meeting") return;
 
   const wake = text.match(WAKE);
   if (wake) {
@@ -213,27 +245,41 @@ let online = false;
 function setOnline(on) {
   online = on;
   log("online:", on);
-  if (on) {
-    startMeeting();
-    watcher.start();
-  } else {
-    stopMeeting();
+  if (on) watcher.start();
+  else {
     watcher.stop();
+    pttUntil = 0;
   }
   send("mascot:online", on);
+  updateContext();
 }
+function pushToTalk() {
+  if (!online) setOnline(true);
+  pttUntil = Date.now() + 10000;
+  updateContext();
+  send("mascot:wake", { ptt: true });
+  log("push-to-talk");
+}
+
+ipcMain.on("mascot:ptt", (event) => fromMascot(event) && pushToTalk());
+
+ipcMain.on("mascot:set-context", (event, mode) => {
+  if (!fromMascot(event) || !["auto", "email", "meeting"].includes(mode)) return;
+  contextMode = mode;
+  if (mode === "meeting") lastMeetingSeen = 0;
+  updateContext();
+});
+
 ipcMain.on("mascot:set-online", (event, on) => {
   if (fromMascot(event) && typeof on === "boolean") setOnline(on);
 });
 
 ipcMain.handle("brain:ask", async (event, question) => {
   if (!fromMascot(event) || !isText(question, 500)) return { error: "Ask a short question." };
-  const chat = smallTalk(question);
-  if (chat) return { chat };
   try {
-    return await brain.ask(question);
+    return await conversation.converse(question);
   } catch {
-    return { error: "The brain is not reachable right now." };
+    return { text: "The brain is not reachable right now." };
   }
 });
 
@@ -275,6 +321,8 @@ app.whenReady().then(() => {
   globalShortcut.register("CommandOrControl+Shift+M", () => send("mascot:toggle-ask"));
   globalShortcut.register("CommandOrControl+Shift+E", openCompose);
   globalShortcut.register("CommandOrControl+Shift+L", () => setOnline(!online));
+  globalShortcut.register("CommandOrControl+Shift+Space", pushToTalk);
+  setInterval(() => online && updateContext(), 5000); // let the meeting setting expire
 });
 
 app.on("will-quit", () => {

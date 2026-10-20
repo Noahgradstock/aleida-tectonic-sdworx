@@ -21,6 +21,22 @@ npm start
 
 Clicks pass through the transparent area around the blob, so it never blocks the apps underneath.
 
+## Settings (Auto by default)
+
+The mascot picks its setting from the app in front, and shows it as a badge on the blob:
+
+| Setting | When | What it does | Speaks? |
+|---|---|---|---|
+| **Email** (blue envelope) | Mail, Outlook and other writing apps | Reads what you write and warns on wrong values. Microphone off | Never |
+| **Meeting** (purple camera) | Teams, Zoom, FaceTime, Webex, Slack in front (stays on 2 minutes after you switch away) | Listens; warns "that last thing you said was off"; answers "Hey SD Worx, …" | Only when asked |
+| **Ask** (push-to-talk) | Long-press the blob, the 🎙 button, or `Cmd+Shift+Space` | Listens for one question and answers out loud | Yes |
+
+The Auto · Email · Meeting switch in the card forces a setting (useful for demos).
+
+## Conversation
+
+The mascot remembers the topic of the last answer or warning, so follow-ups work: "what's the right answer?", "where does that come from?", "how did you get this?", "how sure are you?", "who should I ask?". Fixed patterns catch the usual phrasing; for anything else Claude Haiku only classifies the intent from a fixed list. Every answer is built by code from the trust engine's data (source, evidence, supporters, sources set aside), never written by the model.
+
 ## How the check works
 
 At start the mascot loads every trusted fact from the engine (`/api/trust/facts`, refreshed every 5 minutes), so checks run locally and instantly. Deterministic, no AI in the decision: a sentence that states a value (€, %, hours, weeks, months, days, times) is matched to a fact by its keywords; if the fact is trusted and the stated value has the same unit but a different number, the mascot warns. In Apple Mail it reads the open compose window (macOS asks once for Automation permission); in other apps it reads the focused text field (Accessibility). "Fix it" in Mail copies the trusted value to the clipboard. See `DEMO.md` for sentences to try.

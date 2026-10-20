@@ -110,3 +110,22 @@ button { font: inherit; cursor: pointer; }
 .warning .status-dot { background: #E24B4A; }
 .pill { margin-right: 22px; }
 @keyframes float { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-5px); opacity: .5; } }
+
+/* Setting switch and talk button */
+.seg { display: flex; gap: 2px; padding: 2px; margin-bottom: 10px; border-radius: 10px; background: #eef1f5; }
+.seg button { flex: 1; border: 0; background: none; padding: 5px 0; border-radius: 8px; font-size: 11.5px; font-weight: 600; color: #5f6b7a; }
+.seg button.on { background: #fff; color: #1f2a3a; box-shadow: 0 1px 3px rgba(20, 32, 58, .12); }
+.ask .talk { width: 36px; border: 0; border-radius: 12px; background: #1d2b4a; color: #fff; font-size: 15px; }
+.ptt .talk { background: #E24B4A; }
+.ptt .body { fill: #5AA6E8; }
+.ptt .bob { animation: bob 1s ease-in-out infinite; }
+
+.reply { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: #1f2a3a; }
+.reply:empty { display: none; }
+
+/* Setting badge on the blob: envelope in email mode, video in meeting mode */
+.ctx { position: absolute; bottom: 10px; left: 22px; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(20, 32, 58, .25); opacity: 0; transform: scale(.5); transition: opacity .25s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.ctx svg { width: 20px; height: 20px; }
+.ctx-email { background: #1E7CE0; }
+.ctx-meeting { background: #5B5FC7; }
+.stage[data-ctx="email"]:not(.offline) .ctx-email, .stage[data-ctx="meeting"]:not(.offline) .ctx-meeting { opacity: 1; transform: scale(1); }

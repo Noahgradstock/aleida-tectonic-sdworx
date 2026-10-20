@@ -61,6 +61,7 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
   const [sel, setSel] = useState<Sel>(null);
   const [openDoc, setOpenDoc] = useState<Doc | null>(null);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<TopicStatus["status"] | null>(null); // click a status to light up those topics
   const [layout, setLayout] = useState<N[]>([]); // a copy of node positions per tick, so render never reads the ref
   const [view, setView] = useState({ x: 0, y: 0, k: 1 });
   const sim = useRef<Simulation<N, E> | null>(null);
@@ -231,6 +232,15 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
     } else if (!d.moved) setSel(null);
   };
 
+  // With a status filter on, everything that is not about those topics steps back.
+  const lit = useMemo(() => {
+    if (!filter || !graph) return null;
+    const topics = new Set(graph.nodes.filter((n) => n.kind === "concept" && graph.topics[keyOf(n.id)]?.status === filter).map((n) => n.id));
+    const set = new Set(topics);
+    for (const e of graph.edges) if (e.kind === "knows" && topics.has(e.target)) set.add(e.source);
+    return set;
+  }, [filter, graph]);
+  const filtered = (n: GraphNode) => !!lit && !neighbours && !lit.has(n.id);
   const byId = new Map(layout.map((n) => [n.id, n]));
   const pos = (x: string | N) => byId.get(idOf(x));
   const dim = (id: string) => (neighbours ? !neighbours.has(id) : false);
@@ -245,15 +255,14 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
   const totals = graph ? Object.values(graph.topics).reduce<Record<string, number>>((m, t) => ((m[t.status] = (m[t.status] ?? 0) + 1), m), {}) : {};
 
   return (
-    <main className="mx-auto max-w-[1400px] px-4 pb-16 pt-20">
-      <header className="mb-4 flex flex-wrap items-end justify-between gap-4">
+    <main className="mx-auto max-w-[1400px] px-4 pb-16 pt-20 lg:pt-12">
+      <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-widest text-neutral-500">The brain{graph ? ` · scored for ${graph.reference}` : ""}</p>
-          <h1 className="mt-1 font-serif text-4xl tracking-tight">What we know, and who knows it</h1>
-          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
-            Every topic is coloured by how far you can trust it today. People sit next to what they have been right about. It is built only from
-            work people already did, and it updates live. All people and data are fictional.
-          </p>
+          <h1 className="font-serif text-4xl leading-tight tracking-tight sm:text-5xl">Who knows what</h1>
+          <p className="mt-1 text-[15px] text-neutral-600">Every topic, how far you can trust it, and who to ask. Click anything to see why.</p>
+          {graph && (
+            <span className="mt-2 inline-block rounded-full bg-white px-3 py-1 text-xs text-neutral-600 ring-1 ring-neutral-200">Answers for {graph.reference}</span>
+          )}
         </div>
         <div className="relative w-full max-w-xs">
           <input
@@ -298,27 +307,32 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                 setLens(l);
                 setSel(null);
               }}
-              className={`rounded-full px-3 py-1 ${lens === l ? "bg-[#161616] text-white" : "text-neutral-600"}`}
+              className={`rounded-full px-3.5 py-1 ${lens === l ? "bg-[#161616] text-white" : "text-neutral-600"}`}
             >
-              {l === "people" ? "People: who knows what" : "Sources: what is written where"}
+              {l === "people" ? "People" : "Documents"}
             </button>
           ))}
         </div>
         <span className="mx-1 h-4 w-px bg-neutral-300" />
         {(["trusted", "conflict", "stale", "orphan"] as const).map((s) => (
-          <span key={s} className="flex items-center gap-1.5 text-neutral-600">
+          <button
+            key={s}
+            onClick={() => setFilter((f) => (f === s ? null : s))}
+            aria-pressed={filter === s}
+            title={filter === s ? "Show everything again" : `Light up the topics that are: ${STATUS[s].label.toLowerCase()}`}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 transition ${filter === s ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-300" : "text-neutral-600 hover:bg-white/70"}`}
+          >
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: STATUS[s].color }} />
             {STATUS[s].label} {totals[s] ? `(${totals[s]})` : ""}
-          </span>
+          </button>
         ))}
-        <span className="mx-1 h-4 w-px bg-neutral-300" />
-        {lens === "people" ? (
+        {lens === "sources" && (
           <>
-            <Legend color="#161616" label="Person" />
-            <Legend color="#9a6400" label="Client" square />
+            <span className="mx-1 h-4 w-px bg-neutral-300" />
+            {Object.entries(CHANNEL_LABEL).map(([k, v]) => (
+              <Legend key={k} color={CHANNEL_COLOR[k]} label={v} small />
+            ))}
           </>
-        ) : (
-          Object.entries(CHANNEL_LABEL).map(([k, v]) => <Legend key={k} color={CHANNEL_COLOR[k]} label={v} small />)
         )}
         <button onClick={() => setView({ x: 0, y: 0, k: 1 })} className="ml-auto rounded-full bg-white px-3 py-1 text-neutral-600 shadow-sm">
           Reset view
@@ -346,11 +360,14 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                   <circle cx={r.x} cy={r.y} r={r.r} fill="#f1efe9" opacity={0.55} />
                   <text
                     x={r.x}
-                    y={r.y - r.r + 16}
+                    y={r.y - r.r + 4}
                     textAnchor="middle"
-                    fontSize={13 / Math.sqrt(view.k)}
+                    fontSize={16 / Math.sqrt(view.k)}
                     fontWeight={600}
-                    fill="#737373"
+                    fill="#525252"
+                    paintOrder="stroke"
+                    stroke="#fbfaf7"
+                    strokeWidth={4}
                     className="cursor-pointer"
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={() => zoomTo(r.x, r.y, 1.8)}
@@ -369,6 +386,9 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                 const b = pos(e.target);
                 if (a?.x == null || b?.x == null) return null;
                 const on = !!neighbours && neighbours.has(e.source) && neighbours.has(e.target) && (e.source === focus || e.target === focus);
+                // Calm by default: "works with" lines only around what you focus on; the rest stays faint.
+                if (!on && e.kind === "works-with") return null;
+                if (neighbours && !on) return null;
                 return (
                   <line
                     key={i}
@@ -379,7 +399,7 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                     stroke={on ? (e.kind === "knows" ? "#1463ff" : "#525252") : "#d4d4d4"}
                     strokeWidth={(e.kind === "knows" ? 0.6 + e.weight * 3 : e.kind === "works-with" ? 0.5 + e.weight : 0.8) / Math.sqrt(view.k)}
                     strokeDasharray={e.kind === "works-with" ? "3 4" : undefined}
-                    opacity={neighbours ? (on ? 0.95 : 0.1) : e.kind === "works-with" ? 0.3 : 0.55}
+                    opacity={on ? 0.95 : filter ? 0.08 : 0.22}
                   >
                     <title>{e.label}</title>
                   </line>
@@ -396,13 +416,13 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                   n.kind === "client" ||
                   picked ||
                   !!neighbours?.has(n.id) ||
-                  (n.kind === "concept" && (n.weight >= 5 || view.k > 1.4 || st?.status === "conflict")) ||
+                  (n.kind === "concept" && (view.k > 1.4 || (filter ? st?.status === filter : st?.status === "conflict" || st?.status === "orphan"))) ||
                   (n.kind === "document" && view.k > 1.8);
                 return (
                   <g
                     key={n.id}
                     transform={`translate(${n.x},${n.y})`}
-                    opacity={dim(n.id) ? 0.18 : 1}
+                    opacity={dim(n.id) || filtered(n) ? 0.15 : 1}
                     className="cursor-pointer transition-opacity duration-200"
                     onPointerDown={(e) => onDown(e, n.id)}
                     onPointerEnter={() => setHover(n.id)}
@@ -435,9 +455,9 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                     {n.kind === "document" && n.meta.live === true && <circle r={r + 4} fill="none" stroke="#0f8a4f" strokeWidth={1.2} />}
                     {showLabel && (
                       <text
-                        y={r + 12}
+                        y={r + 14}
                         textAnchor="middle"
-                        fontSize={(n.kind === "person" ? 12 : 10.5) / Math.sqrt(view.k)}
+                        fontSize={(n.kind === "person" ? 14 : 12) / Math.sqrt(view.k)}
                         fontWeight={n.kind === "person" ? 600 : 400}
                         fill={left ? "#a3a3a3" : n.kind === "concept" ? "#262626" : "#404040"}
                         paintOrder="stroke"
@@ -454,6 +474,7 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
               })}
             </g>
           </svg>
+          <p className="pointer-events-none -mt-8 px-4 pb-3 text-xs text-neutral-400">Click a person for their knowledge CV, a topic for the answer and who to ask. Scroll to zoom.</p>
         </div>
 
         <aside className="rounded-2xl bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] lg:max-h-[min(72vh,720px)] lg:overflow-y-auto">
@@ -544,54 +565,87 @@ function Panel({ graph, sel, lens, onSelect, docByFile, onOpenDoc }: PanelProps)
 }
 
 function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; onSelect: (id: string) => void }) {
-  // What needs a human: disputed and unbacked topics first. Everything else maintains itself.
+  const [allPeople, setAllPeople] = useState(false);
+  // What needs a human: disputed, unbacked, out of date, changing soon, or asked about. Everything else looks after itself.
   const attention = graph.nodes
     .filter((n) => n.kind === "concept")
-    .map((n) => ({ n, t: graph.topics[keyOf(n.id)] }))
-    .map((x) => ({ ...x, asked: graph.asked?.[keyOf(x.n.id)] ?? 0 }))
+    .map((n) => ({ n, t: graph.topics[keyOf(n.id)], asked: graph.asked?.[keyOf(n.id)] ?? 0 }))
     .filter((x) => x.t && (x.t.status === "conflict" || x.t.status === "orphan" || x.t.status === "stale" || x.asked > 0 || changesSoon(x.t, graph.today)))
     .sort((a, b) => b.asked - a.asked);
   const total = graph.nodes.filter((n) => n.kind === "concept").length;
   const people = Object.values(graph.cvs)
     .filter((c) => !c.left)
     .sort((a, b) => b.knownFor.length - a.knownFor.length || b.entries.length - a.entries.length);
+  const shown = allPeople ? people : people.slice(0, 5);
+  // The reason and what to do about it, in plain words.
+  const why = (t: TopicStatus, asked: number) =>
+    t.status === "conflict"
+      ? { reason: "Sources disagree", action: "See who to ask" }
+      : t.status === "orphan"
+        ? { reason: "Nobody backs it", action: "Find an expert" }
+        : t.status === "stale"
+          ? { reason: "Out of date", action: "Ask for a fresh check" }
+          : changesSoon(t, graph.today)
+            ? { reason: `Changes on ${t.forecast!.bestBefore!.date}`, action: "See the forecast" }
+            : { reason: `${asked} colleague${asked > 1 ? "s" : ""} asked`, action: "Answer it" };
+
   return (
     <div>
-      <h2 className="font-serif text-2xl">Brain health</h2>
+      <h2 className="font-serif text-2xl">Needs you</h2>
       <p className="mt-1 text-sm text-neutral-600">
-        <b>{total - attention.length}</b> of {total} topics maintain themselves. <b>{attention.length}</b> need a human.
+        <b>{attention.length}</b> topic{attention.length === 1 ? "" : "s"} need a human · <b>{total - attention.length}</b> look after themselves
       </p>
       {attention.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
-          {attention.map(({ n, t, asked }) => (
-            <li key={n.id}>
-              <button onClick={() => onSelect(n.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-sm hover:bg-neutral-50">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: STATUS[t.status].color }} />
-                <span className="flex-1">{n.label}</span>
-                <span className="text-xs text-neutral-500">
-                  {asked ? <span className="mr-1 rounded-full bg-[#eef3ff] px-1.5 py-0.5 text-[#1463ff]">{asked} asked</span> : null}
-                  {changesSoon(t, graph.today) && t.status === "trusted" ? `Changes ${t.forecast!.bestBefore!.date}` : STATUS[t.status].label}
-                </span>
-              </button>
-            </li>
-          ))}
+        <ul className="mt-3 space-y-2">
+          {attention.map(({ n, t, asked }) => {
+            const w = why(t, asked);
+            return (
+              <li key={n.id}>
+                <button onClick={() => onSelect(n.id)} className="group flex w-full items-center gap-3 rounded-xl bg-[#fbfaf7] px-3 py-2.5 text-left hover:bg-neutral-100">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: STATUS[t.status].color }} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{n.label}</span>
+                    <span className="block text-xs text-neutral-500">
+                      {w.reason}
+                      {asked && t.status !== "trusted" ? ` · ${asked} asked` : ""}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-[#1463ff] group-hover:underline">{w.action}</span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
       {lens === "people" && (
         <>
-          <h3 className="mt-5 text-sm font-medium">Knowledge CVs</h3>
-          <ul className="mt-2 space-y-2">
-            {people.map((cv) => (
+          <h3 className="mt-6 text-sm font-medium">People</h3>
+          <ul className="mt-2 divide-y divide-neutral-100">
+            {shown.map((cv) => (
               <li key={cv.id}>
-                <button onClick={() => onSelect(`person:${cv.id}`)} className="w-full rounded-xl bg-neutral-50 px-3 py-2 text-left hover:bg-neutral-100">
-                  <div className="text-sm font-medium">{cv.name}</div>
-                  <div className="text-xs text-neutral-500">
-                    {cv.team} · {cv.knownFor.length ? `known for ${cv.knownFor.slice(0, 2).join(", ").toLowerCase()}` : `${cv.entries.length} topics`}
-                  </div>
+                <button onClick={() => onSelect(`person:${cv.id}`)} className="flex w-full items-center gap-3 py-2 text-left hover:opacity-80">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#161616] text-[11px] font-semibold text-white">
+                    {cv.name
+                      .split(" ")
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join("")}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">{cv.name}</span>
+                    <span className="block truncate text-xs text-neutral-500">
+                      {cv.knownFor.length ? `Knows ${cv.knownFor.slice(0, 2).join(", ").toLowerCase()}` : `${cv.team} · ${cv.entries.length} topics`}
+                    </span>
+                  </span>
                 </button>
               </li>
             ))}
           </ul>
+          {people.length > 5 && (
+            <button onClick={() => setAllPeople((v) => !v)} className="mt-2 text-xs text-neutral-500 hover:text-neutral-900">
+              {allPeople ? "Show less" : `Show all ${people.length}`}
+            </button>
+          )}
         </>
       )}
       {lens === "sources" && <p className="mt-5 text-xs text-neutral-500">Click a document to open it with the exact quote highlighted.</p>}

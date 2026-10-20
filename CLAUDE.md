@@ -83,22 +83,34 @@ Fill this in as soon as the case is known and the work is split. Update it (pull
 - One submission per team through Builderbase. No changes after submission.
 - The GitHub repo must stay public until judging is complete.
 - The README must explain the project, how to run it and anything unfinished.
-- Check every link (repo, demo, video) in a private browser window.
+- Check every link (repo, live demo) in a private browser window.
 - Never upload passwords, API keys or confidential data. Synthetic data only, and say so in the README.
 - Do not copy code, prompts or data from the Aleida product into this repo. Bring ideas, not code.
 
-**Submission package:** short description, demo video under 3 minutes, public GitHub link, Aikido screenshots before and after the security fixes.
+**Submission on Builderbase (official checklist on the day; items can be updated until the 16:00 deadline):**
+
+| Item | Status | Notes |
+|---|---|---|
+| Short description | **Required** | A description of our solution. |
+| GitHub repository link | **Required** | https://github.com/Noahgradstock/aleida-tectonic-sdworx, must stay public so judges can read the code. |
+| Pitch slides | **Required** | Upload as **PPT or PDF**. |
+| Aikido screenshots | Optional | Before and after the security fixes. Optional to upload, but security is 10% of the score, so we do it. |
+
+No demo video is listed on the day's checklist. The pitch slides are what we must deliver.
 
 ---
 
-## 5. How we are judged
+## 5. How we are judged (official weights from Builderbase on the day)
 
-| Criterion | Weight | Question |
+| Criterion | Weight | What it means for us |
 |---|---|---|
-| Creativity | 30% | How original is the idea? |
-| Technical ability | 30% | Does it work? |
-| Fit | 30% | Did you solve the challenge? |
-| Security | 10% | How secure is it? (Aikido AI Code Audit) |
+| **Originality** | **25%** | An idea the other 15 SD Worx teams did not have. Avoid the generic "chat with docs plus trust score". |
+| **Pitch quality** | **25%** | A quarter of the score is the pitch itself: a clear story, one moment of doubt, a live demo that works, strong slides. Plan the pitch from the start, not at 15:30. |
+| **Technical ability** | **20%** | It works end to end: real model calls, real rules, mock mode as backup. |
+| **Applicability to the challenge** | **20%** | Use the case's own words and tie every feature to a sentence of the brief. |
+| **Security** | **10%** | Aikido AI Code Audit: few remaining issues means a high score. |
+
+Originality and pitch together are half the score. A narrow, original idea pitched clearly beats a broad one that is hard to explain.
 
 Aikido checks business logic flaws, IDOR, authentication weaknesses and authorization. Connect the repo at https://app.aikido.dev/ai-pentests/discounts/hackathon-tectonic-aikido, run a baseline by 14:00 at the latest, fix, rescan, screenshot both.
 
@@ -158,8 +170,9 @@ Most qualifier teams built "ask a question, get an answer plus a trust receipt".
 | 13:00 to 14:00 | Make the key moment look great. Deploy to Vercel. |
 | 14:00 | Aikido baseline scan, screenshot, fix. |
 | 14:30 to 15:00 | Polish, README, second Aikido scan and screenshot. |
-| **15:00** | **Feature freeze.** Record the demo video. |
-| 15:30 to 15:45 | Submit on Builderbase. Check every link. |
+| 13:00 onwards | One teammate starts the pitch slides (PPT or PDF) alongside the build. |
+| **15:00** | **Feature freeze.** Finish slides, rehearse the pitch with the live demo at least twice. |
+| 15:30 to 15:45 | Submit on Builderbase: description, GitHub link, slides, Aikido screenshots. Check every link. |
 
 If we are behind at 13:00, cut scope, not quality.
 
@@ -172,5 +185,5 @@ If we are behind at 13:00, cut scope, not quality.
 - Ask before big decisions (stack, scope, data model). Do not silently expand scope.
 - Simple, readable code. No abstractions we do not need today.
 - Never commit secrets. Check `git diff --staged` before every commit.
-- **Language:** chat with the team in whatever language they write in (often Swedish). **Everything that ends up in the repo or the product is in English**: UI text, the live site, code, comments, commit messages, README, docs, synthetic data, prompts, the demo video script and the pitch. Never write Swedish into a file. Plain wording, no hype.
+- **Language:** chat with the team in whatever language they write in (often Swedish). **Everything that ends up in the repo or the product is in English**: UI text, the live site, code, comments, commit messages, README, docs, synthetic data, prompts, the pitch slides and the pitch. Never write Swedish into a file. Plain wording, no hype.
 - Write unclear assumptions about the case into the README instead of guessing silently.

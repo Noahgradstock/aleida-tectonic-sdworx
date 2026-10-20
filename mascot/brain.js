@@ -213,8 +213,20 @@ async function ask(question) {
   return out;
 }
 
+// Speech often comes back with numbers in words: "twenty holiday days", "twenty-two days".
+const UNITS = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+const TENS = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+function wordsToDigits(text) {
+  const unit = `(${UNITS.join("|")})`;
+  return text
+    .replace(new RegExp(`\\b(${Object.keys(TENS).join("|")})[\\s-]+${unit}\\b`, "gi"), (_, t, u) => String(TENS[t.toLowerCase()] + UNITS.indexOf(u.toLowerCase())))
+    .replace(new RegExp(`\\b(${Object.keys(TENS).join("|")})\\b`, "gi"), (t) => String(TENS[t.toLowerCase()]))
+    .replace(new RegExp(`\\b${unit}(?=\\s+(?:holiday|vacation|weeks?|days?|months?|hours?|percent|euros?))`, "gi"), (u) => String(UNITS.indexOf(u.toLowerCase())));
+}
+
 // Every sentence that states a value that disagrees with a trusted fact. Local and deterministic.
-async function checkAll(text) {
+async function checkAll(rawText) {
+  const text = wordsToDigits(rawText);
   await loadClients();
   const client = clientIn(text);
   if (client) lastClient = client;

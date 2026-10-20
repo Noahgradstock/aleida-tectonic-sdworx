@@ -479,6 +479,11 @@ ipcMain.handle("mascot:accounts", (event) => {
 
 ipcMain.handle("mascot:switch", async (event, label) => {
   if (!fromMascot(event) || typeof label !== "string") return null;
+  return switchTo(label);
+});
+
+// Demo shortcuts, invisible on screen: Cmd+Shift+1/2/3 switch to the 1st/2nd/3rd person in DEMO_ACCOUNTS.
+async function switchTo(label) {
   const a = ACCOUNTS.find((x) => x.label === label);
   if (!a) return null;
   account = a;
@@ -492,8 +497,9 @@ ipcMain.handle("mascot:switch", async (event, label) => {
   log("switched to", a.label, me ? `(${me.name})` : "(sign-in failed)");
   pollQuestions();
   if (lastMailText) checkWriting(lastMailText, "Mail");
+  send("mascot:switched", a.label);
   return { label: a.label, name: me ? me.name : null };
-});
+}
 
 let lastQuestions = "";
 async function pollQuestions() {
@@ -559,6 +565,7 @@ app.whenReady().then(() => {
   globalShortcut.register("CommandOrControl+Shift+E", openCompose);
   globalShortcut.register("CommandOrControl+Shift+L", () => setOnline(!online));
   globalShortcut.register("CommandOrControl+Shift+Space", toggleTalk);
+  ACCOUNTS.slice(0, 3).forEach((a, i) => globalShortcut.register(`CommandOrControl+Shift+${i + 1}`, () => switchTo(a.label)));
   // Demo only (no Teams on this machine): force the meeting setting on and off. Normally it is always automatic.
   globalShortcut.register("CommandOrControl+Shift+T", () => {
     contextMode = contextMode === "meeting" ? "auto" : "meeting";

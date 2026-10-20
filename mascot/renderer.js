@@ -246,29 +246,11 @@ $("fix").addEventListener("click", () => {
 });
 $("ignore").addEventListener("click", closeCard);
 
-// ---------- Demo on one computer: switch person ----------
-async function loadPeople() {
-  const a = await window.mascot.accounts();
-  if (!a || !a.list.length) return;
-  $("who").hidden = false;
-  $("people").replaceChildren(
-    ...a.list.map((label) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = label;
-      b.classList.toggle("on", label === a.current);
-      b.addEventListener("click", async () => {
-        for (const x of $("people").children) x.classList.toggle("on", x === b);
-        setMood("thinking");
-        const r = await window.mascot.switchAccount(label);
-        setMood("calm");
-        pill(r && r.name ? `You are ${label} now` : "Could not sign in", 2500);
-      });
-      return b;
-    }),
-  );
-}
-loadPeople();
+// ---------- Demo on one computer: switch person (Cmd+Shift+1/2/3, nothing on screen) ----------
+window.mascot.onSwitched((label) => {
+  setMood("calm");
+  pill(`You are ${label}`, 1500);
+});
 
 // ---------- Approve what a colleague shared ----------
 let openQuestion = null;

@@ -59,14 +59,14 @@ We start in the middle of the story: Isak gets it wrong. Then we meet the knowle
 
 Record each shot with `Cmd+Shift+5` → *Record Selected Portion* around **the Mail window and the mascot** (readable on a projector), with the microphone on for shot 3 and 4. Edit in iMovie: cut, speed up typing at most 1.5× (we need time to talk), keep the mascot's voice, no titles, no music. Export 1080p. Hide the Dock and menu bar, turn on Do Not Disturb, and restart the local server before a full take (it resets everything learned).
 
-Setup: local server `npm run dev` (accounts in `.env.local`); mascot `.env`: `BRAIN_URL=http://localhost:3000` and `DEMO_ACCOUNTS=Ilke:jan:…;Isak:tom:…;Anna:anna:…`. Click the blob, switch **Online**; the card shows **You are: Ilke · Isak · Anna**. The mascot shows and says the stage names (Ilke, Isak, Anna), not the demo personas.
+Setup: local server `npm run dev` (accounts in `.env.local`); mascot `.env`: `BRAIN_URL=http://localhost:3000` and `DEMO_ACCOUNTS=Ilke:jan:…;Isak:tom:…;Anna:anna:…`. Click the blob, switch **Online**. Switch person with `Cmd+Shift+1` (Ilke), `2` (Isak), `3` (Anna): nothing shows on screen except a short pill, so switch before you start recording. The mascot shows and says the stage names (Ilke, Isak, Anna), not the demo personas.
 
 | Shot | Setup | Do |
 |---|---|---|
-| 1 | You are: **Isak** | New Mail to a colleague: *"Hi Sofie, quick check: the employer part of the meal voucher is €6.91 per day, right?"* → amber → say *"Hey SD Worx, fix it"* → hold 1 s on €8.91. (No client name in this email.) |
-| 2 | You are: **Ilke** | New Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → blue card → **Share for review** → hold 2 s on the pill |
-| 3 | You are: **Anna** | The card appears → hold 2 s → **Approve ✓** → hold 1 s |
-| 4 | You are: **Isak**, Teams in front (or `Cmd+Shift+T`) | Noah (client): *"How many holiday days do our people get this year?"* → Isak: *"For De Kroon, that is 20 holiday days this year."* → let it speak → Isak: *"Oh, actually, I was wrong. It's 22 holiday days."* → *"That's right."* |
+| 1 | `Cmd+Shift+2` (Isak) | New Mail to a colleague: *"Hi Sofie, quick check: the employer part of the meal voucher is €6.91 per day, right?"* → amber → say *"Hey SD Worx, fix it"* → hold 1 s on €8.91. (No client name in this email.) |
+| 2 | `Cmd+Shift+1` (Ilke) | New Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → blue card → **Share for review** → hold 2 s on the pill |
+| 3 | `Cmd+Shift+3` (Anna) | The card appears → hold 2 s → **Approve ✓** → hold 1 s |
+| 4 | `Cmd+Shift+2` (Isak), Teams in front (or `Cmd+Shift+T`) | Noah (client): *"How many holiday days do our people get this year?"* → Isak: *"For De Kroon, that is 20 holiday days this year."* → let it speak → Isak: *"Oh, actually, I was wrong. It's 22 holiday days."* → *"That's right."* |
 | 6 | Any | 5 s of the calm blob on a clean desktop |
 
 ## The two emails (tested: each triggers exactly one reaction)

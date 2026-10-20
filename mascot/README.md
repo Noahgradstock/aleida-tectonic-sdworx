@@ -47,7 +47,7 @@ At start the mascot loads every trusted fact from the engine (`/api/trust/facts`
 
 ## Demo on one computer
 
-Put `DEMO_ACCOUNTS=Ilke:jan:<password>;Isak:tom:<password>;Anna:anna:<password>` in the repo's `.env` (accounts from `node scripts/create-users.mjs jan tom anna`). The card then shows **You are: Ilke · Isak · Anna**; one click switches who the mascot is signed in as, with no restart. When the person you switch to has a question waiting ("Can you approve this?"), the card shows it with **Approve ✓ / Not right / Not my area**.
+Put `DEMO_ACCOUNTS=Ilke:jan:<password>;Isak:tom:<password>;Anna:anna:<password>` in the repo's `.env` (accounts from `node scripts/create-users.mjs jan tom anna`). Then `Cmd+Shift+1`, `2` and `3` switch who the mascot is signed in as (Ilke, Isak, Anna), with nothing on screen except a short pill, and no restart. When the person you switch to has a question waiting ("Can you approve this?"), the card shows it with **Approve ✓ / Not right / Not my area**.
 
 ## Voice
 

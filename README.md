@@ -12,6 +12,17 @@ Built by team Aleida.ai: Ilke Seynaeve, Isak Andersson, Noa Gradstock
 
 </div>
 
+## Try it in 2 minutes (no password)
+
+Open the [live demo](https://tavling-eight.vercel.app). You are signed in as **Sofie Maes**, a payroll consultant. All people, clients and documents are fictional.
+
+1. **Ask:** ask *"How many holiday days does a full-time employee get?"* and see the answer, how the score was built (six questions) and who to talk to.
+2. **Live loop:** this morning the mascot heard a meeting, an email and a Teams message, and an agreement came in. Open **Why** on any entry to see the six checks.
+3. **Switch to Jan** (bottom of the sidebar), the expert. Under **For you**, confirm his meeting line or approve the agreement, and watch *20 days* become *22 days* for Brouwerij De Kroon.
+4. **Brain:** who knows what, how far each topic can be trusted, and what is worth a look.
+
+**Reset the demo morning** in the sidebar puts everything back for the next person.
+
 ## The challenge
 
 > **Can your solution stay trusted without becoming another task?**

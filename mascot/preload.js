@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("mascot", {
   answerQuestion: (id, answer) => ipcRenderer.invoke("mascot:answer-question", String(id), String(answer)),
   onQuestions: on("mascot:questions"),
   onSwitched: on("mascot:switched"),
+  onShared: on("mascot:shared"),
   openBrain: (question, client) => ipcRenderer.send("mascot:open-brain", String(question || ""), client ? String(client) : ""),
   onFixed: on("mascot:fixed"),
   onSilence: on("mascot:silence"),

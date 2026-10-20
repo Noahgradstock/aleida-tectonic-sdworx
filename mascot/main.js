@@ -107,7 +107,8 @@ function updateContext() {
 // The current warning stays until the same place (Mail, the meeting, the demo email) says it is fixed.
 let issue = null;
 let lastMailText = "";
-let offerUntil = 0; // after "Want me to fix that?", a "yes" fixes the email
+let offerUntil = 0; // after "Want me to fix that?" / "Want me to share it?", a "yes" does it
+let offerKind = "fix"; // "fix" | "share"
 let lastSpoken = { key: "", at: 0 }; // speak about the same topic at most once per 30 s (typing "€6.9" then "€6.91" is one mistake)
 function speakOnce(key) {
   if (lastSpoken.key === key && Date.now() - lastSpoken.at < 30000) return false;
@@ -158,8 +159,12 @@ async function checkWriting(text, where) {
     send("mascot:check", stageObj(issue)); // the page ignores repeats of a warning it is already showing
     if (!same) {
       conversation.rememberWarning(issue);
-      if (result.kind !== "wrong") {
-        // Unknown knowledge: a quiet card, never spoken.
+      if (result.kind === "client-new" && (where === "Mail" || where === "email") && speakOnce(`share|${result.key}|${result.client}`)) {
+        offerKind = "share";
+        offerUntil = Date.now() + 60000;
+        say(`This isn't in the Company brain for ${result.client.replace(/\s+(NV|BV)$/, "")} yet. Do you want me to share it for review?`);
+      } else if (result.kind !== "wrong") {
+        // Other unknown knowledge: a quiet card, never spoken.
       } else if (where === "meeting" && !speakOnce(`meeting|${result.key}|${result.client || ""}`)) {
         // Already said it.
       } else if (where === "meeting" && result.client) {
@@ -180,6 +185,7 @@ async function checkWriting(text, where) {
             : `Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`,
         );
       } else if ((where === "Mail" || where === "email") && speakOnce(`${where}|${result.key}`)) {
+        offerKind = "fix";
         offerUntil = Date.now() + 60000;
         say(
           result.client
@@ -260,7 +266,8 @@ async function say(text, g = gen) {
 async function answerAloud(question, explicit = true) {
   const g = gen;
   log("question:", question, explicit ? "" : "(follow-up)");
-  if (FIX_COMMAND.test(question) || (Date.now() < offerUntil && YES.test(question))) return fixMail(true);
+  if (Date.now() < offerUntil && YES.test(question)) return offerKind === "share" ? shareByVoice() : fixMail(true);
+  if (FIX_COMMAND.test(question)) return fixMail(true);
   send("mascot:thinking");
   let r;
   try {
@@ -294,7 +301,7 @@ async function onSegment(buffer, mime) {
   send("mascot:heard", { text });
 
 
-  if (Date.now() < offerUntil && YES.test(text)) return fixMail(true);
+  if (Date.now() < offerUntil && YES.test(text)) return offerKind === "share" ? shareByVoice() : fixMail(true);
 
   const wake = text.match(WAKE);
   if (wake) {
@@ -420,6 +427,25 @@ ipcMain.on("mascot:copy", (event, text) => {
 });
 
 ipcMain.on("mascot:fix-mail", (event) => fromMascot(event) && fixMail(false));
+
+// "Yes" after "Do you want me to share it for review?": same as clicking Share for review.
+async function shareByVoice() {
+  offerUntil = 0;
+  if (!issue || !issue.sentence) return say("There's nothing to share right now.");
+  let r;
+  try {
+    r = await brain.share(issue.sentence, issue.client);
+  } catch {
+    r = { ok: false, reason: "The brain is not reachable right now." };
+  }
+  if (!r.ok && /not about a topic the brain knows/i.test(r.reason || "")) r = saveSuggestion(issue);
+  log("share (voice):", r.ok ? `${r.label || "suggestion"} → review by ${r.toName || "a colleague"}` : r.reason);
+  r = stageObj(r);
+  if (!r.ok) return say(r.reason || "I couldn't share it.");
+  issue = null;
+  send("mascot:shared", r);
+  say(r.suggestion ? "Saved as a suggestion for the knowledge team." : `Shared. ${r.toName || "A colleague"} will approve it.`);
+}
 
 // Suggestions for new topics, kept locally (one JSON file in the app's data folder) until the knowledge team adds the topic.
 function saveSuggestion(i) {

@@ -247,6 +247,11 @@ $("fix").addEventListener("click", () => {
 $("ignore").addEventListener("click", closeCard);
 
 // ---------- Demo on one computer: switch person (Cmd+Shift+1/2/3, nothing on screen) ----------
+window.mascot.onShared((r) => {
+  closeCard();
+  pill(r.suggestion ? "New topic · saved as a suggestion ✓" : `Shared for review · ${r.toName ? `${r.toName} will approve it` : "waiting for approval"} ✓`, 4500);
+});
+
 window.mascot.onSwitched((label) => {
   setMood("calm");
   pill(`You are ${label}`, 1500);

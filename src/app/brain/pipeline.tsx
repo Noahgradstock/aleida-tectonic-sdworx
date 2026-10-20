@@ -22,7 +22,7 @@ const SOURCES: { name: string; type: Channel | null; logo: ReactNode }[] = [
 ];
 
 // The short version for the top of a page: four steps in one airy row, each with one line and a live number,
-// joined by a line a dot travels along. The detailed cards open underneath on request.
+// joined by a line. The detailed cards open underneath on request.
 export function HowItWorks({ data }: { data: BrainData }) {
   const [open, setOpen] = useState(false);
   const statements = data.topics.reduce((n, t) => n + t.claims.length, 0);
@@ -36,10 +36,8 @@ export function HowItWorks({ data }: { data: BrainData }) {
     <section aria-label="How it works">
       <h2 className="mb-2 font-serif text-xl">How it works</h2>
       <div className="relative rounded-2xl bg-white px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-        {/* the line the steps sit on, with a dot moving from hearing to scoring */}
-        <div className="pointer-events-none absolute inset-x-[6%] top-[33px] hidden h-px bg-neutral-200 lg:block">
-          <span className="flow-dot absolute -top-[3px] h-[7px] w-[7px] rounded-full bg-[#1463ff] shadow-[0_0_8px_rgba(20,99,255,0.6)]" />
-        </div>
+        {/* the line the steps sit on */}
+        <div className="pointer-events-none absolute inset-x-[6%] top-[33px] hidden h-px bg-neutral-200 lg:block" />
         <ol className="relative grid grid-cols-2 gap-x-4 gap-y-4 lg:grid-cols-4">
           {steps.map((st, i) => (
             <li key={st.title} className="flex items-start gap-3">

@@ -77,8 +77,3 @@ body {
 .blob-bob { animation: blob-bob 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
 .blob-eyes { animation: blob-blink 5s infinite; transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) { .blob-bob, .blob-eyes { animation: none; } }
-
-/* How it works: a dot travelling along the line from "Hears" to "Scores". */
-@keyframes flow-dot { 0% { left: 0; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
-.flow-dot { animation: flow-dot 3.6s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .flow-dot { animation: none; left: 50%; } }

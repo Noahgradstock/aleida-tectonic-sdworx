@@ -4,6 +4,8 @@ You are helping team **Aleida.ai** (Noah `Noahgradstock`, Isak `kasikasikasi`, I
 
 This repository is **public** and the judges may read this file. Keep everything in it true and free of secrets.
 
+The final case (verbatim): @docs/final-case.md
+
 Background on SD Worx (company, products, AI in house, competitors, regulations, vocabulary): @docs/sd-worx-briefing.md
 
 ---

@@ -43,9 +43,9 @@ We start in the middle of the story: Isak gets it wrong. Then we meet the knowle
 
 ## 1:50 – 2:35 · How it works (Noah, one slide)
 
-*Slide: Everyday work → AI reads → code decides → people approve only when it matters. Four privacy lines.*
+*Slide: Everyday work → AI reads → code decides → people approve only when it matters. Four privacy lines. In the corner: a Wikipedia-style "[source needed]" and "View history".*
 
-> **NOAH:** AI only reads. Deterministic code decides, so every answer has a score, a source and the exact sentence behind it. Knowledge goes up only when you click, one sentence at a time, and it counts only after a colleague approves. Spoken knowledge waits at fifty percent. When the law changes, older answers lose trust on their own. The goal is not zero humans. It's zero unnecessary effort.
+> **NOAH:** Who here trusts Wikipedia? Not because of who wrote it, but because of three rules: every sentence needs a source, every change is visible, anyone can fix a mistake. Jef brings those rules to SD Worx. Said in a meeting? *Source needed*, and it waits at fifty percent until a document or a colleague backs it. Every answer has a *View history*. And AI only reads: deterministic code decides the score. Then two things Wikipedia can't do: check it against the law, and check that it fits *your* client. The goal is not zero humans. It's zero unnecessary effort.
 
 ## 2:35 – 3:00 · Close (everyone)
 

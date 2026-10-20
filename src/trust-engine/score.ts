@@ -21,8 +21,9 @@ const clamp = (n: number, max: number) => Math.max(-max, Math.min(max, n));
 const specificity: Record<Relevance, number> = { client: 2, sector: 1, country: 0 };
 const RELEVANCE_TAG: Record<Relevance, string> = { client: "Client-specific", sector: "Same sector", country: "Same country" };
 
-export const sameValue = (a: string, b: string) =>
-  a.toLowerCase().replace(/\s+/g, "").replace(",", ".") === b.toLowerCase().replace(/\s+/g, "").replace(",", ".");
+// "€1,600" and "€1600" are the same value; "8,91" and "8.91" too.
+const normValue = (v: string) => v.toLowerCase().replace(/\s+/g, "").replace(/(\d),(?=\d{3}\b)/g, "$1").replace(",", ".");
+export const sameValue = (a: string, b: string) => normValue(a) === normValue(b);
 
 // A meeting claim is hearsay until the speaker or an expert confirms it in writing:
 // until then it must not lend weight to anything else (agreement, expert backing).

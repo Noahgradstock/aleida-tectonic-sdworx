@@ -33,6 +33,7 @@ export type Claim = {
   reactions?: string[]; // person ids who gave a thumbs-up
   corrects?: string; // id of the claim this one replies to and corrects
   file?: string; // source file under data/, when the claim comes from real data
+  reportedBy?: string; // learned claims: who fed it in (can differ from the speaker in a meeting)
   hedged?: boolean; // the speaker sounded unsure ("I think", "not sure")
 };
 

@@ -105,13 +105,18 @@ function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Elect
           return;
         }
         reported = false;
-        if (!r.text || ignoreApps.includes(r.app) || r.text === last) return;
+        if (ignoreApps.includes(r.app)) return;
+        // In Mail only the message body counts (not To, Subject or the inbox); an empty body counts too.
+        if (r.app === "Mail" && r.role !== "AXWebArea") return;
+        if (!r.text && r.role !== "AXWebArea") return;
+        const key = `${r.app}|${r.text}`;
+        if (key === last) return;
         // Wait until the text is the same on two reads in a row, so half-typed numbers are not checked.
-        if (r.text !== pending) {
-          pending = r.text;
+        if (key !== pending) {
+          pending = key;
           return;
         }
-        last = r.text;
+        last = key;
         onText(r.app, r.text);
       }, 900);
     },

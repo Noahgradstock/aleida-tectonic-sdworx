@@ -167,6 +167,7 @@ const watcher = createWatcher(
   (appName, text) => {
     log("writing in", appName, `(${text.length} chars)`);
     if (appName === "Mail") lastMailText = text;
+    if (!text.trim()) return checkWriting("", appName);
     checkWriting(text, appName);
   },
   (error) => {

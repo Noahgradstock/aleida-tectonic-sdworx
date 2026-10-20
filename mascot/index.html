@@ -44,6 +44,18 @@
       <div class="thinking-dots"><span></span><span></span><span></span></div>
       <svg viewBox="0 0 160 160" aria-label="Company brain mascot">
         <defs>
+          <linearGradient id="crown" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2f4677" />
+            <stop offset="100%" stop-color="#131f3b" />
+          </linearGradient>
+          <radialGradient id="crownShine" cx="38%" cy="28%" r="55%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity=".22" />
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+          </radialGradient>
+          <linearGradient id="brim" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#26396a" />
+            <stop offset="100%" stop-color="#0f1a33" />
+          </linearGradient>
           <radialGradient id="shine" cx="35%" cy="30%" r="75%">
             <stop offset="0%" stop-color="#ffffff" stop-opacity=".55" />
             <stop offset="45%" stop-color="#ffffff" stop-opacity="0" />
@@ -54,23 +66,35 @@
           <path class="body" d="M80 40 C118 40 140 66 138 98 C136 128 112 144 80 144 C48 144 22 128 22 98 C20 66 42 40 80 40 Z" />
           <path d="M80 40 C118 40 140 66 138 98 C136 128 112 144 80 144 C48 144 22 128 22 98 C20 66 42 40 80 40 Z" fill="url(#shine)" />
           <g class="face">
-            <ellipse class="eye" cx="62" cy="94" rx="7" ry="10" />
-            <ellipse class="eye" cx="98" cy="94" rx="7" ry="10" />
-            <circle cx="64.5" cy="90" r="2.4" fill="#fff" />
-            <circle cx="100.5" cy="90" r="2.4" fill="#fff" />
-            <ellipse cx="48" cy="110" rx="7" ry="4" fill="#ff8a8a" opacity=".35" />
-            <ellipse cx="112" cy="110" rx="7" ry="4" fill="#ff8a8a" opacity=".35" />
-            <path class="mouth" d="M70 114 Q80 121 90 114" fill="none" stroke="#1f2a3a" stroke-width="3" stroke-linecap="round" />
+            <ellipse class="eye" cx="62" cy="101" rx="7" ry="10" />
+            <ellipse class="eye" cx="98" cy="101" rx="7" ry="10" />
+            <circle cx="64.5" cy="97" r="2.4" fill="#fff" />
+            <circle cx="100.5" cy="97" r="2.4" fill="#fff" />
+            <ellipse cx="48" cy="116" rx="7" ry="4" fill="#ff8a8a" opacity=".35" />
+            <ellipse cx="112" cy="116" rx="7" ry="4" fill="#ff8a8a" opacity=".35" />
+            <path class="mouth" d="M70 120 Q80 127 90 120" fill="none" stroke="#1f2a3a" stroke-width="3" stroke-linecap="round" />
           </g>
+          <ellipse cx="80" cy="87" rx="38" ry="5" fill="#0b1426" opacity=".25" />
           <g class="cap">
-            <path d="M34 66 C38 30 122 30 126 66 Z" fill="#1d2b4a" />
-            <path d="M34 66 C70 58 92 58 126 66 L132 72 C96 64 62 64 26 72 Z" fill="#14203a" />
-            <path d="M104 64 C124 62 146 66 150 74 C136 74 118 72 104 70 Z" fill="#14203a" />
-            <circle cx="80" cy="33" r="3.5" fill="#14203a" />
-            <g transform="translate(55 42)">
-              <rect x="0" y="0" width="3" height="12" rx="1.5" fill="#7ED957" transform="skewX(-20)" />
-              <rect x="5" y="0" width="3" height="12" rx="1.5" fill="#4FB3F6" transform="skewX(-20)" />
-              <text x="14" y="10.5" font-family="-apple-system, system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#ffffff" letter-spacing=".2">sdworx</text>
+            <path d="M28 66 C28 31 53 13 80 13 C107 13 132 31 132 66 C112 61 48 61 28 66 Z" fill="url(#crown)" />
+            <path d="M28 66 C28 31 53 13 80 13 C107 13 132 31 132 66 C112 61 48 61 28 66 Z" fill="url(#crownShine)" />
+            <path d="M80 15 C64 20 54 38 51 62" fill="none" stroke="#0c1730" stroke-width="1.1" opacity=".55" />
+            <path d="M80 15 C96 20 106 38 109 62" fill="none" stroke="#0c1730" stroke-width="1.1" opacity=".55" />
+            <path d="M80 15 C70 17 62 22 57 28" fill="none" stroke="#5f77a8" stroke-width=".6" stroke-dasharray="1.6 1.6" opacity=".6" />
+            <path d="M80 15 C90 17 98 22 103 28" fill="none" stroke="#5f77a8" stroke-width=".6" stroke-dasharray="1.6 1.6" opacity=".6" />
+            <circle cx="44" cy="40" r="1.5" fill="#0c1730" opacity=".8" />
+            <circle cx="116" cy="40" r="1.5" fill="#0c1730" opacity=".8" />
+            <ellipse cx="80" cy="14.5" rx="5" ry="2.4" fill="#1a2a4c" />
+            <ellipse cx="79" cy="13.7" rx="2.8" ry="1" fill="#4a628f" opacity=".8" />
+            <path d="M36 63 C58 58 102 58 124 63 C131 67 129 79 118 82 C100 88 60 88 42 82 C31 79 29 67 36 63 Z" fill="url(#brim)" />
+            <path d="M42 82 C60 88 100 88 118 82 C112 86 98 90 80 90 C62 90 48 86 42 82 Z" fill="#0a1224" />
+            <path d="M39 68 C60 63 100 63 121 68" fill="none" stroke="#6a83b6" stroke-width=".7" stroke-dasharray="2 2" opacity=".55" />
+            <path d="M37 72 C58 68 102 68 123 72" fill="none" stroke="#6a83b6" stroke-width=".7" stroke-dasharray="2 2" opacity=".4" />
+            <path d="M38 64 C60 59.5 100 59.5 122 64" fill="none" stroke="#ffffff" stroke-width=".9" opacity=".18" />
+            <g>
+              <rect x="57" y="34" width="2.6" height="10" rx="1.2" fill="#7ED957" transform="skewX(-22) translate(14 0)" />
+              <rect x="61.6" y="34" width="2.6" height="10" rx="1.2" fill="#4FB3F6" transform="skewX(-22) translate(14 0)" />
+              <text x="86" y="43" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="11" font-weight="700" fill="#f4f6fb" letter-spacing=".1" stroke="#0c1730" stroke-width=".35" paint-order="stroke">sdworx</text>
             </g>
           </g>
           <g class="badge">

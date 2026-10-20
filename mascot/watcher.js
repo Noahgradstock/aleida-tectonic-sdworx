@@ -15,14 +15,18 @@ tell application "System Events"
     set w to name of window 1 of p
   end try
   if n is "Mail" then
-    -- The compose window you are in; otherwise the first open compose window.
+    -- The compose window you are in. Only if Mail cannot say which one, the frontmost window, then the first
+    -- compose window. Never alternate between drafts (that would keep the text from settling).
     set cands to {}
     try
-      set end of cands to value of attribute "AXFocusedWindow" of p
+      set fw to value of attribute "AXFocusedWindow" of p
+      if fw is not missing value then set end of cands to fw
     end try
-    try
-      set cands to cands & (windows of p)
-    end try
+    if (count of cands) is 0 then
+      try
+        set cands to (windows of p)
+      end try
+    end if
     repeat with cw in cands
       try
         set f to UI element 1 of scroll area 1 of group 1 of group 1 of cw
@@ -68,7 +72,7 @@ return n & "<<SEP>>" & v & "<<ROLE>>" & r & "<<WIN>>" & w`;
 
 function run(script) {
   return new Promise((resolve) => {
-    execFile("osascript", ["-e", script], { timeout: 2500, maxBuffer: 256 * 1024 }, (err, stdout, stderr) => {
+    execFile("osascript", ["-e", script], { timeout: 4000, maxBuffer: 256 * 1024 }, (err, stdout, stderr) => {
       resolve(err ? { error: String(stderr || err.message).trim() } : { out: stdout });
     });
   });

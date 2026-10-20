@@ -7,6 +7,7 @@ export const POINTS = {
   newAuthor: -0.5,
   ownerLeft: -1.0, // author left the company: nobody maintains this anymore
   meeting: -0.3, // said out loud in a meeting: nobody wrote it down or reviewed it
+  signedAgreement: 2.5, // a signed client agreement: close to the law, but only for that client
   hedged: -1.0, // "I think", "not sure": the speaker doubts it themselves
   // Layer 2 – freshness: when?
   maxAgePenalty: 2.0, // -1 point per topic half-life, capped here
@@ -35,6 +36,7 @@ export const CAPS = {
   predatesRuleChange: 0.3,
   noExpertBacking: 0.6,
   unconfirmedMeeting: 0.5, // spoken in a meeting, until the speaker or an expert confirms it in writing
+  unapprovedDocument: 0.5, // an uploaded agreement, until an expert approves it as a source (and it is signed)
   awaitingReview: 0.5, // shared from the desktop assistant, until an expert other than the author approves it
 } as const;
 

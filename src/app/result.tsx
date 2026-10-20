@@ -534,7 +534,7 @@ function Highlighted({ text, quote, value, markRef }: { text: string; quote: str
   );
 }
 
-const SAID_IN: Record<string, string> = { sharepoint: "in a document", teams: "in Teams", email: "by email", meeting: "in a meeting", official: "in an official notice" };
+const SAID_IN: Record<string, string> = { agreement: "in a client agreement", sharepoint: "in a document", teams: "in Teams", email: "by email", meeting: "in a meeting", official: "in an official notice" };
 const RELATION_STYLE: Record<TrailEntry["relation"], string> = {
   agrees: "bg-[#eef7f1] text-[#0f8a4f]",
   differs: "bg-[#fff4e0] text-[#9a6400]",

@@ -25,6 +25,17 @@ const TAB: Record<keyof typeof DEMO, { label: string; icon: IconName }> = {
   teams: { label: "Teams message", icon: "teams" },
   email: { label: "Email", icon: "email" },
 };
+const DEMO_AGREEMENT = `SERVICE AGREEMENT – PAYROLL (fictional, for the demo)
+Between Brouwerij De Kroon NV and SD Worx Belgium.
+
+Article 1. This agreement sets the payroll terms for Brouwerij De Kroon from 1 November 2026.
+Article 2. Full-time employees of Brouwerij De Kroon get 22 days of annual leave, two more than the legal minimum.
+Article 3. The employer contribution to meal vouchers is €8.91 per working day.
+
+Signed on 3 October 2026 by Pieter Claes, HR manager, Brouwerij De Kroon NV, and Anna De Smet, SD Worx.`;
+type Mode = keyof typeof DEMO | "document";
+type DocResult = { title: string; checks: { ok: boolean; label: string }[]; changes: string[] };
+
 const POLL_MS = 5000;
 
 const KIND_ICON: Record<Entry["kind"], IconName> = {
@@ -101,7 +112,11 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
       if (e.kind === "confirmed" && e.claimScore.after >= 0.75) confirmed.add(e.claimId);
     }
     const waiting = (e: Entry) =>
-      e.kind === "learned" && e.channel === "meeting" && !takenBack.has(e.claimId) && !confirmed.has(e.claimId) && e.caps.some((c) => c.includes("not confirmed yet"));
+      e.kind === "learned" &&
+      (e.channel === "meeting" || e.channel === "agreement") &&
+      !takenBack.has(e.claimId) &&
+      !confirmed.has(e.claimId) &&
+      e.caps.some((c) => c.includes("not confirmed yet") || c.includes("not approved"));
     return { takenBack, waiting };
   }, [entries]);
 
@@ -133,9 +148,13 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
     const isFresh = fresh.has(e.id);
     const headline =
       e.kind === "learned"
-        ? `Heard in ${CHANNEL[e.channel] ?? e.channel}`
+        ? e.channel === "agreement"
+          ? "Read in a client agreement"
+          : `Heard in ${CHANNEL[e.channel] ?? e.channel}`
         : e.kind === "confirmed"
-          ? `${name(e.actor)} confirmed it`
+          ? e.channel === "agreement"
+            ? `${name(e.actor)} approved the agreement`
+            : `${name(e.actor)} confirmed it`
           : e.kind === "rejected"
             ? `${name(e.actor)} marked it wrong`
             : e.kind === "corrected"
@@ -156,17 +175,17 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
           <div className="min-w-0 flex-1">
             <div className="text-[15px] font-medium text-neutral-900">{headline}</div>
             <div className="text-xs text-neutral-400">
-              {e.kind === "learned" && e.actor !== e.speaker ? `via ${name(e.actor)} · ` : ""}
+              {e.kind === "learned" && e.channel === "agreement" ? `uploaded by ${name(e.actor)} · ` : e.kind === "learned" && e.actor !== e.speaker ? `via ${name(e.actor)} · ` : ""}
               {ago(e.at, now)} · {scopeName(e)}
             </div>
           </div>
-          {waiting && <Pill tone="amber">Waiting for {name(e.speaker).split(" ")[0]}</Pill>}
+          {waiting && <Pill tone="amber">{e.channel === "agreement" ? "Waiting for approval" : `Waiting for ${name(e.speaker).split(" ")[0]}`}</Pill>}
           {gone && <Pill tone="gray">Taken back</Pill>}
         </div>
 
         {e.kind === "learned" && (
           <p className="mt-3 text-[15px] leading-relaxed text-neutral-800">
-            <span className="font-medium">{name(e.speaker).split(" ")[0]}:</span> “{e.quote}”
+            <span className="font-medium">{e.channel === "agreement" ? (e.source ?? "Agreement") : name(e.speaker).split(" ")[0]}:</span> “{e.quote}”
           </p>
         )}
 
@@ -225,7 +244,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
             </div>
           </div>
         )}
-        {me && waiting && e.speaker === me.id && <p className="mt-2 text-xs text-[#9a6400]">This is yours: confirm or correct it under “Waiting for you”.</p>}
+        {me && waiting && e.channel !== "agreement" && e.speaker === me.id && <p className="mt-2 text-xs text-[#9a6400]">This is yours: confirm or correct it under “Waiting for you”.</p>}
       </li>
     );
   }
@@ -306,8 +325,10 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: "amber" | "
 
 // Paste a transcript, an email or a message yourself. Normally the mascot does this in the background.
 function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string) => void }) {
-  const [channel, setChannel] = useState<keyof typeof DEMO>("meeting");
+  const [channel, setChannel] = useState<Mode>("meeting");
   const [text, setText] = useState(DEMO.meeting);
+  const [title, setTitle] = useState("Service agreement Brouwerij De Kroon 2026");
+  const [result, setResult] = useState<DocResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -320,6 +341,16 @@ function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string
   async function feed() {
     setBusy(true);
     setError(null);
+    if (channel === "document") {
+      try {
+        const r = await api<{ doc: DocResult }>("/api/brain/documents", { title, text });
+        setResult(r.doc);
+      } catch (e) {
+        setError((e as Error).message);
+      }
+      setBusy(false);
+      return;
+    }
     try {
       const r = await api<{ learned: Entry[]; skipped: { sentence: string; reason: string }[] }>("/api/brain/ingest", { channel, text, context: { country: "BE", pc: "200" } });
       onDone(`Learned ${r.learned.length} statement${r.learned.length === 1 ? "" : "s"}${r.skipped.length ? `, ignored ${r.skipped.length} (${r.skipped[0].reason.toLowerCase()})` : ""}.`);
@@ -335,7 +366,7 @@ function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="font-serif text-3xl">Paste text yourself</h2>
-            <p className="mt-1 text-sm text-neutral-500">Normally the mascot hears this by itself. Paste a meeting transcript, an email or a message to try it.</p>
+            <p className="mt-1 text-sm text-neutral-500">Normally the mascot hears this by itself. Paste a meeting transcript, an email, a message or a whole document to try it.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
             <Icon name="cross" />
@@ -348,6 +379,7 @@ function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string
               onClick={() => {
                 setChannel(c);
                 setText(DEMO[c]);
+                setResult(null);
               }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${c === channel ? "bg-[#161616] text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"}`}
             >
@@ -355,7 +387,66 @@ function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string
               {TAB[c].label}
             </button>
           ))}
+          <button
+            onClick={() => {
+              setChannel("document");
+              setText(DEMO_AGREEMENT);
+              setResult(null);
+            }}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${channel === "document" ? "bg-[#161616] text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"}`}
+          >
+            <Icon name="document" size={14} />
+            Document
+          </button>
         </div>
+        {channel === "document" && !result && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={120}
+              aria-label="Document title"
+              className="min-w-0 flex-1 rounded-full border border-neutral-200 px-3 py-1.5 text-sm focus:border-neutral-400 focus:outline-none"
+            />
+            <label className="cursor-pointer rounded-full bg-neutral-100 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200">
+              Upload a text file
+              <input
+                type="file"
+                accept=".txt,.md,.eml,text/plain"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  if (f.size > 20_000) return setError("That file is too large for the demo");
+                  setText(await f.text());
+                  setTitle(f.name.replace(/\.[a-z]+$/i, ""));
+                }}
+              />
+            </label>
+          </div>
+        )}
+        {result && (
+          <div className="mt-4 rounded-2xl bg-[#fbfaf7] p-4">
+            <p className="text-sm font-medium">{result.title}</p>
+            <ul className="mt-2 space-y-1 text-sm">
+              {result.checks.map((c) => (
+                <li key={c.label} className={`flex items-center gap-2 ${c.ok ? "text-[#0f8a4f]" : "text-[#9a6400]"}`}>
+                  <Icon name={c.ok ? "check" : "cross"} size={14} />
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+            {result.changes.length > 0 && (
+              <ul className="mt-3 space-y-0.5 border-t border-neutral-200 pt-2 text-xs text-neutral-600">
+                {result.changes.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3 text-xs text-neutral-500">It now waits for an expert who works on this client to approve it. Until then it counts for at most 50%.</p>
+          </div>
+        )}
+        {!result && (
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -364,14 +455,21 @@ function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string
           aria-label="Text to feed to the brain"
           className="mt-3 w-full resize-y rounded-2xl border border-neutral-200 bg-[#fbfaf7] p-3 font-mono text-[13px] leading-relaxed focus:border-neutral-400 focus:outline-none"
         />
+        )}
         {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
         <div className="mt-4 flex items-center justify-end gap-3">
           <button onClick={onClose} className="text-sm text-neutral-500 hover:text-neutral-900">
             Cancel
           </button>
-          <button onClick={feed} disabled={busy || !text.trim()} className="rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-40">
-            {busy ? "Listening…" : "Feed to the brain"}
-          </button>
+          {result ? (
+            <button onClick={() => onDone(`Read "${result.title}": waiting for an expert to approve it.`)} className="rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black">
+              Done
+            </button>
+          ) : (
+            <button onClick={feed} disabled={busy || !text.trim()} className="rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-40">
+              {busy ? "Reading…" : channel === "document" ? "Read the document" : "Feed to the brain"}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 // Shared types for the trust engine. No framework imports: this module runs anywhere
 // (Next.js route, Cloud Run service, tests).
 
-export type SourceType = "official" | "sharepoint" | "teams" | "email" | "meeting";
+export type SourceType = "official" | "sharepoint" | "teams" | "email" | "meeting" | "agreement";
 export type Role = "expert" | "regular" | "new";
 
 // Where a piece of knowledge applies. Missing pc/client = applies to the whole country.
@@ -35,7 +35,8 @@ export type Claim = {
   file?: string; // source file under data/, when the claim comes from real data
   reportedBy?: string; // learned claims: who fed it in (can differ from the speaker in a meeting)
   review?: boolean; // shared on purpose from the desktop assistant: capped until a colleague approves it
-  hedged?: boolean; // the speaker sounded unsure ("I think", "not sure")
+  hedged?: boolean;
+  signed?: boolean; // agreements: a signature and date were found in the document // the speaker sounded unsure ("I think", "not sure")
 };
 
 export type FeedbackKind = "correct" | "wrong" | "outdated" | "not_applicable";

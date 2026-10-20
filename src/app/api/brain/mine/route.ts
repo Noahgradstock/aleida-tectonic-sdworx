@@ -2,6 +2,7 @@ import { currentUser, forbidden, kb, readJson, tooManyRequests, unauthorized } f
 import { rateLimit, sameOrigin } from "@/lib/auth";
 import { canVote } from "@/lib/access";
 import { act, buildMine, type MineAction } from "@/lib/mine";
+import { docsToApprove } from "@/lib/intake";
 
 const ACTIONS: MineAction[] = ["confirm", "remove", "restore", "correct", "undo"];
 const name = (id: string | null) => (id ? (kb.people.find((p) => p.id === id)?.name ?? id) : null);
@@ -10,11 +11,13 @@ const name = (id: string | null) => (id ? (kb.people.find((p) => p.id === id)?.n
 export async function GET(request: Request) {
   const user = await currentUser(request);
   if (!user) return unauthorized();
-  if (!canVote(user)) return Response.json({ waiting: [], questions: [], log: [] });
+  if (!canVote(user)) return Response.json({ waiting: [], questions: [], documents: [], log: [] });
   try {
     const m = await buildMine(user);
     const named = <T extends { speaker: string | null; reportedBy: string | null }>(i: T) => ({ ...i, speakerName: name(i.speaker), reportedByName: name(i.reportedBy) });
+    const docs = (await docsToApprove(user)).map((d) => ({ ...d, uploadedByName: name(d.uploadedBy), clientName: kb.clients.find((c) => c.id === d.client)?.name ?? d.client }));
     return Response.json({
+      documents: docs,
       waiting: m.waiting.map(named),
       questions: m.questions.map((q) => ({
         ...q,

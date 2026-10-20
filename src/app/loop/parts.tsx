@@ -28,6 +28,7 @@ export type Entry = {
   evidence: Evidence[];
   caps: string[];
   explain?: string; // older entries have none
+  source?: string;
   replaces?: string; // a correction: the claim it took the place of
 };
 export type SetAside = { person: { id: string; name: string }; reason: string };
@@ -62,6 +63,7 @@ export const statusWord = (st: string | undefined) => (st ? (STATUS[st] ?? st) :
 
 export const CHANNEL: Record<string, string> = {
   meeting: "a meeting",
+  agreement: "a client agreement",
   teams: "a Teams message",
   email: "an email",
   official: "an official notice",

@@ -25,9 +25,10 @@ type Item = {
   correctedTo?: string | null;
 };
 type Question = { id: string; factLabel: string; value: string; quote: string; source: string; fromName: string; askedAt: string; caseName?: string };
-type Mine = { waiting: Item[]; questions: Question[]; log: Item[] };
+type Doc = { id: string; title: string; clientName: string; uploadedByName: string; uploadedAt: string; checks: { ok: boolean; label: string }[]; changes: string[] };
+type Mine = { waiting: Item[]; questions: Question[]; documents: Doc[]; log: Item[] };
 
-const CHANNEL: Record<string, string> = { meeting: "Meeting", email: "Email", teams: "Teams", sharepoint: "Document", official: "Official" };
+const CHANNEL: Record<string, string> = { agreement: "Agreement", meeting: "Meeting", email: "Email", teams: "Teams", sharepoint: "Document", official: "Official" };
 const pct = (n: number | null) => (n == null ? "" : `${Math.round(n * 100)}%`);
 const tone = (n: number | null) => (n == null ? "#a3a3a3" : n >= 0.75 ? "#0f8a4f" : n >= 0.5 ? "#9a6400" : "#c0392b");
 const when = (d: string) => {
@@ -85,7 +86,7 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
     run(q.id, () => post("/api/brain/questions/answer", { id: q.id, answer: kind }), kind === "not_mine" ? "Passed on. You won't be asked about this topic again." : "Thanks, your answer now counts.");
 
   if (!mine) return null;
-  const inbox = mine.waiting.length + mine.questions.length;
+  const inbox = mine.waiting.length + mine.questions.length + (mine.documents?.length ?? 0);
   const log = showAll ? mine.log : mine.log.slice(0, 4);
 
   return (
@@ -98,6 +99,45 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
 
       {inbox > 0 && (
         <ul className="mt-4 space-y-3">
+          {(mine.documents ?? []).map((d) => (
+            <li key={d.id} className="rounded-2xl border border-[#1463ff]/20 bg-[#f5f8ff] p-4">
+              <p className="flex items-center gap-1.5 text-xs text-neutral-500">
+                <Icon name="document" size={13} />
+                Document · uploaded by {d.uploadedByName} · {when(d.uploadedAt)}
+              </p>
+              <p className="mt-2 text-sm">
+                Approve <b>{d.title}</b> as a source for <b>{d.clientName}</b>?
+              </p>
+              <ul className="mt-2 space-y-0.5 text-xs">
+                {d.checks.map((c) => (
+                  <li key={c.label} className={`flex items-center gap-1.5 ${c.ok ? "text-[#0f8a4f]" : "text-[#9a6400]"}`}>
+                    <Icon name={c.ok ? "check" : "cross"} size={12} />
+                    {c.label}
+                  </li>
+                ))}
+              </ul>
+              {d.changes.length > 0 && (
+                <ul className="mt-2 space-y-0.5 text-xs text-neutral-600">
+                  {d.changes.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              )}
+              {!note[d.id] && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Btn primary disabled={!!busy} onClick={() => run(d.id, () => post("/api/brain/documents/decide", { id: d.id, decision: "approve" }), "Approved. It now counts as a source for this client.")}>
+                    <Icon name="check" size={14} />
+                    Approve as a source
+                  </Btn>
+                  <Btn ghost disabled={!!busy} onClick={() => run(d.id, () => post("/api/brain/documents/decide", { id: d.id, decision: "reject" }), "Rejected. It counts nowhere.")}>
+                    <Icon name="cross" size={14} />
+                    Reject
+                  </Btn>
+                </div>
+              )}
+              <Note n={note[d.id]} />
+            </li>
+          ))}
           {mine.waiting.map((it) => (
             <li key={it.id} className="rounded-2xl border border-[#1463ff]/20 bg-[#f5f8ff] p-4">
               <Meta it={it} lead={`${it.reportedByName ?? "A colleague"} added this from a meeting`} />
@@ -172,7 +212,9 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
                 : it.kind === "added"
                   ? `You added ${it.speakerName?.split(" ")[0] ?? "a colleague"}'s words`
                   : it.kind === "confirmed"
-                    ? `You confirmed ${it.speakerName?.split(" ")[0] ?? "a source"}`
+                    ? it.channel === "agreement"
+                      ? "You approved the agreement"
+                      : `You confirmed ${it.speakerName?.split(" ")[0] ?? "a source"}`
                     : `You marked ${it.speakerName?.split(" ")[0] ?? "a source"} wrong`;
             const removed = it.state === "removed";
             return (

@@ -65,12 +65,16 @@ function scoreClaim(
   const add = (layer: string, tag: string, label: string, points: number) => evidence.push({ layer, tag, label, points });
   const author = claim.author ? people.get(claim.author) : undefined;
   const isOfficial = claim.source.type === "official";
+  const isAgreement = claim.source.type === "agreement";
+  // An agreement counts once an expert other than the person who uploaded it approved it as a source.
+  const approved = isAgreement && feedback.some((f) => f.claimId === claim.id && f.kind === "correct" && f.userId !== claim.author && people.get(f.userId)?.role === "expert");
 
-  // Layer 1 – authority
+  // Layer 1 – authority. For an agreement the document is the authority, not the person who uploaded it.
   if (isOfficial) add("authority", "Official", "Official publication", POINTS.official);
+  else if (isAgreement) add("authority", claim.signed ? "Signed agreement" : "Unsigned agreement", claim.signed ? "Signed client agreement" : "Agreement without a signature", claim.signed ? POINTS.signedAgreement : 0);
   else if (author?.role === "expert") add("authority", "Expert", `${author.name} is a topic expert`, POINTS.expertAuthor);
   else if (author?.role === "new") add("authority", "New hire", `${author.name} is new, no track record`, POINTS.newAuthor);
-  if (author?.left) add("authority", "No owner", `${author.name} has left, nobody owns this anymore`, POINTS.ownerLeft);
+  if (!isAgreement && author?.left) add("authority", "No owner", `${author.name} has left, nobody owns this anymore`, POINTS.ownerLeft);
   if (claim.source.type === "meeting") add("authority", "Said in a meeting", "Said out loud in a meeting, not written down", POINTS.meeting);
   if (claim.hedged) add("authority", "Unsure", "The speaker sounded unsure", POINTS.hedged);
 
@@ -129,11 +133,14 @@ function scoreClaim(
   if (claim.source.type === "meeting" && !confirmed && !matchesRef) {
     caps.push({ label: "said in a meeting, not confirmed yet", max: CAPS.unconfirmedMeeting });
   }
+  if (isAgreement && (!approved || !claim.signed)) {
+    caps.push({ label: claim.signed ? "document not approved as a source yet" : "agreement is not signed", max: CAPS.unapprovedDocument });
+  }
   if (claim.review && !matchesRef && !approvedByColleague(claim, feedback, people)) {
     caps.push({ label: "shared for review, waiting for a colleague to approve it", max: CAPS.awaitingReview });
   }
   // A curated client agreement may deviate from the law on its own; something a consultant just wrote or said may not.
-  const curatedException = isException && !claim.id.startsWith("live-");
+  const curatedException = isException && (!claim.id.startsWith("live-") || (isAgreement && approved && !!claim.signed));
   if (!isOfficial && author?.role !== "expert" && thumbs === 0 && !matchesRef && !curatedException) {
     caps.push({ label: "no expert or official source backs it", max: CAPS.noExpertBacking });
   }

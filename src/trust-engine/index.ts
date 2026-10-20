@@ -10,3 +10,4 @@ export { extractClaims, findValues, parseValue, unitOf, type Channel, type Extra
 export { rankContacts, lastUpdated, recentTrail, type Contact, type ContactRanking, type TrailEntry } from "./contacts";
 export { buildKnowledgeGraph, DOMAINS, domainOf, type DomainId, type KnowledgeGraph, type GraphNode, type GraphEdge, type PersonCv, type CvEntry, type NodeKind } from "./graph";
 export { explainScore, forecast, HORIZON_DAYS, type Forecast, type ForecastPoint } from "./forecast";
+export { readDocument, type DocCheck, type ReadDocument } from "./document";

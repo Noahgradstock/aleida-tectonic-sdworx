@@ -43,8 +43,8 @@ const STATUS: Record<TopicStatus["status"], { color: string; label: string }> = 
   orphan: { color: "#c0392b", label: "Nobody backs it" },
   empty: { color: "#c4c4c4", label: "No answer yet" },
 };
-const CHANNEL_COLOR: Record<string, string> = { official: "#1463ff", sharepoint: "#0b7a75", teams: "#5b5fc7", email: "#0078d4", meeting: "#c98a00" };
-const CHANNEL_LABEL: Record<string, string> = { official: "Official", sharepoint: "SharePoint", teams: "Teams", email: "Email", meeting: "Meeting" };
+const CHANNEL_COLOR: Record<string, string> = { official: "#1463ff", sharepoint: "#0b7a75", teams: "#5b5fc7", email: "#0078d4", meeting: "#c98a00", agreement: "#0f8a4f" };
+const CHANNEL_LABEL: Record<string, string> = { official: "Official", sharepoint: "SharePoint", teams: "Teams", email: "Email", meeting: "Meeting", agreement: "Agreement" };
 
 const radius = (n: GraphNode) =>
   n.kind === "person" ? 9 + Math.min(10, n.weight * 2.2) : n.kind === "concept" ? 6 + Math.min(9, n.weight * 0.8) : n.kind === "client" ? 7 : 4.5;

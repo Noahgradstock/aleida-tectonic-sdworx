@@ -298,3 +298,35 @@ test("recent trail: everyone who touched the topic, newest first, other countrie
   assert.ok(anna.quote);
   assert.ok(trail.some((t) => t.person.id === "koen" && t.person.left));
 });
+
+test("a client agreement: checks, claims for that client, and it only counts once an expert approves it", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { readDocument } = await import("./document");
+  const text = readFileSync("data/demo/agreement-de-kroon-2026.txt", "utf8");
+  const doc = readDocument({ title: "Service agreement De Kroon 2026", text }, sofie, kb, now);
+  assert.equal(doc.client?.id, "brouwerij-de-kroon");
+  assert.equal(doc.signedOn, "2026-10-03");
+  assert.ok(doc.checks.every((c) => c.ok), JSON.stringify(doc.checks));
+  const leave = doc.claims.find((c) => c.factKey === "annual-leave-days")!;
+  assert.equal(leave.value, "22 days");
+  assert.equal(leave.scope.client, "brouwerij-de-kroon");
+
+  const live = { ...kb, claims: [...kb.claims, ...doc.claims] };
+  const ctx = { country: "BE", pc: "200", client: "brouwerij-de-kroon" };
+  const before = evaluateFact(fact, live, ctx, [], now);
+  assert.equal(before.best?.claim.value, "20 days"); // not approved yet: capped
+  const approve: Feedback[] = doc.claims.map((c) => ({ claimId: c.id, userId: "jan", kind: "correct", context: ctx, date: now.toISOString() }));
+  const after = evaluateFact(fact, live, ctx, approve, now);
+  assert.equal(after.best?.claim.value, "22 days");
+  assert.equal(after.status, "trusted");
+  // the uploader cannot approve their own document
+  const self: Feedback[] = doc.claims.map((c) => ({ claimId: c.id, userId: "sofie", kind: "correct", context: ctx, date: now.toISOString() }));
+  assert.equal(evaluateFact(fact, live, ctx, self, now).best?.claim.value, "20 days");
+});
+
+test("a draft or unsigned agreement is flagged", async () => {
+  const { readDocument } = await import("./document");
+  const doc = readDocument({ title: "Draft agreement", text: "DRAFT. Brouwerij De Kroon employees get 25 days of annual leave." }, sofie, kb, now);
+  assert.equal(doc.checks.find((c) => c.id === "signed")!.ok, false);
+  assert.equal(doc.checks.find((c) => c.id === "final")!.ok, false);
+});

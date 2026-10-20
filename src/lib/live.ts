@@ -84,6 +84,7 @@ export type LedgerEntry = {
   kind: "learned" | "confirmed" | "rejected" | "outdated" | "removed" | "corrected" | "restored";
   actor: string; // signed-in user who caused it (reporter, voter)
   channel: string;
+  source?: string; // the source title, e.g. the agreement's name
   factKey: string;
   factLabel: string;
   claimId: string;
@@ -134,6 +135,7 @@ export async function recordChange(opts: {
     kind: opts.kind,
     actor: opts.actor,
     channel: opts.claim.source.type,
+    source: opts.claim.source.title,
     factKey: opts.claim.factKey,
     factLabel: a.fact.label,
     claimId: opts.claim.id,

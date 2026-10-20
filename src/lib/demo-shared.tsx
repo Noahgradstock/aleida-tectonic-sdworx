@@ -10,8 +10,8 @@ export const seg = (p: number, a: number, b: number) => clamp((p - a) / (b - a))
 export const pct = (n: number) => Math.round(n * 100);
 export const color = (s: number) => (s >= 0.75 ? "#1463ff" : s >= 0.5 ? "#e39a0b" : "#e5484d");
 
-export const CHANNEL = { official: "Official", teams: "Teams", sharepoint: "SharePoint", email: "Email", meeting: "Meeting" } as const;
-const EXT = { official: "pdf", teams: "json", sharepoint: "docx", email: "eml", meeting: "txt" } as const;
+export const CHANNEL = { official: "Official", teams: "Teams", sharepoint: "SharePoint", email: "Email", meeting: "Meeting", agreement: "Agreement" } as const;
+const EXT = { official: "pdf", teams: "json", sharepoint: "docx", email: "eml", meeting: "txt", agreement: "pdf" } as const;
 
 // How one engine claim looks as a document card in the visualization.
 export type DocCard = {

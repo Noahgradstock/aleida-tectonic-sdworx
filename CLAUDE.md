@@ -1,6 +1,6 @@
 # CLAUDE.md: Team Aleida.ai at the Tectonic Hackathon final (Ghent, 20 October 2026)
 
-You are helping team **Aleida.ai** (Noah, Isak, Ilke) build a proof of concept during the final of the Tectonic Hackathon, SD Worx track. Three people and their Claude sessions work in this repo at the same time. Read this whole file before doing anything.
+You are helping team **Aleida.ai** (Noah `Noahgradstock`, Isak `kasikasikasi`, Ilke `IlkeSey` on GitHub) build a proof of concept during the final of the Tectonic Hackathon, SD Worx track. Three people and their Claude sessions work in this repo at the same time. Read this whole file before doing anything.
 
 This repository is **public** and the judges may read this file. Keep everything in it true and free of secrets.
 

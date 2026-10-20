@@ -16,6 +16,8 @@ npm start
 |---|---|
 | Click the blob (or `Cmd+Shift+M`) | Opens the card: ask a payroll question, get the trusted answer, score, source and expert |
 | Drag the blob | Moves it anywhere on screen |
+| Toggle **Email** in the card | Opt-in: reads the text field you are typing in, in the app in front (Mail, Outlook, Teams chat) every 2 s through macOS Accessibility, and warns on wrong values. macOS asks once for Accessibility permission. Nothing is stored |
+| Toggle **Meeting** (or `Cmd+Shift+L`) | Listens to your microphone in 4.5 s segments, transcribes them with ElevenLabs. Wrong values you *say* make the mascot warn. Say **"Hey SD Worx, …"** to ask a question: it answers on screen and out loud |
 | `Cmd+Shift+E` or "Open demo email" | Opens a demo email window. Write e.g. "the employer part of the meal voucher is €6.91". After a short pause the mascot turns amber and warns; "Fix it" replaces the value |
 
 Clicks pass through the transparent area around the blob, so it never blocks the apps underneath.
@@ -24,14 +26,20 @@ Clicks pass through the transparent area around the blob, so it never blocks the
 
 Deterministic, no AI in the decision: each sentence that states a value (€, %, days, weeks, months) is sent to the trust engine, which matches the topic and returns the trusted answer. If the answer is trusted and the sentence's value differs, the mascot warns.
 
+## Voice
+
+Put `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_VOICE_ID`) in the repo's `.env`. Speech-to-text uses ElevenLabs Scribe, replies use ElevenLabs text-to-speech. Without a key the mascot cannot listen, and replies fall back to the macOS voice.
+
 ## Security
 
 - Renderer pages run with `contextIsolation`, `sandbox`, no `nodeIntegration`, a strict Content-Security-Policy, and no navigation or new windows.
-- Only the main process talks to the network, and only to `BRAIN_URL`. Every IPC message checks which window sent it and validates its input.
+- Only the main process talks to the network, and only to `BRAIN_URL` and the ElevenLabs API. The ElevenLabs key never reaches a page.
+- Only the hidden meeting listener window may use the microphone; audio segments are size- and type-checked and are not stored. Every IPC message checks which window sent it and validates its input.
 - The demo email never leaves the device except the sentences checked against the trust engine.
 
 ## Unfinished
 
 - The email window is a demo; real Outlook or Gmail integration (Microsoft Graph, OAuth) is not built.
-- Meetings and voice (speech-to-text, "Hey SD Worx", ElevenLabs voice replies) are not built yet.
+- Meeting mode hears your microphone only, not the other participants (that needs system-audio capture).
+- The Email toggle depends on the app exposing its text field to Accessibility; some web-based editors do not. The demo email window always works.
 - The case context is fixed to Belgium, PC 200.

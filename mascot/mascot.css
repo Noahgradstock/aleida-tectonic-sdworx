@@ -63,3 +63,30 @@ button { font: inherit; cursor: pointer; }
 @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
 @keyframes dot { 0%, 100% { transform: translateY(0); opacity: .4; } 50% { transform: translateY(-4px); opacity: 1; } }
+
+/* Settings */
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.mode { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 12px; background: #f4f6f9; cursor: pointer; }
+.mode input { display: none; }
+.mode b { display: block; font-size: 12px; }
+.mode small { display: block; font-size: 10.5px; color: #8a94a3; }
+.sw { flex: none; width: 26px; height: 15px; border-radius: 8px; background: #cfd5df; position: relative; transition: background .2s; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.mode input:checked + .sw { background: #1D9E75; }
+.mode input:checked + .sw::after { transform: translateX(11px); }
+
+/* Live meeting caption and listening pill */
+.live { margin-top: 10px; display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; color: #5f6b7a; font-style: italic; line-height: 1.4; }
+.rec { flex: none; width: 8px; height: 8px; margin-top: 4px; border-radius: 50%; background: #E24B4A; animation: rec 1.4s ease-in-out infinite; }
+.pill { display: flex; align-items: center; gap: 6px; margin: 0 28px 2px 0; padding: 4px 10px; border-radius: 999px; background: rgba(20, 32, 58, .88); color: #fff; font-size: 11px; font-weight: 600; }
+.pill .rec { margin-top: 0; }
+@keyframes rec { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* Listening and speaking moods */
+.listening .body { fill: #3DBE9A; }
+.wake .body { fill: #5AA6E8; }
+.wake .bob { animation: hop .5s ease-out 1, bob 4s ease-in-out .5s infinite; }
+.speaking .mouth { animation: talk .22s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.speaking .bob { animation-duration: 2s; }
+@keyframes hop { 0% { transform: translateY(0); } 40% { transform: translateY(-14px) scale(.97, 1.04); } 100% { transform: translateY(0); } }
+@keyframes talk { from { transform: scaleY(1); } to { transform: scaleY(2.2) translateY(1px); } }

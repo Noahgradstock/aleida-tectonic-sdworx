@@ -1,5 +1,6 @@
 // Talks to the Company brain trust engine (the deployed web app). Runs in the main process only.
-const BRAIN_URL = process.env.BRAIN_URL || "https://tavling-eight.vercel.app";
+const env = require("./env");
+const BRAIN_URL = env.BRAIN_URL || "https://tavling-eight.vercel.app";
 const CONTEXT = { country: "BE", pc: "200" }; // demo case: a Belgian PC 200 employer
 
 let cookie = null;
@@ -44,8 +45,8 @@ async function ask(question) {
   return summarise(await post("/api/trust/ask", { question: question.slice(0, 500), context: CONTEXT }));
 }
 
-const norm = (s) => s.toLowerCase().replace(/\s+/g, "").replace(",", ".");
-const VALUE = /€\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s?%|\d+\s?(?:weeks?|months?|days?)/gi;
+const norm = (s) => s.toLowerCase().replace(/€|euros?|eur\b/g, "").replace(/\s+/g, "").replace(",", ".");
+const VALUE = /€\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s?(?:%|percent\b|euros?\b|eur\b)|\d+\s?(?:weeks?|months?|days?)\b/gi;
 
 // Checks each sentence that states a value against the trusted answer for its topic.
 async function check(text) {

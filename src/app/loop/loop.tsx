@@ -62,6 +62,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<string | null>(null);
+  const [show, setShow] = useState<"all" | "heard" | "confirmed" | "changed">("all"); // filter for the log
   const [feeding, setFeeding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [now, setNow] = useState(0);
@@ -121,8 +122,18 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
   }, [entries]);
 
   const today = new Date(now || 0).toDateString();
-  const todays = (entries ?? []).filter((e) => new Date(e.at).toDateString() === today);
-  const earlier = (entries ?? []).filter((e) => new Date(e.at).toDateString() !== today);
+  const KIND_GROUP: Record<Entry["kind"], "heard" | "confirmed" | "changed"> = {
+    learned: "heard",
+    confirmed: "confirmed",
+    rejected: "changed",
+    outdated: "changed",
+    removed: "changed",
+    corrected: "changed",
+    restored: "changed",
+  };
+  const listed = (entries ?? []).filter((e) => show === "all" || KIND_GROUP[e.kind] === show);
+  const todays = listed.filter((e) => new Date(e.at).toDateString() === today);
+  const earlier = listed.filter((e) => new Date(e.at).toDateString() !== today);
   const heard = todays.filter((e) => e.kind === "learned").length;
   const waitingCount = (entries ?? []).filter(state.waiting).length;
 
@@ -131,7 +142,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
     if (!items.length) return null;
     return (
       <div className="mb-8">
-        <h2 className="mb-3 text-xs font-medium uppercase tracking-widest text-neutral-500">{title}</h2>
+        <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-neutral-500">{title}</h3>
         <ol className="space-y-3">
           {items.map((e) => feedCard(e))}
         </ol>
@@ -176,7 +187,7 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
             <div className="text-[15px] font-medium text-neutral-900">{headline}</div>
             <div className="text-xs text-neutral-400">
               {e.kind === "learned" && e.channel === "agreement" ? `uploaded by ${name(e.actor)} · ` : e.kind === "learned" && e.actor !== e.speaker ? `via ${name(e.actor)} · ` : ""}
-              {ago(e.at, now)} · {scopeName(e)}
+              {new Date(e.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · {ago(e.at, now)} · {scopeName(e)}
             </div>
           </div>
           {waiting && <Pill tone="amber">{e.channel === "agreement" ? "Waiting for approval" : `${name(e.speaker).split(" ")[0]} can check`}</Pill>}
@@ -297,8 +308,33 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
             </div>
           ) : (
             <>
+              <div className="mb-4">
+                <h2 className="font-serif text-3xl">The log</h2>
+                <p className="mt-1 text-sm text-neutral-500">Everything the brain heard and every change it made, newest first. Open “Why” to trace any answer back.</p>
+                <div className="mt-3 flex flex-wrap gap-1.5 text-xs" role="tablist" aria-label="Show">
+                  {(
+                    [
+                      ["all", "All"],
+                      ["heard", "Heard"],
+                      ["confirmed", "Confirmed"],
+                      ["changed", "Corrected or taken back"],
+                    ] as const
+                  ).map(([k, label]) => (
+                    <button
+                      key={k}
+                      role="tab"
+                      aria-selected={show === k}
+                      onClick={() => setShow(k)}
+                      className={`rounded-full px-3 py-1 ${show === k ? "bg-[#161616] text-white" : "bg-white text-neutral-600 ring-1 ring-neutral-200 hover:ring-neutral-400"}`}
+                    >
+                      {label} {k === "all" ? (entries?.length ?? 0) : (entries ?? []).filter((e) => KIND_GROUP[e.kind] === k).length}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {feedGroup("Today", todays)}
               {feedGroup("Earlier", earlier)}
+              {listed.length === 0 && <p className="text-sm text-neutral-500">Nothing of this kind yet.</p>}
             </>
           )}
         </section>

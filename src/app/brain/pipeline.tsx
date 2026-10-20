@@ -27,39 +27,53 @@ export function HowItWorks({ data }: { data: BrainData }) {
   const [open, setOpen] = useState(false);
   const statements = data.topics.reduce((n, t) => n + t.claims.length, 0);
   const steps: { icon: IconName; title: string; text: string; stat: string }[] = [
-    { icon: "meeting", title: "Hears", text: "Meetings, Teams, email and Copilot", stat: `${SOURCES.length} sources` },
+    { icon: "meeting", title: "Hears", text: "Meetings, Teams, email and Copilot", stat: "" },
     { icon: "document", title: "Finds", text: "Documents that mention the topic", stat: `${data.documents.length} documents` },
     { icon: "paste", title: "Reads", text: "The exact line, word for word", stat: `${statements} statements` },
     { icon: "check", title: "Scores", text: "Six questions, one trust score", stat: "Trusted from 75%" },
   ];
   return (
     <section aria-label="How it works">
-      <h2 className="mb-3 font-serif text-2xl">How it works</h2>
-      <div className="relative rounded-3xl bg-white px-6 py-7 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:px-10">
+      <h2 className="mb-2 font-serif text-xl">How it works</h2>
+      <div className="relative rounded-2xl bg-white px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
         {/* the line the steps sit on, with a dot moving from hearing to scoring */}
-        <div className="pointer-events-none absolute inset-x-[12%] top-[52px] hidden h-px bg-neutral-200 sm:block">
+        <div className="pointer-events-none absolute inset-x-[6%] top-[33px] hidden h-px bg-neutral-200 lg:block">
           <span className="flow-dot absolute -top-[3px] h-[7px] w-[7px] rounded-full bg-[#1463ff] shadow-[0_0_8px_rgba(20,99,255,0.6)]" />
         </div>
-        <ol className="relative grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+        <ol className="relative grid grid-cols-2 gap-x-4 gap-y-4 lg:grid-cols-4">
           {steps.map((st, i) => (
-            <li key={st.title} className="flex flex-col items-center text-center">
-              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#161616] text-white ring-8 ring-white">
-                <Icon name={st.icon} size={18} />
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-semibold text-neutral-500 ring-1 ring-neutral-200">
-                  {i + 1}
-                </span>
+            <li key={st.title} className="flex items-start gap-3">
+              <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#161616] text-white ring-4 ring-white">
+                <Icon name={st.icon} size={14} />
               </span>
-              <span className="mt-3 text-lg font-medium">{st.title}</span>
-              <span className="mt-0.5 max-w-[14rem] text-sm text-neutral-500">{st.text}</span>
-              <span className="mt-2 rounded-full bg-[#f3f1ec] px-2.5 py-0.5 text-xs font-medium text-neutral-700">{st.stat}</span>
+              <div className="min-w-0 bg-white pr-2">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono text-[10px] text-neutral-400">0{i + 1}</span>
+                  <span className="text-[15px] font-medium">{st.title}</span>
+                </div>
+                <div className="text-xs text-neutral-500">{st.text}</div>
+                {i === 0 ? (
+                  // the places it listens to, as small logos
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1 [&_svg]:h-4 [&_svg]:w-4">
+                    {SOURCES.slice(0, 6).map((src) => (
+                      <span key={src.name} title={src.name} className="flex h-6 w-6 items-center justify-center rounded-md bg-[#f6f5f2]">
+                        {src.logo}
+                      </span>
+                    ))}
+                    <span title={SOURCES.slice(6).map((x) => x.name).join(", ")} className="text-[11px] text-neutral-400">
+                      +{SOURCES.length - 6}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="mt-1.5 inline-block rounded-full bg-[#f3f1ec] px-2 py-0.5 text-[11px] font-medium text-neutral-700">{st.stat}</span>
+                )}
+              </div>
             </li>
           ))}
         </ol>
-        <div className="mt-6 text-center">
-          <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-sm font-medium text-[#1463ff] hover:underline">
-            {open ? "Hide the details" : "See the details"}
-          </button>
-        </div>
+        <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="absolute bottom-3 right-4 text-xs font-medium text-[#1463ff] hover:underline">
+          {open ? "Hide the details" : "See the details"}
+        </button>
       </div>
       {open && (
         <div className="mt-4">

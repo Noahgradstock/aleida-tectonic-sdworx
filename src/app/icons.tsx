@@ -16,6 +16,7 @@ const PATHS = {
   thumb: "M7 11v9H4v-9h3ZM7 11l4-8a2 2 0 0 1 2 2v4h5.5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.3 20H7",
   chevron: "M9 6l6 6-6 6",
   arrow: "M5 12h14M13 6l6 6-6 6",
+  upload: "M12 15V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3",
 } as const;
 
 export type IconName = keyof typeof PATHS;

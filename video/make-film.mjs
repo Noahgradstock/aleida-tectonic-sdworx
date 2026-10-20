@@ -283,7 +283,7 @@ await key("4-ended");
 
 // ================= 2. The brain learns (18–27), as Tom, who ran the meeting =================
 await signIn("tom");
-await goTo("/loop", "company-brain · Live loop", () => app.getByText("Paste text yourself").waitFor({ timeout: 500 }));
+await goTo("/loop", "company-brain · Live loop", () => app.getByRole("button", { name: "Import" }).waitFor({ timeout: 500 }));
 await cam(WIDE, now(), 0.01);
 await until(now() + 1.2);
 // Nobody pastes anything: the meeting tool hands the transcript (with speaker names) to the brain,

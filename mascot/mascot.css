@@ -129,3 +129,10 @@ button { font: inherit; cursor: pointer; }
 .ctx-email { background: #1E7CE0; }
 .ctx-meeting { background: #5B5FC7; }
 .stage[data-ctx="email"]:not(.offline) .ctx-email, .stage[data-ctx="meeting"]:not(.offline) .ctx-meeting { opacity: 1; transform: scale(1); }
+
+/* Talking mode */
+.ask .talk.on { background: #E24B4A; }
+.mic-badge { position: absolute; bottom: 8px; right: 18px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #E24B4A; border: 2px solid #fff; opacity: 0; transform: scale(.5); transition: opacity .25s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.mic-badge svg { width: 14px; height: 14px; }
+.talk-on .mic-badge { opacity: 1; transform: scale(1); animation: rec 1.6s ease-in-out infinite; }
+.talk-on .status-dot { opacity: 0; }

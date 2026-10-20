@@ -17,6 +17,7 @@ function setMood(next) {
   const base = !online && next === "calm" ? "offline" : next;
   stage.className = `stage ${base}${next === "warning" ? " warning-mode" : ""}`;
   stage.dataset.ctx = context;
+  stage.classList.toggle("talk-on", $("talk").classList.contains("on"));
 }
 
 function pill(text, ms = 2500) {
@@ -53,7 +54,7 @@ blob.addEventListener("mousedown", (e) => {
   pressTimer = setTimeout(() => {
     if (drag && drag.moved < 4) {
       drag.ptt = true;
-      window.mascot.pushToTalk();
+      window.mascot.toggleTalk();
     }
   }, 450);
 });
@@ -82,7 +83,17 @@ function toggleCard() {
 
 $("close").addEventListener("click", closeCard);
 $("online").addEventListener("change", (e) => window.mascot.setOnline(e.target.checked));
-$("talk").addEventListener("click", () => window.mascot.pushToTalk());
+$("talk").addEventListener("click", () => window.mascot.toggleTalk());
+
+function setTalk(on) {
+  stage.classList.toggle("talk-on", on);
+  $("talk").classList.toggle("on", on);
+  $("talk").title = on ? "Talking on: say “Hey SD Worx”. Click to turn off." : "Turn on talking (or long-press the blob)";
+}
+window.mascot.onTalk((on) => {
+  setTalk(on);
+  pill(on ? "Talking on · say “Hey SD Worx”" : "Talking off", 2500);
+});
 for (const b of document.querySelectorAll("#seg button")) {
   b.addEventListener("click", () => window.mascot.setContext(b.dataset.mode));
 }
@@ -91,7 +102,8 @@ function statusLine() {
   $("status-text").textContent = online ? `Online · ${CONTEXT_TEXT[context]}` : "Offline";
 }
 
-window.mascot.onContext(({ context: c, mode }) => {
+window.mascot.onContext(({ context: c, mode, talk }) => {
+  setTalk(Boolean(talk));
   const changed = c !== context;
   context = c;
   stage.dataset.ctx = c;
@@ -104,7 +116,7 @@ window.mascot.onOnline((on) => {
   online = on;
   $("online").checked = on;
   statusLine();
-  pill(on ? "Online · long-press me to ask" : "Offline");
+  pill(on ? "Online · tap 🎙 to talk" : "Offline");
   setMood("calm");
 });
 
@@ -165,8 +177,8 @@ window.mascot.onHeard(({ error }) => {
   if (error) pill(error, 4000);
 });
 
-window.mascot.onWake((d) => {
-  setMood(d && d.ptt ? "ptt" : "wake");
+window.mascot.onWake(() => {
+  setMood("wake");
   pill("Yes? Ask your question…", 9000);
 });
 

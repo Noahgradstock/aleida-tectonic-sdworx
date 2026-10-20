@@ -10,7 +10,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 const SIZE = { width: 360, height: 480 };
 const SECURE = { contextIsolation: true, nodeIntegration: false, sandbox: true };
-const WAKE = /\b(?:hey|hi|hello|okay|ok)\b[\s,.!]*(?:(?:[a-z]{1,4}[\s.\-]*){1,2}(?:works?|worx|work|words?)|brainy|brain)\b[\s,.!?:\-]*(.*)$/i;
+const WAKE = /\b(?:hey|hej|hi|hello|hallå|okay|ok)\b[\s,.!]*(?:(?:[a-z]{1,4}[\s.\-]*){1,2}(?:works?|worx|work|words?)|brainy|brain)\b[\s,.!?:\-]*(.*)$/i;
 const MAX_SEGMENT = 2 * 1024 * 1024;
 
 let mascot;
@@ -70,7 +70,7 @@ let contextMode = "auto"; // auto | email | meeting
 let activeContext = "email";
 let frontApp = "";
 let lastMeetingSeen = 0;
-let pttUntil = 0;
+let talkMode = false; // on: always listening for "Hey SD Worx"; off: mic only in meetings
 
 function updateContext() {
   if (MEETING_APPS.includes(frontApp)) lastMeetingSeen = Date.now();
@@ -80,10 +80,10 @@ function updateContext() {
     activeContext = next;
     log("context:", next, `(${frontApp})`);
   }
-  const wantMic = online && (activeContext === "meeting" || Date.now() < pttUntil);
+  const wantMic = online && (activeContext === "meeting" || talkMode);
   if (wantMic) startMeeting();
   else if (listener) stopMeeting();
-  send("mascot:context", { context: activeContext, mode: contextMode, app: frontApp });
+  send("mascot:context", { context: activeContext, mode: contextMode, app: frontApp, talk: talkMode });
 }
 
 // The current warning stays until the same place (Mail, the meeting, the demo email) says it is fixed.
@@ -197,15 +197,6 @@ async function onSegment(buffer, mime) {
   if (!text) return;
   send("mascot:heard", { text });
 
-  // Push-to-talk: the next thing you say is a question.
-  if (Date.now() < pttUntil) {
-    pttUntil = 0;
-    waitingForQuestion = false;
-    const wakeInPtt = text.match(WAKE);
-    await answerAloud(wakeInPtt && wakeInPtt[1].trim().length > 3 ? wakeInPtt[1].trim() : text);
-    return updateContext();
-  }
-  if (activeContext !== "meeting") return;
 
   const wake = text.match(WAKE);
   if (wake) {
@@ -218,6 +209,7 @@ async function onSegment(buffer, mime) {
     waitingForQuestion = false;
     return answerAloud(text);
   }
+  if (activeContext !== "meeting") return; // outside meetings, only "Hey SD Worx" counts
   checkWriting(text, "meeting");
 }
 
@@ -248,20 +240,20 @@ function setOnline(on) {
   if (on) watcher.start();
   else {
     watcher.stop();
-    pttUntil = 0;
+    talkMode = false;
   }
   send("mascot:online", on);
   updateContext();
 }
-function pushToTalk() {
-  if (!online) setOnline(true);
-  pttUntil = Date.now() + 10000;
+function toggleTalk() {
+  talkMode = !talkMode;
+  if (talkMode && !online) setOnline(true);
+  log("talk mode:", talkMode);
   updateContext();
-  send("mascot:wake", { ptt: true });
-  log("push-to-talk");
+  send("mascot:talk", talkMode);
 }
 
-ipcMain.on("mascot:ptt", (event) => fromMascot(event) && pushToTalk());
+ipcMain.on("mascot:toggle-talk", (event) => fromMascot(event) && toggleTalk());
 
 ipcMain.on("mascot:set-context", (event, mode) => {
   if (!fromMascot(event) || !["auto", "email", "meeting"].includes(mode)) return;
@@ -321,7 +313,7 @@ app.whenReady().then(() => {
   globalShortcut.register("CommandOrControl+Shift+M", () => send("mascot:toggle-ask"));
   globalShortcut.register("CommandOrControl+Shift+E", openCompose);
   globalShortcut.register("CommandOrControl+Shift+L", () => setOnline(!online));
-  globalShortcut.register("CommandOrControl+Shift+Space", pushToTalk);
+  globalShortcut.register("CommandOrControl+Shift+Space", toggleTalk);
   setInterval(() => online && updateContext(), 5000); // let the meeting setting expire
 });
 

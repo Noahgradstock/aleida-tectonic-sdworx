@@ -29,7 +29,7 @@ The mascot picks its setting from the app in front, and shows it as a badge on t
 |---|---|---|---|
 | **Email** (blue envelope) | Mail, Outlook and other writing apps | Reads what you write and warns on wrong values. Microphone off | Never |
 | **Meeting** (purple camera) | Teams, Zoom, FaceTime, Webex, Slack in front (stays on 2 minutes after you switch away) | Listens; warns "that last thing you said was off"; answers "Hey SD Worx, …" | Only when asked |
-| **Ask** (push-to-talk) | Long-press the blob, the 🎙 button, or `Cmd+Shift+Space` | Listens for one question and answers out loud | Yes |
+| **Talking** (on/off) | Tap 🎙, long-press the blob, or `Cmd+Shift+Space`; tap again to turn off. A red mic badge shows on the blob | Listens anywhere for "Hey SD Worx" / "Hej SD Worx" and answers out loud. Outside meetings it reacts only to the wake word | Yes |
 
 The Auto · Email · Meeting switch in the card forces a setting (useful for demos).
 

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
+import { buildBrainData } from "@/lib/brain-data";
+import Pipeline from "../brain/pipeline";
 import Loop from "./loop";
 
 export const metadata: Metadata = {
@@ -9,6 +11,14 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function LoopPage() {
-  await requireUser();
-  return <Loop />;
+  const data = await buildBrainData(await requireUser());
+  return (
+    <>
+      <Loop />
+      {/* How a document or a meeting becomes a statement the brain can score. */}
+      <div className="mx-auto max-w-6xl px-4 pb-24">
+        <Pipeline data={data} />
+      </div>
+    </>
+  );
 }

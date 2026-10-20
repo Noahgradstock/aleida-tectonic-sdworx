@@ -6,6 +6,31 @@ import type { Claim, Context, Feedback, KnowledgeBase, ScoredClaim, SourceType }
 
 export type NodeKind = "person" | "concept" | "document" | "client";
 
+// Topics are grouped into a few domains, so the web has regions you can name and zoom into.
+export const DOMAINS = [
+  { id: "pay", label: "Pay" },
+  { id: "benefits", label: "Benefits" },
+  { id: "leave", label: "Leave & absence" },
+  { id: "time", label: "Working time" },
+  { id: "contracts", label: "Contracts" },
+] as const;
+export type DomainId = (typeof DOMAINS)[number]["id"];
+const DOMAIN_OF: Record<string, DomainId> = {
+  indexation: "pay",
+  bonus: "pay",
+  "payroll-process": "pay",
+  "meal-vouchers": "benefits",
+  benefits: "benefits",
+  "company-car": "benefits",
+  "sick-leave": "leave",
+  "holiday-pay": "leave",
+  leave: "leave",
+  "working-time": "time",
+  "student-work": "time",
+  dismissal: "contracts",
+};
+export const domainOf = (topic: string): DomainId => DOMAIN_OF[topic] ?? "pay";
+
 export type GraphNode = {
   id: string; // "person:anna", "concept:meal-voucher-max", "doc:<title>", "client:<id>"
   kind: NodeKind;
@@ -143,7 +168,7 @@ export function buildKnowledgeGraph(
   for (const [key, n] of conceptWeight) {
     const fact = factByKey.get(key);
     if (!fact) continue;
-    nodes.push({ id: `concept:${key}`, kind: "concept", label: fact.label, group: fact.topic, weight: n, meta: { topic: fact.topic } });
+    nodes.push({ id: `concept:${key}`, kind: "concept", label: fact.label, group: fact.topic, weight: n, meta: { topic: fact.topic, domain: domainOf(fact.topic) } });
   }
 
   // Documents (one node per source title), each stating one or more concepts.

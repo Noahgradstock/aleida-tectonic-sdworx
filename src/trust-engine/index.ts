@@ -8,4 +8,4 @@ export { MemoryFeedbackStore, parseFeedback, parseContext, type FeedbackStore } 
 export { mockKnowledgeBase, MOCK_NOW } from "./mock";
 export { extractClaims, findValues, parseValue, unitOf, type Channel, type Extracted, type Quantity, type Skipped } from "./extract";
 export { rankContacts, lastUpdated, type Contact, type ContactRanking } from "./contacts";
-export { buildKnowledgeGraph, type KnowledgeGraph, type GraphNode, type GraphEdge, type PersonCv, type CvEntry, type NodeKind } from "./graph";
+export { buildKnowledgeGraph, DOMAINS, domainOf, type DomainId, type KnowledgeGraph, type GraphNode, type GraphEdge, type PersonCv, type CvEntry, type NodeKind } from "./graph";

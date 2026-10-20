@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { requireUser } from "@/lib/session";
-import WhoKnows from "./who-knows";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Company brain – who knows what",
-  description: "A knowledge web of people, topics, documents and clients, built from everyday work.",
-};
-export const dynamic = "force-dynamic";
-
-export default async function GraphPage() {
-  await requireUser();
-  return <WhoKnows />;
+// "Who knows what" is now the People lens of the Brain.
+export default function GraphPage() {
+  redirect("/brain");
 }

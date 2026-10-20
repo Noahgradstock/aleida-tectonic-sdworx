@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { buildBrainData } from "@/lib/brain-data";
-import Pipeline from "../brain/pipeline";
+import { HowItWorks } from "../brain/pipeline";
 import Loop from "./loop";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default async function LoopPage() {
   return (
     <>
       {/* How a meeting or a document becomes a statement the brain can score, right under the heading. */}
-      <Loop howItWorks={<Pipeline data={data} />} />
+      <Loop howItWorks={<HowItWorks data={data} />} />
       <p className="pb-12 text-center text-xs text-neutral-400">All people, clients and documents are fictional.</p>
     </>
   );

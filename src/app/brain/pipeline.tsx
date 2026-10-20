@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { Icon, type IconName } from "../icons";
 import { Flag } from "@/lib/demo-shared";
 import { CopilotLogo, DatabaseLogo, DocsLogo, GmailLogo, OutlookLogo, TeamsLogo } from "../logos";
 import { KIND } from "./documents";
@@ -20,7 +21,56 @@ const SOURCES: { name: string; type: Channel | null; logo: ReactNode }[] = [
   { name: "BE law", type: "official", logo: <Flag country="BE" size={16} /> },
 ];
 
-export default function Pipeline({ data }: { data: BrainData }) {
+// The short version for the top of a page: four steps in one airy row, each with one line and a live number,
+// joined by a line a dot travels along. The detailed cards open underneath on request.
+export function HowItWorks({ data }: { data: BrainData }) {
+  const [open, setOpen] = useState(false);
+  const statements = data.topics.reduce((n, t) => n + t.claims.length, 0);
+  const steps: { icon: IconName; title: string; text: string; stat: string }[] = [
+    { icon: "meeting", title: "Hears", text: "Meetings, Teams, email and Copilot", stat: `${SOURCES.length} sources` },
+    { icon: "document", title: "Finds", text: "Documents that mention the topic", stat: `${data.documents.length} documents` },
+    { icon: "paste", title: "Reads", text: "The exact line, word for word", stat: `${statements} statements` },
+    { icon: "check", title: "Scores", text: "Six questions, one trust score", stat: "Trusted from 75%" },
+  ];
+  return (
+    <section aria-label="How it works">
+      <h2 className="mb-3 font-serif text-2xl">How it works</h2>
+      <div className="relative rounded-3xl bg-white px-6 py-7 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:px-10">
+        {/* the line the steps sit on, with a dot moving from hearing to scoring */}
+        <div className="pointer-events-none absolute inset-x-[12%] top-[52px] hidden h-px bg-neutral-200 sm:block">
+          <span className="flow-dot absolute -top-[3px] h-[7px] w-[7px] rounded-full bg-[#1463ff] shadow-[0_0_8px_rgba(20,99,255,0.6)]" />
+        </div>
+        <ol className="relative grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+          {steps.map((st, i) => (
+            <li key={st.title} className="flex flex-col items-center text-center">
+              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#161616] text-white ring-8 ring-white">
+                <Icon name={st.icon} size={18} />
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-semibold text-neutral-500 ring-1 ring-neutral-200">
+                  {i + 1}
+                </span>
+              </span>
+              <span className="mt-3 text-lg font-medium">{st.title}</span>
+              <span className="mt-0.5 max-w-[14rem] text-sm text-neutral-500">{st.text}</span>
+              <span className="mt-2 rounded-full bg-[#f3f1ec] px-2.5 py-0.5 text-xs font-medium text-neutral-700">{st.stat}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-6 text-center">
+          <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-sm font-medium text-[#1463ff] hover:underline">
+            {open ? "Hide the details" : "See the details"}
+          </button>
+        </div>
+      </div>
+      {open && (
+        <div className="mt-4">
+          <Pipeline data={data} bare />
+        </div>
+      )}
+    </section>
+  );
+}
+
+export default function Pipeline({ data, bare }: { data: BrainData; bare?: boolean }) {
   const count = (t: Channel | null) => (t ? (data.channels.find((c) => c.type === t)?.claims ?? 0) : 0);
   // A real example: the best-scored statement on the sick leave relapse question.
   const example = data.topics
@@ -35,8 +85,12 @@ export default function Pipeline({ data }: { data: BrainData }) {
 
   return (
     <section>
-      <h2 className="font-serif text-2xl leading-none">How it works</h2>
-      <p className="mt-1.5 text-sm text-neutral-500">From what people say to a trusted answer, in four steps. Nobody has to write anything down.</p>
+      {!bare && (
+        <>
+          <h2 className="font-serif text-2xl leading-none">How it works</h2>
+          <p className="mt-1.5 text-sm text-neutral-500">From what people say to a trusted answer, in four steps. Nobody has to write anything down.</p>
+        </>
+      )}
 
       <ol className="mt-6 grid gap-3 sm:grid-cols-4">
         <Step n={1} title="Hears" text="The mascot listens to meetings, Teams, email and Copilot, read-only with your own access.">

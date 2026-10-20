@@ -59,7 +59,7 @@ Projector: laptop A (blob in front of a "Team meeting" screen) during scene 1, l
 
 *[Noah types: "How many holiday days at Brouwerij De Kroon?"]*
 
-> **NOAH:** Twenty-two. *(pause, 2 seconds)* Ilke's words, from that meeting, confirmed by her.
+> **NOAH:** Twenty-two. *(pause, 2 seconds)* Ilke's words, from that meeting, confirmed by Ilke.
 
 *[Noah types: "How many holiday days at TechStart Gent?"]*
 
@@ -69,7 +69,7 @@ Projector: laptop A (blob in front of a "Team meeting" screen) during scene 1, l
 
 > **NOAH:** What you just saw: Company brain learns from the work you already do, and only asks you when it matters.
 > When you start at university, you get a handbook and a mentor, who tells you what isn't in the handbook. SD Worx has ten thousand mentors. What they know is said in meetings, and never written down.
-> In that meeting, the only effort was one word: Ilke's "yes". Nobody opened a wiki. It didn't record the meeting: it kept one fact, with her exact words, and asked the person who said it.
+> In that meeting, the only effort was one word: Ilke's "yes". Nobody opened a wiki. It didn't record the meeting: it kept one fact, with the exact words used, and asked the person who said it.
 > And trust stays visible. *(point at the answer on screen)* Twenty-two, not twenty, because this client has its own agreement, and it beats the law only for this client. If I still doubt it, it tells me who to ask: Ilke.
 > The AI only reads. The code decides, with rules you can read: same question, same answer, every point of the score explained.
 

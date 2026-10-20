@@ -94,40 +94,46 @@ async function readWriting() {
 const isPermissionError = (e) => /-1743|-25211|not allowed|assistive|inte behörig|tillåtelse/i.test(e || "");
 
 function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Electron", "Company brain"]) {
-  let timer = null;
+  let running = false;
   let last = "";
   let pending = "";
   let reported = false;
+
+  // One read at a time: read, pause, read again. Overlapping reads came back out of order while typing.
+  async function loop() {
+    while (running) {
+      const t0 = Date.now();
+      const r = await readWriting();
+      r.ms = Date.now() - t0;
+      if (!running) break;
+      onDebug(r);
+      if (r.error) {
+        if (!reported && isPermissionError(r.error)) onError(r.error);
+        reported = true;
+      } else {
+        reported = false;
+        const relevant = !ignoreApps.includes(r.app) && !(r.app === "Mail" && r.role !== "AXWebArea") && (r.text || r.role === "AXWebArea");
+        const key = `${r.app}|${r.text}`;
+        if (relevant && key !== last) {
+          // Check once the text is the same on two reads in a row, so half-typed numbers are not checked.
+          if (key === pending) {
+            last = key;
+            onText(r.app, r.text);
+          } else pending = key;
+        }
+      }
+      await new Promise((res) => setTimeout(res, 600));
+    }
+  }
+
   return {
     start() {
-      if (timer || process.platform !== "darwin") return;
-      timer = setInterval(async () => {
-        const r = await readWriting();
-        onDebug(r);
-        if (r.error) {
-          if (!reported && isPermissionError(r.error)) onError(r.error);
-          reported = true;
-          return;
-        }
-        reported = false;
-        if (ignoreApps.includes(r.app)) return;
-        // In Mail only the message body counts (not To, Subject or the inbox); an empty body counts too.
-        if (r.app === "Mail" && r.role !== "AXWebArea") return;
-        if (!r.text && r.role !== "AXWebArea") return;
-        const key = `${r.app}|${r.text}`;
-        if (key === last) return;
-        // Wait until the text is the same on two reads in a row, so half-typed numbers are not checked.
-        if (key !== pending) {
-          pending = key;
-          return;
-        }
-        last = key;
-        onText(r.app, r.text);
-      }, 900);
+      if (running || process.platform !== "darwin") return;
+      running = true;
+      loop();
     },
     stop() {
-      clearInterval(timer);
-      timer = null;
+      running = false;
       last = "";
       pending = "";
     },

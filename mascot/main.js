@@ -210,8 +210,8 @@ const watcher = createWatcher(
         frontWindow = r.window || "";
         updateContext();
       }
-      const line = r.error ? `error: ${r.error}` : `${r.app} role=${r.role || "-"} chars=${(r.text || "").length}`;
-      if (line !== lastLine) log("watch:", line);
+      const line = r.error ? `error: ${r.error.slice(0, 120)}` : `${r.app} role=${r.role || "-"} chars=${(r.text || "").length}`;
+      if (line !== lastLine) log("watch:", line, `(${r.ms} ms)`);
       lastLine = line;
     };
   })(),

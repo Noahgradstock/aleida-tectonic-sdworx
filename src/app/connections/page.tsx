@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/session";
 import { liveKb } from "@/lib/live";
+import { canReadClaim } from "@/lib/access";
 import type { SourceType } from "@/trust-engine";
 import Connections, { type SourceStats } from "./connections";
 

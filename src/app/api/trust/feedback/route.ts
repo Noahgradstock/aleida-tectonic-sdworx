@@ -1,5 +1,6 @@
 import { matchScope, parseFeedback } from "@/trust-engine";
-import { allFeedback, currentUser, forbidden, kb, notYourClient, now, readJson, saveFeedback, tooManyRequests, unauthorized } from "@/lib/trust-server";
+import { allFeedback, currentUser, forbidden, notYourClient, now, readJson, saveFeedback, tooManyRequests, unauthorized } from "@/lib/trust-server";
+import { liveKb, recordChange } from "@/lib/live";
 import { rateLimit, sameOrigin } from "@/lib/auth";
 import { canUseContext, canVote } from "@/lib/access";
 
@@ -10,6 +11,7 @@ export async function POST(request: Request) {
   if (!user) return unauthorized();
   if (!canVote(user)) return Response.json({ error: "Sign in with your own account to give feedback" }, { status: 403 });
   if (!(await rateLimit(`vote:${user.id}`, 60, 60_000))) return tooManyRequests();
+  const kb = await liveKb();
   const parsed = parseFeedback(await readJson(request), user.id, kb, now());
   if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
   // Only for cases this consultant works on.
@@ -21,6 +23,12 @@ export async function POST(request: Request) {
   const scope = matchScope(claim, parsed.feedback.context, await allFeedback());
   if (!scope.ok) return Response.json({ error: "This source does not apply to that case" }, { status: 400 });
 
+  const feedbackBefore = await allFeedback();
   await saveFeedback(parsed.feedback);
-  return Response.json({ ok: true });
+  const kind = { correct: "confirmed", wrong: "rejected", outdated: "outdated" } as const;
+  const entry =
+    parsed.feedback.kind === "not_applicable"
+      ? null
+      : await recordChange({ kind: kind[parsed.feedback.kind], actor: user.id, claim, before: kb, after: kb, feedbackBefore, now: now() });
+  return Response.json({ ok: true, entry });
 }

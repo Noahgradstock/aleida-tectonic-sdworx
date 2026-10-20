@@ -94,9 +94,9 @@ export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase
   return { ranked, setAside };
 }
 
-// When did the brain last learn something about this fact, and from where.
+// When did the brain last learn something about this fact for this case, and from where.
 export function lastUpdated(result: FactResult): { date: string; source: string; by: string | null } | null {
-  const claims = [...result.claims.map((c) => c.claim), ...result.excluded.map((e) => e.claim)];
+  const claims = result.claims.map((c) => c.claim);
   const latest = claims.sort((a, b) => Date.parse(b.date) - Date.parse(a.date))[0];
   return latest ? { date: latest.date, source: latest.source.title, by: latest.author } : null;
 }

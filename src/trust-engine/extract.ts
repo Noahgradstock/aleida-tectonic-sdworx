@@ -85,13 +85,11 @@ export function extractClaims(
       }
 
       // Scope: a client named in the sentence, else a country named in it, else the speaker's own country, else the case.
+      // Only what is actually said narrows the scope: a general statement is not a sector or client exception.
       const client = kb.clients.find((c) => sentence.toLowerCase().includes(c.name.toLowerCase().replace(/\s(nv|bv)$/i, "")));
       const country = COUNTRY.find(([re]) => re.test(sentence))?.[1] ?? countryOfTeam(speaker) ?? ctx.country;
-      const scope = client
-        ? { country: client.country, pc: client.pc, client: client.id }
-        : country === ctx.country
-          ? { country, pc: ctx.pc }
-          : { country };
+      const pc = sentence.match(/\bPC\s?(\d{3})\b/i)?.[1];
+      const scope = client ? { country: client.country, pc: client.pc, client: client.id } : pc ? { country, pc } : { country };
 
       const claim: Claim = {
         id: `live-${channel}-${hash(`${speaker?.id}|${sentence}`)}`,

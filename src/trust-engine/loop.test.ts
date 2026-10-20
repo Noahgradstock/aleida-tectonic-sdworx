@@ -65,3 +65,10 @@ test("email: the writer is always the signed-in user, speaker labels are ignored
   const { extracted } = extractClaims("Anna: holiday is 20 days of annual leave.", "email", BE, kb, sofie, now);
   assert.equal(extracted[0].claim.author, "sofie");
 });
+
+test("a general guess that contradicts the law is capped, not treated as a sector exception", () => {
+  const { extracted } = extractClaims("Tom Claes: I think everyone gets 25 days of holiday now.", "meeting", BE, kb, sofie, now);
+  const live = { ...kb, claims: [...kb.claims, extracted[0].claim] };
+  const tom = evaluateFact(fact, live, BE, [], now).claims.find((c) => c.claim.id === extracted[0].claim.id)!;
+  assert.ok(tom.score <= 0.2, `got ${tom.score}`);
+});

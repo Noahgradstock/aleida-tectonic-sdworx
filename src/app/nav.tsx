@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/", label: "Ask" },
   { href: "/brain", label: "Brain map" },
+  { href: "/loop", label: "Live loop" },
 ];
 
 export default function Nav() {

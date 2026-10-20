@@ -6,7 +6,7 @@ import { KIND, KindBadge, TrustTag, Viewer, type ClaimScores } from "./documents
 import Pipeline from "./pipeline";
 
 type Status = "trusted" | "conflict" | "stale" | "orphan" | "empty";
-type SourceType = "official" | "sharepoint" | "teams" | "email";
+type SourceType = "official" | "sharepoint" | "teams" | "email" | "meeting";
 
 export type BrainData = {
   company: string;
@@ -116,7 +116,7 @@ const ABBR: Record<DocKind, string> = {
   Newsletter: "HTML",
 };
 
-const CHANNEL: Record<SourceType, string> = { official: "Official", sharepoint: "SharePoint", teams: "Teams", email: "Email" };
+const CHANNEL: Record<SourceType, string> = { official: "Official", sharepoint: "SharePoint", teams: "Teams", email: "Email", meeting: "Meeting" };
 const ROLE = { expert: "Expert", regular: "Consultant", new: "New hire" };
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n * 100)}%`);
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);

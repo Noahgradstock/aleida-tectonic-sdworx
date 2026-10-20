@@ -76,6 +76,11 @@ async function loadClients() {
       name: c.name,
       match: c.name.toLowerCase().replace(/\s+(nv|bv|bvba|sa|srl)$/i, "").trim(),
     }));
+    // Short names people actually say: "De Kroon", "Janssens", "Ter Duinen".
+    for (const c of clients) {
+      const short = c.match.replace(/^(brouwerij|bakkerij|hotel|bouwbedrijf|groen)\s+/, "").trim();
+      c.alias = short !== c.match && short.length >= 5 ? short : null;
+    }
   } catch {
     // No client list: everything uses the default case.
   }
@@ -83,7 +88,7 @@ async function loadClients() {
 
 function clientIn(text) {
   const t = text.toLowerCase();
-  const c = clients.find((x) => t.includes(x.match) || t.includes(x.id.replace(/-/g, " ")));
+  const c = clients.find((x) => t.includes(x.match) || t.includes(x.id.replace(/-/g, " ")) || (x.alias && t.includes(x.alias)));
   return c || null;
 }
 
@@ -230,7 +235,8 @@ async function checkAll(text) {
     const trusted = parse(fact.value);
     const sameUnit = said.map((v) => ({ raw: v.trim().replace(/[.,]$/, ""), ...parse(v) })).filter((v) => v.unit === trusted.unit);
     if (!sameUnit.length || sameUnit.some((v) => sameValue(v, trusted))) continue;
-    issues.push({ kind: "wrong", said: sameUnit[0].raw, sentence: sentence.trim(), ...fact, client: client ? client.name : null });
+    const kind = client && !fact.clientSpecific ? "client-new" : "wrong";
+    issues.push({ kind, said: sameUnit[0].raw, sentence: sentence.trim(), ...fact, client: client ? client.name : null });
   }
   return [...issues, ...unknown]; // wrong values first
 }
@@ -244,7 +250,7 @@ async function check(text) {
 
 // The text with every wrong value replaced by the trusted one, only inside the sentence it was found in.
 async function corrected(text) {
-  const issues = (await checkAll(text)).filter((i) => i.kind === "wrong");
+  const issues = (await checkAll(text)).filter((i) => i.kind === "wrong" || i.kind === "client-new");
   let out = text;
   for (const i of issues) {
     // Swap only the number, keep the words: "22 holiday days" -> "20 holiday days", "€148.73" -> "€154.74".

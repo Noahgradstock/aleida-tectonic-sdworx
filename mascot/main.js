@@ -143,7 +143,8 @@ async function checkWriting(text, where) {
     result = { ok: true };
   }
   // Unknown knowledge is only offered for sharing in your own writing, never from meeting audio.
-  if (!result.ok && result.kind === "unknown" && where === "meeting") result = { ok: true };
+  // Unknown or client-new knowledge is only offered for sharing in your own writing, never from meeting audio.
+  if (!result.ok && (result.kind === "unknown" || result.kind === "client-new") && where === "meeting") result = { ok: true };
   log("check", where, result.ok ? "ok" : result.kind === "unknown" ? `NOT IN BRAIN ${result.said}` : `WRONG ${result.said} (trusted ${result.value})`, "| issue:", issue ? `${issue.where} ${issue.said}` : "none");
   if (!result.ok) {
     const same = issue && issue.where === where && issue.said === result.said && issue.key === result.key;
@@ -154,7 +155,11 @@ async function checkWriting(text, where) {
       if (result.kind !== "wrong") {
         // Unknown knowledge: a quiet card, never spoken.
       } else if (where === "meeting") {
-        say(`Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`);
+        say(
+          result.client
+            ? `Quick note: for ${result.client.replace(/\s+(NV|BV)$/, "")} it's ${conversation.speakable(result.value)}, not ${conversation.speakable(result.said)}.`
+            : `Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`,
+        );
       } else if (inConversation() && where === "Mail") {
         offerUntil = Date.now() + 60000;
         say(
@@ -284,6 +289,7 @@ async function onSegment(buffer, mime) {
   if (activeContext === "meeting") {
     const c = await brain.check(text);
     if (!c.ok && c.kind === "wrong") return checkWriting(text, "meeting");
+    if (c.ok === false && c.kind === "client-new") { /* the brain only knows the general rule here: stay quiet */ }
   }
 
   if (waitingForQuestion) {

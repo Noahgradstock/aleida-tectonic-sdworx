@@ -177,6 +177,21 @@ window.mascot.onCheck((r) => {
     setMood("curious");
     return show("warning");
   }
+  if (r.kind === "client-new") {
+    pendingFix = { from: r.said, to: r.value, native: r.where !== "email" };
+    $("w-title").textContent = `Not in the Company brain for ${r.client.replace(/\s+(NV|BV)$/, "")} yet`;
+    $("w-text").textContent = `The brain only knows the general rule: ${r.value}. If ${r.said} is an agreement with this client, share it for review. A colleague approves it before anyone sees it.`;
+    $("w-meta").hidden = false;
+    $("w-chip").textContent = `General rule · ${r.score}%`;
+    $("w-source").textContent = r.source;
+    $("fix").hidden = false;
+    $("fix").textContent = `Use ${r.value}`;
+    $("share").textContent = "Share for review";
+    $("ignore").textContent = "Not now";
+    setMood("curious");
+    return show("warning");
+  }
+  $("fix").textContent = "Fix it";
   $("w-title").textContent = "Heads up before you send";
   $("w-meta").hidden = false;
   $("share").textContent = "I know better";

@@ -50,6 +50,23 @@ const speakable = (v) => String(v).replace(/€\s?([\d.,]+)/g, "$1 euros");
 function reply(intent, t) {
   const d = t.detail || {};
   const v = t.value;
+  // Knowledge a colleague shared for review and an expert approved (e.g. a client agreement).
+  if (/review/i.test(t.source || "")) {
+    const author = (d.supporters || [])[0] || "a colleague";
+    const general = (d.setAside || [])[0];
+    switch (intent) {
+      case "right_answer":
+        return topicSaid ? `It's ${v}, not ${topicSaid}. That's the agreement for this client.` : `The agreed value is ${v}.`;
+      case "source":
+        return `${author} shared it from an agreement with the client, and an expert approved it.`;
+      case "explain":
+        return `${general ? `The general rule is ${general.value}, from ${/^(FPS|Law|Official|Royal)/i.test(general.source) ? "Belgian law" : general.source}. ` : ""}But ${author} agreed ${v} with this client and an expert approved it. A client agreement beats the general rule, so I trust ${v} at ${t.score} percent.`;
+      case "confidence":
+        return `${t.score} percent. ${author} shared it and an expert approved it.`;
+      case "expert":
+        return `Ask ${author}. They made the agreement.`;
+    }
+  }
   switch (intent) {
     case "right_answer":
       return topicSaid

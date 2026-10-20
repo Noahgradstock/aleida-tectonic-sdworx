@@ -162,3 +162,6 @@ button { font: inherit; cursor: pointer; }
 .approve { margin-top: 12px; padding: 12px; border-radius: 14px; background: #EEF5FD; border: 1px solid #B5D4F4; }
 .approve .warn-title { color: #0C447C; }
 .approve p { margin: 0 0 8px; font-size: 12.5px; line-height: 1.45; }
+
+.unknown-mode #share { order: -1; background: #185FA5; border-color: #185FA5; color: #fff; }
+.unknown-mode #fix { background: #fff; color: #1f2a3a; border-color: #dfe3ea; }

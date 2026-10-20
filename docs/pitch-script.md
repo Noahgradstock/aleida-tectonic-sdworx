@@ -22,23 +22,24 @@ We cannot bring our own computer: the pitch is a PowerPoint with **one embedded 
 
 ## 0:25 – 1:50 · The video: the full circle in 85 seconds (narrated live, on cue)
 
-One piece of knowledge goes all the way round: Ilke shares it → Anna approves → it corrects Isak's email → the assistant guards his client meeting → and when Isak asks why, the answer leads back to Ilke.
+We start in the middle of the story: Isak gets it wrong. Then we meet the knowledge (Ilke), and the meeting at the end pays it off with exactly what Ilke shared.
 
 | Video | Visual cue | Live line |
 |---|---|---|
-| **0:00 – 0:16 · Ilke shares** (You are: Ilke) | Ilke types to Brouwerij De Kroon: *"as agreed… 22 holiday days"* | **ILKE:** "Monday. I just agreed 22 holiday days with Brouwerij De Kroon. I put it in my email." |
-| | Blue card: *Not in the Company brain for De Kroon yet* | **ILKE:** "The company brain only knows the law: 20. So I share it, just this sentence." |
+| **0:00 – 0:22 · Isak's email** (You are: Isak) | Isak types to a colleague: *"…the meal voucher is €6.91 per day, right?"* | **ISAK:** "My first week at SD Worx. I don't know a single rule yet, formal or informal." |
+| | The blob turns **amber**: *→ €8.91* | **ISAK:** "And there it is: €6.91 was the old rule." |
+| | Isak's voice: *"Hey SD Worx, fix it."* → the email changes to €8.91 | *(silent)* |
+| | Blob calm and green | **NOAH:** "Silent while you're right. There the moment you're not. But where does it know this from?" |
+| **0:22 – 0:40 · Ilke shares** (You are: Ilke) | Ilke types to Brouwerij De Kroon: *"as agreed… 22 holiday days"* | **ILKE:** "From people like me. I just agreed 22 holiday days with Brouwerij De Kroon." |
+| | Blue card: *Not in the Company brain for De Kroon yet* | **ILKE:** "The brain only knows the law: 20. So I share it. Just this sentence." |
 | | Click **Share for review** → pill *Anna will approve it* | **NOAH:** "Nothing left her laptop until she clicked. And it counts for nobody until a colleague approves." |
-| **0:16 – 0:24 · Anna approves** (You are: Anna) | Card *Can you approve this?* → **Approve ✓** | **NOAH:** "One question. One click. That's all the maintenance anyone did." |
-| **0:24 – 0:44 · Isak's email** (You are: Isak) | Isak types *"…20 holiday days…"* | **ISAK:** "A week later. My first week. I don't know a single rule here." |
-| | Amber: *→ 22 days, Brouwerij De Kroon* | **ISAK:** "Twenty is the law. But not for this client." |
-| | Isak's voice: *"Hey SD Worx, fix it."* → the email changes to 22 | *(silent)* |
-| **0:44 – 1:00 · Client meeting** (Teams, purple camera) | Isak on a call with the client | **NOAH:** "Same afternoon. Isak meets the client." |
-| | Isak's voice: *"And the meal voucher is 6.91 euros per day."* | *(silent)* |
-| | **The assistant speaks up:** *"Quick correction: 6.91 euros is outdated… 8.91 euros."* | *(silent while it speaks)* |
-| **1:00 – 1:20 · Isak asks** | Isak's voice: *"Hey SD Worx, why does De Kroon get 22 holiday days?"* | *(silent)* |
-| | **The assistant answers:** *"The general rule is 20 days, from Belgian law. But Ilke agreed 22 days with this client…"* | *(silent while it speaks)* |
-| **1:20 – 1:25 · Calm blob** | The blob, green, in the corner | **NOAH:** "Ilke shared it once. Isak never had to ask her. Silent when you're right, there when it matters." |
+| **0:40 – 0:47 · Anna approves** (You are: Anna) | Card *Can you approve this?* → **Approve ✓** | **NOAH:** "One question, one click. That's all the maintenance anyone did." |
+| **0:47 – 1:05 · Client meeting** (You are: Isak, Teams, purple camera) | Isak on a call with De Kroon | **NOAH:** "Next day. Isak meets Brouwerij De Kroon." |
+| | Isak's voice: *"So for De Kroon that is 20 holiday days this year."* | *(silent)* |
+| | **The assistant speaks up:** *"Quick note: for Brouwerij De Kroon it's 22 days, not 20 holiday days."* | *(silent while it speaks)* |
+| **1:05 – 1:20 · Isak asks** | Isak's voice: *"Hey SD Worx, how do you know?"* | *(silent)* |
+| | **The assistant answers:** *"The general rule is 20 days, from Belgian law. But Ilke agreed 22 days with this client and an expert approved it…"* | *(silent while it speaks)* |
+| **1:20 – 1:25 · Calm blob** | The blob, green, in the corner | **NOAH:** "Ilke shared it once. Isak never had to ask her. Think electricity. Think wifi." |
 
 ## 1:50 – 2:35 · How it works (Noah, one slide)
 
@@ -62,11 +63,11 @@ Setup: local server `npm run dev` (accounts in `.env.local`); mascot `.env`: `BR
 
 | Shot | Setup | Do |
 |---|---|---|
-| 1 | You are: **Ilke** | New Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → wait for the blue card → **Share for review** → hold 2 s on the pill |
-| 2 | You are: **Anna** | The card appears → hold 2 s → **Approve ✓** → hold 1 s |
-| 3 | You are: **Isak** | New Mail: *"Dear Brouwerij De Kroon, your employees get 20 holiday days this year."* → amber → say *"Hey SD Worx, fix it"* → hold 1 s on the corrected email |
-| 4 | You are: **Isak**, Teams in front (or `Cmd+Shift+T`) | Say *"And the meal voucher is 6.91 euros per day."* → let it correct |
-| 5 | Same | Say *"Hey SD Worx, why does De Kroon get 22 holiday days?"* → let it finish |
+| 1 | You are: **Isak** | New Mail to a colleague: *"Hi Sofie, quick check: the employer part of the meal voucher is €6.91 per day, right?"* → amber → say *"Hey SD Worx, fix it"* → hold 1 s on €8.91. (No client name in this email.) |
+| 2 | You are: **Ilke** | New Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → blue card → **Share for review** → hold 2 s on the pill |
+| 3 | You are: **Anna** | The card appears → hold 2 s → **Approve ✓** → hold 1 s |
+| 4 | You are: **Isak**, Teams in front (or `Cmd+Shift+T`) | Say *"So for De Kroon that is 20 holiday days this year."* → let it speak |
+| 5 | Same | Say *"Hey SD Worx, how do you know?"* → let it finish |
 | 6 | Any | 5 s of the calm blob on a clean desktop |
 
 Embed in PowerPoint (Insert → Video, start *On click*). Bring a USB stick with the deck, the video file and a PDF.

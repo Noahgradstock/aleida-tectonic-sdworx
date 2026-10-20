@@ -9,6 +9,7 @@ import Funnel, { funnelLayers, funnelStage, LAYERS } from "./funnel";
 import ScanStage, { scannedCount } from "./scan";
 import ConnectStage, { connectText } from "./connect";
 import { Result } from "./result";
+import Blob from "./blob";
 
 // Three moments: ask (only the chat) → thinking (the documents get sorted) → the answer and why.
 
@@ -178,7 +179,10 @@ export default function Ask() {
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 text-[#161616]">
       {phase === "ask" && (
         <div className="flex flex-1 flex-col justify-center py-16">
-          <h1 className="font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl">Ask the company brain</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl">Ask the company brain</h1>
+            <Blob size={72} />
+          </div>
           <p className="mt-3 max-w-lg text-neutral-500">
             One answer from policies, Teams, email and the law, and the reason you can trust it.
           </p>

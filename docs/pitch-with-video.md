@@ -1,6 +1,6 @@
 # Pitch script with the 1-minute demo video (3 minutes + 5 minutes Q&A)
 
-We cannot use our own device, so the demo is a **silent 1-minute video** (`video/out/film-silent.mp4`, made by `video/make-film.mjs`) embedded in the slides. No titles, no music: we talk over it.
+We cannot use our own device, so the demo is a **silent 1-minute video** (`video/film-silent.mp4`, made by `video/make-film.mjs`) embedded in the slides. No titles, no music: we talk over it.
 
 **What the video shows (all real app screens, recorded from the app):**
 
@@ -8,11 +8,11 @@ We cannot use our own device, so the demo is a **silent 1-minute video** (`video
 |---|---|
 | 0:00 – 0:16 | A team meeting, "Payroll BE · weekly": Tom (new hire) and Jan (payroll expert). The blob sits in the corner. Tom says students can work 600 hours. The blob turns amber: the trusted value is 650 hours (official source, 96%). Jan says: "For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law." |
 | 0:16 – 0:18 | "Meeting ended · Transcript saved with speaker names." |
-| 0:18 – 0:27 | Company brain, Live loop: the transcript goes in. Tom's 600 hours is learned at 3%. Jan's 22 days for Brouwerij De Kroon is learned at 50%, capped until confirmed. |
-| 0:27 – 0:34 | Jan's screen: "Waiting for you": one card with Jan's own words, ✓ That's right. One click: 97%, "this is the answer people get". |
-| 0:35 – 0:43 | A week later, Sofie (not in the meeting) asks: "How many holiday days do employees get at Brouwerij De Kroon?" The brain reads its sources. |
-| 0:43 – 0:51 | **22 days · 97 · Trusted.** Reliable: Jan Wouters, expert. Applies here: the client's own agreement. Jan's exact words from the meeting. |
-| 0:51 – 1:00 | Who to talk to: "Contact Jan Wouters first". Fade to black. |
+| 0:18 – 0:27 | Company brain, "What changed today": the meeting transcript goes in. Tom's 600 hours is heard at 3%. Jan's 22 days for Brouwerij De Kroon is heard at 50%, "Waiting for Jan". |
+| 0:27 – 0:34 | Jan's screen, "Waiting for you": one card with Jan's own words, ✓ That's right. One click: "Jan Wouters confirmed it · 20 days → 22 days · 97% · +47 pts". |
+| 0:34 – 0:41 | A week later, Sofie (not in the meeting) asks: "How many holiday days do employees get at Brouwerij De Kroon?" The brain reads its sources. |
+| 0:41 – 0:48 | **22 days · 97 · Trusted.** Reliable: Jan Wouters, expert. Applies here: the client's own agreement. Jan's exact words from the meeting. |
+| 0:48 – 1:00 | Who to talk to: "Contact Jan Wouters first". Fade to black. |
 
 **Cast:** Noah = narrator. Ilke speaks Jan's line, Isak speaks Tom's line, live, on cue (the names on screen come from our demo data).
 
@@ -39,9 +39,9 @@ We cannot use our own device, so the demo is a **silent 1-minute video** (`video
 | 0:16 | **NOAH** | "The meeting ends. Nobody writes anything down." |
 | 0:19 | **NOAH** | "The brain picks out each fact, who said it, and the exact words. Tom's guess: three percent. Jan's agreement: fifty, because it was only said out loud." |
 | 0:28 | **NOAH** | "So it asks one person one question. Jan clicks once. Ninety-seven." |
-| 0:35 | **NOAH** | "A week later, Sofie wasn't in that meeting. She asks." |
-| 0:43 | **NOAH** | *(pause 1 s)* "Twenty-two days, not the twenty in the law, because this client has its own agreement. Jan's own words, from the meeting." |
-| 0:51 | **NOAH** | "And if Sofie still doubts it: ask Jan." |
+| 0:34 | **NOAH** | "A week later, Sofie wasn't in that meeting. She asks." |
+| 0:41 | **NOAH** | *(pause 1 s)* "Twenty-two days, not the twenty in the law, because this client has its own agreement. Jan's own words, from the meeting." |
+| 0:48 | **NOAH** | "And if Sofie still doubts it: ask Jan." |
 
 ### 1:15 – 2:30 · What you just saw (Noah, video ends on black, then a slide)
 
@@ -64,7 +64,7 @@ We cannot use our own device, so the demo is a **silent 1-minute video** (`video
 
 ## Rehearsal notes
 
-- Rehearse over the video at least twice. Sync points: Tom's caption (0:01), Jan's caption (0:11), the 22-day answer (0:43).
+- Rehearse over the video at least twice. Sync points: Tom's caption (0:01), Jan's caption (0:11), the 22-day answer (0:41).
 - The meeting captions are on screen, so if Ilke or Isak miss their cue, the jury can still read the line.
 - If you run long, pause the video (space bar) on the 22-day answer and finish the sentence.
 - Keep the video file local in the slides (PPT: insert video; PDF: link the file or use screenshots of the key frames in `video/out/keys/`).

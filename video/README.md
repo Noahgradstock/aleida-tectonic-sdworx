@@ -15,6 +15,6 @@
 DEMO_PASSWORDS="jan:...,sofie:...,tom:..." PREVIEW=1 node make-film.mjs
 ```
 
-checks the key frames in `out/keys/`, and without `PREVIEW=1` it writes `out/film-silent.mp4` (1920×1080, about 6 minutes). Restart the app between runs.
+checks the key frames in `out/keys/`, and without `PREVIEW=1` it writes `out/film-silent.mp4` (the committed copy is `video/film-silent.mp4`) (1920×1080, about 6 minutes). Restart the app between runs.
 
 All people, clients and documents are synthetic.

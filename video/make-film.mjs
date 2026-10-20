@@ -90,6 +90,8 @@ await context.route(`${BASE}/**`, async (route) => {
 });
 
 const page = await context.newPage();
+page.on("console", (m) => m.type() === "error" && console.log("console:", m.text().slice(0, 300)));
+page.on("pageerror", (e) => console.log("pageerror:", String(e).slice(0, 300)));
 async function signIn(user) {
   await page.request.post(BASE + "/api/auth/logout", { headers: { origin: BASE } }).catch(() => {});
   const r = await page.request.post(BASE + "/api/auth/login", { headers: { origin: BASE }, data: { username: user, password: PASSWORDS[user] } });
@@ -228,7 +230,16 @@ async function goTo(url, label, ready) {
   await page.evaluate(([u, l]) => { document.getElementById("app").src = u; document.getElementById("url").textContent = l; }, [url, label]);
   await page.waitForTimeout(800);
   app = await (await page.$("#app")).contentFrame();
-  await ready().catch(async () => { await page.waitForTimeout(3000); await ready(); });
+  // Keep the page's clock moving while it loads: the app waits on timers before it renders.
+  for (let k = 0; ; k++) {
+    if (await ready().then(() => true, () => false)) break;
+    if (k > 60) {
+      await page.screenshot({ path: "out/debug.png" });
+      console.log("DOM:", await app.evaluate(() => ({ ta: document.querySelectorAll("textarea").length, len: document.body.innerHTML.length, text: document.body.innerText.slice(0, 300).replace(/\n/g, " | "), url: location.href, tas: [...document.querySelectorAll("textarea,input")].length, title: document.title, vis: document.visibilityState, w: innerWidth, h: innerHeight })));
+      throw new Error("page did not render: " + url);
+    }
+    await context.clock.runFor(200);
+  }
   await page.waitForTimeout(600);
   await app.evaluate(() => window.scrollTo(0, 0));
   await cam(WIDE, now(), 0.01);
@@ -271,49 +282,54 @@ await until(17.8);
 await key("4-ended");
 
 // ================= 2. The brain learns (18–27), as Tom, who ran the meeting =================
-await goTo("/loop", "company-brain · Live loop", () => app.locator("textarea").first().waitFor());
+await signIn("tom");
+await goTo("/loop", "company-brain · Live loop", () => app.getByText("Paste text yourself").waitFor({ timeout: 500 }));
+await until(now() + 0.6);
+await click(app.getByRole("button", { name: /Paste text yourself/ }), 0.6);
 const transcript = L("textarea").first();
-await focus(transcript, 1.45, now(), 1.2, { sx: 720, sy: 420 });
-await until(now() + 0.8);
+while (!(await transcript.isVisible())) await shot();
+await focus(transcript, 1.4, now(), 1.0, { sx: 720, sy: 420 });
+await until(now() + 0.6);
 await transcript.fill(TRANSCRIPT);
 await transcript.evaluate((el) => el.classList.add("__hl"));
 await until(now() + 1.4);
 await transcript.evaluate((el) => el.classList.remove("__hl"));
 await click(app.getByRole("button", { name: "Feed to the brain" }), 0.6);
-const learned = app.getByText(/Learned 22 days for Brouwerij De Kroon/);
-while (!(await learned.isVisible())) await shot();
-const results = app.getByText(/Learned 2 statements/).locator("xpath=..");
+const waiting = app.getByText("Waiting for Jan", { exact: true });
+while (!(await waiting.isVisible())) await shot();
+cursor.x = cursor.y = null;
+const heard = waiting.locator("xpath=ancestor::*[contains(., 'we agreed 22')][1]");
 await cam(WIDE, now(), 0.6);
-await bring(results, 0.6);
-await focus(results, 1.35, now(), 1.0, { sx: 720, sy: 420 });
-await learned.evaluate((el) => el.classList.add("__hl"));
-await until(now() + 3.2);
+await bring(heard, 0.6);
+await focus(heard, 1.45, now(), 1.0, { sx: 720, sy: 420 });
+await heard.evaluate((el) => el.classList.add("__hl"));
+await until(now() + 3.0);
 await key("5-learned-50");
 
-// ================= 3. Jan confirms in one click (27–35) =================
+// ================= 3. Jan confirms in one click =================
 await signIn("jan");
-await goTo("/loop", "company-brain · Live loop", () => app.getByRole("button", { name: /That's right/ }).waitFor());
+await goTo("/loop", "company-brain · Live loop", () => app.getByRole("button", { name: /That's right/ }).waitFor({ timeout: 500 }));
 const yes = app.getByRole("button", { name: /That's right/ });
 await bring(yes, 0);
-const ask = yes.locator("xpath=ancestor::*[.//*[contains(text(),'we agreed 22')]][1]");
-await focus(ask, 1.4, now(), 1.1, { sx: 720, sy: 470 });
+await focus(yes, 1.45, now(), 1.1, { sx: 760, sy: 600 });
+await yes.evaluate((el) => el.parentElement?.parentElement?.classList.add("__hl"));
 await until(now() + 1.6);
 await key("6-jan-question");
 await click(yes, 0.7);
-const trusted = app.getByText(/lifted the 50% cap/).first();
-while (!(await trusted.isVisible())) await shot();
-const entry = trusted.locator("xpath=..");
-await cam(WIDE, now(), 0.5);
-await bring(entry, 0.5);
-await focus(entry, 1.45, now(), 1.0, { sx: 720, sy: 420 });
-await entry.evaluate((el) => el.classList.add("__hl"));
+const confirmed = app.getByText("Jan Wouters confirmed it");
+while (!(await confirmed.isVisible())) await shot();
 cursor.x = cursor.y = null;
+const change = confirmed.locator("xpath=ancestor::*[contains(., '+47') or contains(., 'pts')][1]");
+await cam(WIDE, now(), 0.5);
+await bring(change, 0.5);
+await focus(change, 1.55, now(), 1.0, { sx: 720, sy: 420 });
+await change.evaluate((el) => el.classList.add("__hl"));
 await until(now() + 3.0);
 await key("7-jan-97");
 
 // ================= 4. A week later: Sofie asks (35–60) =================
 await signIn("sofie");
-await goTo("/", "company-brain · Ask", () => app.locator("textarea, input[type=text]").first().waitFor());
+await goTo("/", "company-brain · Ask", () => app.locator("textarea, input[type=text]").first().waitFor({ timeout: 500 }));
 const input = L("textarea, input[type=text]").first();
 await focus(input, 1.3, now(), 1.0, { sx: 720, sy: 420 });
 await click(input, 0.6);

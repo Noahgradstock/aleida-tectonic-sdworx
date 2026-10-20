@@ -10,15 +10,27 @@ let cookie = null;
 let facts = []; // [{ key, label, keywords, status, value, score, source }]
 let loadedAt = 0;
 
+const ORIGIN = new URL(BRAIN_URL).origin; // the server's same-origin check
+let me = null; // { id, name, role } of the signed-in account; null for the read-only guest
+
+// A real account (BRAIN_USER / BRAIN_PASSWORD in .env) can teach the brain; the guest can only ask.
 async function signIn() {
-  const res = await fetch(`${BRAIN_URL}/api/auth/guest`, { method: "POST" });
+  const account = env.BRAIN_USER && env.BRAIN_PASSWORD;
+  const res = account
+    ? await fetch(`${BRAIN_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: ORIGIN },
+        body: JSON.stringify({ username: env.BRAIN_USER, password: env.BRAIN_PASSWORD }),
+      })
+    : await fetch(`${BRAIN_URL}/api/auth/guest`, { method: "POST", headers: { origin: ORIGIN } });
   if (!res.ok) throw new Error(`Sign-in failed (${res.status})`);
   cookie = (res.headers.get("set-cookie") || "").split(";")[0];
+  me = account ? (await res.json()).user : null;
 }
 
 async function call(path, init = {}, retry = true) {
   if (!cookie) await signIn();
-  const res = await fetch(`${BRAIN_URL}${path}`, { ...init, headers: { ...(init.headers || {}), cookie } });
+  const res = await fetch(`${BRAIN_URL}${path}`, { ...init, headers: { ...(init.headers || {}), origin: ORIGIN, cookie } });
   if (res.status === 401 && retry) {
     cookie = null;
     return call(path, init, false);
@@ -178,14 +190,65 @@ async function corrected(text) {
   return { text: out, issues };
 }
 
+// ---------- Learning: what you write and say teaches the brain (online only, called from main.js) ----------
+
+// Teaches the brain from everyday work. channel: "meeting" | "teams" | "email".
+// Returns only what the mascot shows: what was learned, and whether it waits for a confirmation.
+async function learn(text, channel) {
+  if (!cookie) await signIn().catch(() => {});
+  if (!me) return { learned: [], skipped: 0 }; // guest: read-only
+  if (!(text.match(VALUE) || []).length) return { learned: [], skipped: 0 }; // no value, nothing to learn; saves the rate limit
+  // The listener only hears your own microphone, so in a meeting you are the speaker.
+  const body = channel === "meeting" ? `${me.name}: ${text}` : text;
+  const r = await call("/api/brain/ingest", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ channel, text: body.slice(0, 8000), context: CONTEXT }),
+  });
+  if (r.learned.length) {
+    answerCache.clear(); // the next answer and check include what was just learned
+    loadedAt = 0;
+  }
+  return {
+    learned: r.learned.map((e) => ({
+      topic: e.factLabel,
+      value: e.value,
+      score: Math.round(e.claimScore.after * 100),
+      waiting: e.caps.some((c) => /not confirmed/.test(c)), // meeting claim capped at 50% until the speaker or an expert confirms
+      claimId: e.claimId,
+    })),
+    skipped: r.skipped.length,
+  };
+}
+
+// Writing changes on every keystroke: learn only once the text has settled, so half-typed values never become claims.
+const SETTLE_MS = 10_000;
+const settling = new Map(); // channel -> timer
+function learnWhenSettled(text, channel, onLearned) {
+  clearTimeout(settling.get(channel));
+  settling.set(
+    channel,
+    setTimeout(() => {
+      settling.delete(channel);
+      if (!/[.!?]\s*$/.test(text.trim())) return; // the last sentence is not finished yet
+      learn(text, channel).then(onLearned, () => {}); // 403/429/offline: stay quiet
+    }, SETTLE_MS),
+  );
+}
+
+function stopLearning() {
+  for (const t of settling.values()) clearTimeout(t);
+  settling.clear();
+}
+
 // Signs in and loads all facts up front, so the first check and question are fast.
 async function warmUp() {
   try {
     const n = await loadFacts();
-    console.log(`brain: ${n} facts loaded`);
+    console.log(`brain: ${n} facts loaded, ${me ? `signed in as ${me.name} (learns from your work)` : "guest (read-only, add BRAIN_USER and BRAIN_PASSWORD to .env to learn)"}`);
   } catch (e) {
     console.log("brain: could not load facts:", e.message);
   }
 }
 
-module.exports = { ask, check, checkAll, corrected, warmUp, findFactByText: (t) => findFact(t) };
+module.exports = { ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, findFactByText: (t) => findFact(t) };

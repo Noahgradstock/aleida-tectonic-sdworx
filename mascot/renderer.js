@@ -220,6 +220,14 @@ window.mascot.onSilence(() => {
   if (mood === "speaking" || mood === "thinking" || mood === "wake") setMood("calm");
 });
 
+// Background learning: one quiet line, no state change. A meeting claim waits for the speaker or an expert.
+window.mascot.onLearned((learned) => {
+  if (mood === "warning" || mood === "speaking") return; // never cover a warning or an answer
+  const l = learned[0];
+  const more = learned.length > 1 ? ` (+${learned.length - 1} more)` : "";
+  pill(l.waiting ? `Learned: ${l.topic} ${l.value}, waiting for a confirmation${more}` : `Learned: ${l.topic} ${l.value} (${l.score}%)${more}`, 4000);
+});
+
 window.mascot.onFixed(({ count }) => {
   closeCard();
   pill(`Fixed ${count} value${count > 1 ? "s" : ""} in your email ✓`, 3000);

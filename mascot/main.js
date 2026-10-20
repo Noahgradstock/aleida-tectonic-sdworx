@@ -163,12 +163,25 @@ async function checkWriting(text, where) {
   send("mascot:check", { ok: true });
 }
 
+// What you write and say also teaches the brain (online only). Quiet: a short pill, never a pop-up.
+function onLearned(r) {
+  if (!r || !r.learned.length) return;
+  log("learned:", r.learned.map((l) => `${l.topic} ${l.value} (${l.score}%${l.waiting ? ", waiting" : ""})`).join("; "));
+  send("mascot:learned", r.learned);
+}
+const LEARN_CHANNEL = { Mail: "email", email: "email", "Microsoft Teams": "teams", "Microsoft Teams (work or school)": "teams" };
+function learnFromWriting(text, where) {
+  const channel = LEARN_CHANNEL[where];
+  if (online && channel && text.trim()) brain.learnWhenSettled(text.slice(0, 8000), channel, onLearned);
+}
+
 const watcher = createWatcher(
   (appName, text) => {
     log("writing in", appName, `(${text.length} chars)`);
     if (appName === "Mail") lastMailText = text;
     if (!text.trim()) return checkWriting("", appName);
     checkWriting(text, appName);
+    learnFromWriting(text, appName);
   },
   (error) => {
     log("watcher error:", error);
@@ -267,6 +280,9 @@ async function onSegment(buffer, mime) {
     return send("mascot:wake");
   }
 
+  const toMascot = waitingForQuestion || (inConversation() && (conversation.isAddressed(text) || FIX_COMMAND.test(text)));
+  if (online && activeContext === "meeting" && !toMascot) brain.learn(text, "meeting").then(onLearned, () => {});
+
   // In a meeting, a wrong value is corrected before anything else.
   if (activeContext === "meeting") {
     const c = await brain.check(text);
@@ -311,6 +327,7 @@ function setOnline(on) {
   if (on) watcher.start();
   else {
     watcher.stop();
+    brain.stopLearning(); // offline: nothing pending is sent
     talkMode = false;
     convoUntil = 0;
     waitingForQuestion = false;
@@ -359,7 +376,9 @@ ipcMain.handle("brain:ask", async (event, question) => {
 });
 
 ipcMain.on("compose:changed", (event, text) => {
-  if (fromCompose(event) && typeof text === "string") checkWriting(text.slice(0, 4000), "email");
+  if (!fromCompose(event) || typeof text !== "string") return;
+  checkWriting(text.slice(0, 4000), "email");
+  learnFromWriting(text, "email");
 });
 
 ipcMain.on("mascot:fix", (event, from, to) => {

@@ -27,4 +27,5 @@ contextBridge.exposeInMainWorld("mascot", {
   onWake: on("mascot:wake"),
   onAnswer: on("mascot:answer"),
   onSpeak: on("mascot:speak"),
+  onLearned: on("mascot:learned"),
 });

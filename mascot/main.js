@@ -146,8 +146,8 @@ async function checkWriting(text, where) {
   if (!result.ok) {
     const same = issue && issue.where === where && issue.said === result.said && issue.key === result.key;
     issue = { ...result, where };
+    send("mascot:check", issue); // the page ignores repeats of a warning it is already showing
     if (!same) {
-      send("mascot:check", issue);
       conversation.rememberWarning(issue);
       if (where === "meeting") {
         say(`Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`);
@@ -232,7 +232,7 @@ async function answerAloud(question, explicit = true) {
   }
   if (g !== gen) return log("dropped (turned off):", question);
   if (!explicit && !r.known) {
-    send("mascot:check", { ok: true });
+    send("mascot:idle");
     return log("ignored, not a known topic:", question);
   }
   log("reply:", r.text);

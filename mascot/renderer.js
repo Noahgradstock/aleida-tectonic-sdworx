@@ -4,6 +4,7 @@ const stage = $("stage");
 const card = $("card");
 const audio = $("audio");
 let pendingFix = null;
+let shownIssue = ""; // the warning on screen, so repeats do not re-animate it
 let online = false;
 let mood = "calm";
 let context = "email";
@@ -34,6 +35,7 @@ function show(section) {
 
 function closeCard() {
   card.hidden = true;
+  shownIssue = "";
   pendingFix = null;
   setMood("calm");
   window.mascot.interactive(false);
@@ -157,6 +159,9 @@ window.mascot.onCheck((r) => {
     } else if (mood === "thinking") setMood("calm");
     return;
   }
+  const id = `${r.where}|${r.key}|${r.said}`;
+  if (id === shownIssue && !$("warning").hidden) return;
+  shownIssue = id;
   const spoken = r.where === "meeting";
   pendingFix = r.where === "meeting" ? null : { from: r.said, to: r.value, native: r.where !== "email" };
   $("w-text").textContent = spoken
@@ -203,6 +208,10 @@ $("fix").addEventListener("click", () => {
   closeCard();
 });
 $("ignore").addEventListener("click", closeCard);
+
+window.mascot.onIdle(() => {
+  if (mood === "thinking") setMood("calm");
+});
 
 window.mascot.onSilence(() => {
   audio.pause();

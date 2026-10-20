@@ -27,9 +27,9 @@ The mascot picks its setting from the app in front, and shows it as a badge on t
 
 | Setting | When | What it does | Speaks? |
 |---|---|---|---|
-| **Email** (blue envelope) | Mail, Outlook and other writing apps | Reads what you write and warns on wrong values. Microphone off | Never |
-| **Meeting** (purple camera) | Teams, Zoom, FaceTime, Webex, Slack in front (stays on 2 minutes after you switch away) | Listens; warns "that last thing you said was off"; answers "Hey SD Worx, …" | Only when asked |
-| **Talking** (on/off) | Tap 🎙, long-press the blob, or `Cmd+Shift+Space`; tap again to turn off. A red mic badge shows on the blob | Listens anywhere for "Hey SD Worx" / "Hej SD Worx" and answers out loud. Outside meetings it reacts only to the wake word | Yes |
+| **Email** (blue envelope) | Mail, Outlook and other writing apps | Reads what you write and warns on wrong values. Say "Hey SD Worx, fix it" to correct the draft | Only when you talk to it |
+| **Meeting** (purple camera) | Teams, Zoom, FaceTime, Webex, Slack in front (stays on 2 minutes after you switch away) | Listens; on a wrong value it turns amber and speaks up ("Quick correction: …"); answers "Hey SD Worx, …" | Corrections and answers |
+| **Conversation** | Online, the mascot always listens for **"Hey SD Worx"** (also "Hej SD Worx"). Saying it opens a 30-second conversation: follow-ups need no wake word, and every answer extends it. 🎙, long-press or `Cmd+Shift+Space` keeps it open until you turn it off. Sound-wave bars on the blob show it is open | Yes |
 
 The setting is always automatic. For a demo on a machine without Teams, `Cmd+Shift+T` forces the meeting setting on and off.
 

@@ -71,7 +71,15 @@ let contextMode = "auto"; // auto | email | meeting
 let activeContext = "email";
 let frontApp = "";
 let lastMeetingSeen = 0;
-let talkMode = false; // on: always listening for "Hey SD Worx"; off: mic only in meetings
+let talkMode = false; // conversation mode: no wake word needed (manual toggle, or 30 s after "Hey SD Worx")
+let convoUntil = 0;
+const CONVO_MS = 30000;
+const inConversation = () => talkMode || Date.now() < convoUntil;
+function openConversation() {
+  const was = inConversation();
+  convoUntil = Date.now() + CONVO_MS;
+  if (!was) send("mascot:talk", true);
+}
 
 function updateContext() {
   if (MEETING_APPS.includes(frontApp)) lastMeetingSeen = Date.now();
@@ -81,10 +89,10 @@ function updateContext() {
     activeContext = next;
     log("context:", next, `(${frontApp})`);
   }
-  const wantMic = online && (activeContext === "meeting" || talkMode);
+  const wantMic = online;
   if (wantMic) startMeeting();
   else if (listener) stopMeeting();
-  send("mascot:context", { context: activeContext, mode: contextMode, app: frontApp, talk: talkMode });
+  send("mascot:context", { context: activeContext, mode: contextMode, app: frontApp, talk: inConversation() });
 }
 
 // The current warning stays until the same place (Mail, the meeting, the demo email) says it is fixed.
@@ -132,7 +140,9 @@ async function checkWriting(text, where) {
     if (!same) {
       send("mascot:check", issue);
       conversation.rememberWarning(issue);
-      if (talkMode && where === "Mail") {
+      if (where === "meeting") {
+        say(`Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`);
+      } else if (inConversation() && where === "Mail") {
         offerUntil = Date.now() + 60000;
         say(`${conversation.speakable(result.said)} looks off. Want me to fix your email?`);
       }
@@ -207,6 +217,7 @@ async function answerAloud(question) {
     r = { text: "Sorry, I can't reach the brain right now." };
   }
   log("reply:", r.text);
+  convoUntil = Math.max(convoUntil, Date.now() + CONVO_MS);
   send("mascot:answer", r);
   await say(conversation.speakable(r.text));
 }
@@ -225,19 +236,22 @@ async function onSegment(buffer, mime) {
   send("mascot:heard", { text });
 
 
-  if ((Date.now() < offerUntil && YES.test(text)) || (talkMode && FIX_COMMAND.test(text) && /\b(e-?mail|mail)\b/i.test(text))) {
-    return fixMail(true);
-  }
+  if (Date.now() < offerUntil && YES.test(text)) return fixMail(true);
+
   const wake = text.match(WAKE);
   if (wake) {
+    openConversation();
     const question = wake[1].trim();
-    if (question.length > 6) return answerAloud(question);
+    if (question.length > 3) return answerAloud(question);
     waitingForQuestion = true;
     return send("mascot:wake");
   }
-  if (waitingForQuestion) {
+  if (waitingForQuestion || inConversation()) {
     waitingForQuestion = false;
-    return answerAloud(text);
+    if (text.split(/\s+/).length >= 2 || FIX_COMMAND.test(text)) {
+      openConversation();
+      return answerAloud(text);
+    }
   }
   if (activeContext !== "meeting") return; // outside meetings, only "Hey SD Worx" counts
   checkWriting(text, "meeting");
@@ -276,7 +290,8 @@ function setOnline(on) {
   updateContext();
 }
 function toggleTalk() {
-  talkMode = !talkMode;
+  talkMode = !inConversation();
+  if (!talkMode) convoUntil = 0;
   if (talkMode && !online) setOnline(true);
   log("talk mode:", talkMode);
   updateContext();
@@ -357,6 +372,13 @@ app.whenReady().then(() => {
     updateContext();
   });
   setInterval(() => online && updateContext(), 5000); // let the meeting setting expire
+  // Close the conversation window after 30 s of quiet.
+  let wasTalking = false;
+  setInterval(() => {
+    const now = inConversation();
+    if (wasTalking && !now) send("mascot:talk", false);
+    wasTalking = now;
+  }, 1000);
 });
 
 app.on("will-quit", () => {

@@ -92,7 +92,7 @@ function setTalk(on) {
 }
 window.mascot.onTalk((on) => {
   setTalk(on);
-  pill(on ? "Talking on · say “Hey SD Worx”" : "Talking off", 2500);
+  pill(on ? "Listening · just talk" : "Say “Hey SD Worx” to talk", 2500);
 });
 
 function statusLine() {
@@ -112,7 +112,7 @@ window.mascot.onOnline((on) => {
   online = on;
   $("online").checked = on;
   statusLine();
-  pill(on ? "Online · tap 🎙 to talk" : "Offline");
+  pill(on ? "Online · say “Hey SD Worx”" : "Offline");
   setMood("calm");
 });
 

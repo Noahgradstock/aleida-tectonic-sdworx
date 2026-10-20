@@ -1,0 +1,93 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-nl')/messages",
+  "value": [
+    {
+      "id": "1772704800001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-03-05T10:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-eva",
+          "displayName": "Eva Jansen"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>New electric lease car at Groen BV from April. I'll put the bijtelling at 16%, ok?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1772706000002",
+          "replyToId": "1772704800001",
+          "messageType": "message",
+          "createdDateTime": "2026-03-05T10:20:00Z",
+          "from": {
+            "user": {
+              "id": "u-lars",
+              "displayName": "Lars de Vries"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Eva 16% was 2024. A new electric car registered in 2026 has 22% bijtelling up to €30.000 catalogue value.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-sanne",
+                  "displayName": "Sanne de Vries"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "1772791200003",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-03-06T10:00:00Z",
+      "from": {
+        "user": {
+          "id": "u-emma",
+          "displayName": "Emma Bakker"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Does the 60-month period start at the first registration or at the start of the lease?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1772792400004",
+          "replyToId": "1772791200003",
+          "messageType": "message",
+          "createdDateTime": "2026-03-06T10:20:00Z",
+          "from": {
+            "user": {
+              "id": "u-sanne",
+              "displayName": "Sanne de Vries"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>At the first registration (datum eerste toelating), not the lease start.</p>"
+          },
+          "attachments": [],
+          "reactions": [],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

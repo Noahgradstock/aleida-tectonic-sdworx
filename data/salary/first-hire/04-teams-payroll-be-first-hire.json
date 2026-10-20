@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1776159000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-04-14T09:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-tom",
+          "displayName": "Tom Claes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>New client just hired their first employee. The reduction is €3,100 per quarter, I found it in the starter guide 👍</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1776160800002",
+          "replyToId": "1776159000001",
+          "messageType": "message",
+          "createdDateTime": "2026-04-14T10:00:00Z",
+          "from": {
+            "user": {
+              "id": "u-an",
+              "displayName": "An Peeters"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Tom careful, that guide is from 2022. For a first employee hired from 1 January 2026 the reduction is €2,000 per quarter, limited to 20 quarters.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-jan",
+                  "displayName": "Jan Wouters"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

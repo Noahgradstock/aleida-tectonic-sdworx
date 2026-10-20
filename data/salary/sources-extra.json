@@ -1,0 +1,1301 @@
+{
+  "about": "Extra fictional salary topics (night work, Sunday work, NL home-working allowance, NL bijtelling, first employee reduction, short leave, end-of-year gifts, anniversary bonus). All names, clients, amounts, decrees and circulars are made up for the demo.",
+  "today": "2026-09-30",
+  "facts": [
+    {
+      "key": "night-work-premium",
+      "label": "Night work premium per hour",
+      "topic": "working-time",
+      "keywords": [
+        "night work",
+        "night shift",
+        "night shifts",
+        "night premium",
+        "night hours",
+        "nachtarbeid",
+        "nachtwerk",
+        "nachtpremie",
+        "nachtploeg",
+        "travail de nuit",
+        "prime de nuit",
+        "working at night",
+        "work at night",
+        "night-work"
+      ]
+    },
+    {
+      "key": "sunday-work-premium",
+      "label": "Premium for work on a Sunday",
+      "topic": "working-time",
+      "keywords": [
+        "sunday",
+        "sundays",
+        "zondag",
+        "zondagswerk",
+        "zondagstoeslag",
+        "dimanche",
+        "travail dominical",
+        "sunday work",
+        "sunday premium",
+        "work on a sunday",
+        "sunday hours"
+      ]
+    },
+    {
+      "key": "home-working-allowance-nl",
+      "label": "Tax-free home-working allowance per day (NL)",
+      "topic": "benefits",
+      "keywords": [
+        "thuiswerkvergoeding",
+        "thuiswerkdag",
+        "per thuiswerkdag",
+        "home-working allowance",
+        "home working allowance",
+        "home-working day",
+        "home working day",
+        "telework allowance per day",
+        "allowance per day for working from home"
+      ]
+    },
+    {
+      "key": "bijtelling-ev-nl",
+      "label": "Bijtelling for an electric company car (NL)",
+      "topic": "company-car",
+      "keywords": [
+        "bijtelling",
+        "addition to income",
+        "electric company car",
+        "electric car",
+        "elektrische auto",
+        "lease car",
+        "leaseauto",
+        "auto van de zaak",
+        "electric lease"
+      ]
+    },
+    {
+      "key": "first-employee-reduction",
+      "label": "Social security reduction for a first employee (per quarter)",
+      "topic": "social-security",
+      "keywords": [
+        "first employee",
+        "first hire",
+        "first-hire",
+        "eerste werknemer",
+        "eerste aanwerving",
+        "première embauche",
+        "premier travailleur",
+        "doelgroepvermindering",
+        "réduction groupe-cible",
+        "target group reduction",
+        "first worker"
+      ]
+    },
+    {
+      "key": "short-leave-wedding",
+      "label": "Short leave (klein verlet) for the employee's own wedding",
+      "topic": "leave",
+      "keywords": [
+        "short leave",
+        "klein verlet",
+        "petit chômage",
+        "wedding",
+        "own wedding",
+        "getting married",
+        "gets married",
+        "marriage",
+        "huwelijk",
+        "trouwen",
+        "bijzonder verlof",
+        "special leave"
+      ]
+    },
+    {
+      "key": "gift-tax-free-max",
+      "label": "Tax-free end-of-year gift per employee",
+      "topic": "benefits",
+      "keywords": [
+        "gift",
+        "gifts",
+        "christmas gift",
+        "christmas present",
+        "kerstgeschenk",
+        "kerstpakket",
+        "cadeau",
+        "geschenk",
+        "sinterklaas",
+        "saint nicholas",
+        "saint-nicolas",
+        "gift voucher",
+        "geschenkcheque",
+        "chèque-cadeau"
+      ]
+    },
+    {
+      "key": "anniversary-bonus-max",
+      "label": "Tax-free anniversary bonus at 25 years of service",
+      "topic": "bonus",
+      "keywords": [
+        "anniversary bonus",
+        "anniversary",
+        "jubilee",
+        "jubileumpremie",
+        "jubileumuitkering",
+        "prime d'ancienneté",
+        "25 years of service",
+        "years of service bonus",
+        "service anniversary"
+      ]
+    }
+  ],
+  "clients": {
+    "logistiek-van-damme": {
+      "name": "Logistiek Van Damme NV",
+      "country": "BE",
+      "pc": "140"
+    },
+    "zorggroep-horizon": {
+      "name": "Zorggroep Horizon BV",
+      "country": "NL"
+    }
+  },
+  "claims": [
+    {
+      "id": "off-night-2026",
+      "file": "night-work/01-cao-pc200-night-work-2026.txt",
+      "fact": "night-work-premium",
+      "value": "€2.15 per hour",
+      "sourceType": "official",
+      "title": "PC 200 agreement: night work premium 2026",
+      "author": null,
+      "date": "2025-12-10",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "trusted: the sector rule in force"
+    },
+    {
+      "id": "off-night-2024",
+      "file": "night-work/02-cao-pc200-night-work-2024.txt",
+      "fact": "night-work-premium",
+      "value": "€1.98 per hour",
+      "sourceType": "official",
+      "title": "PC 200 agreement: night work premium 2024",
+      "author": null,
+      "date": "2023-12-12",
+      "effectiveFrom": "2024-01-01",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "low: replaced by the 2026 agreement"
+    },
+    {
+      "id": "sp-night-guide",
+      "file": "night-work/03-shift-work-guide-2023.md",
+      "fact": "night-work-premium",
+      "value": "€1.98 per hour",
+      "sourceType": "sharepoint",
+      "title": "Shift and night work guide (2023)",
+      "author": "koen",
+      "date": "2023-03-14",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "low: old amount, owner left"
+    },
+    {
+      "id": "tm-night-nora",
+      "file": "night-work/04-teams-payroll-be-night-work.json",
+      "fact": "night-work-premium",
+      "value": "€1.98 per hour",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "nora",
+      "date": "2026-02-03",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "low: new hire, old amount"
+    },
+    {
+      "id": "tm-night-lotte",
+      "file": "night-work/04-teams-payroll-be-night-work.json",
+      "fact": "night-work-premium",
+      "value": "€2.15 per hour",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "lotte",
+      "date": "2026-02-03",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "reactions": [
+        "anna"
+      ],
+      "corrects": "tm-night-nora",
+      "expected": "trusted: expert correction that matches the agreement"
+    },
+    {
+      "id": "em-night-vandamme",
+      "file": "night-work/05-email-logistiek-van-damme-night-work.eml",
+      "fact": "night-work-premium",
+      "value": "€2.60 per hour",
+      "sourceType": "email",
+      "title": "Email: Logistiek Van Damme night shifts",
+      "author": "jan",
+      "date": "2026-03-02",
+      "scope": {
+        "country": "BE",
+        "pc": "140",
+        "client": "logistiek-van-damme"
+      },
+      "expected": "trusted for Logistiek Van Damme"
+    },
+    {
+      "id": "sp-night-vandamme",
+      "file": "night-work/06-company-agreement-logistiek-van-damme.txt",
+      "fact": "night-work-premium",
+      "value": "€2.60 per hour",
+      "sourceType": "sharepoint",
+      "title": "Company agreement Logistiek Van Damme – shift work",
+      "author": "an",
+      "date": "2025-11-20",
+      "scope": {
+        "country": "BE",
+        "pc": "140",
+        "client": "logistiek-van-damme"
+      },
+      "expected": "trusted for Logistiek Van Damme"
+    },
+    {
+      "id": "off-night-2026-nl",
+      "file": "night-work/07-nachtarbeid-premie-pc200-nl.txt",
+      "fact": "night-work-premium",
+      "value": "€2.15 per hour",
+      "sourceType": "official",
+      "title": "PC 200 cao: premie nachtarbeid 2026 (NL)",
+      "author": null,
+      "date": "2025-12-10",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "trusted: Dutch version of the agreement"
+    },
+    {
+      "id": "mt-night-pieter",
+      "file": "night-work/09-meeting-shift-planning-2026-09-24.txt",
+      "fact": "night-work-premium",
+      "value": "€2.15 per hour",
+      "sourceType": "meeting",
+      "title": "Meeting: Shift planning Q4",
+      "author": "pieter",
+      "date": "2026-09-24",
+      "scope": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expected": "usable: said in a meeting, matches the agreement"
+    },
+    {
+      "id": "off-sun-2022",
+      "file": "sunday-work/01-labour-act-sunday-work-2022.txt",
+      "fact": "sunday-work-premium",
+      "value": "100%",
+      "sourceType": "official",
+      "title": "Official: Sunday work premium",
+      "author": null,
+      "date": "2022-06-15",
+      "effectiveFrom": "2022-07-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the law"
+    },
+    {
+      "id": "sp-sun-manual",
+      "file": "sunday-work/02-payroll-manual-v2-sunday.md",
+      "fact": "sunday-work-premium",
+      "value": "75%",
+      "sourceType": "sharepoint",
+      "title": "Payroll manual BE v2 – Sunday work (2019)",
+      "author": "marc",
+      "date": "2019-05-02",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old rule, owner left"
+    },
+    {
+      "id": "tm-sun-bram",
+      "file": "sunday-work/03-teams-payroll-be-sunday.json",
+      "fact": "sunday-work-premium",
+      "value": "50%",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "bram",
+      "date": "2026-05-11",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: mixed up with the weekday overtime premium"
+    },
+    {
+      "id": "tm-sun-jan",
+      "file": "sunday-work/03-teams-payroll-be-sunday.json",
+      "fact": "sunday-work-premium",
+      "value": "100%",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "jan",
+      "date": "2026-05-11",
+      "scope": {
+        "country": "BE"
+      },
+      "reactions": [
+        "lotte"
+      ],
+      "corrects": "tm-sun-bram",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "em-sun-terduinen",
+      "file": "sunday-work/04-email-hotel-ter-duinen-sunday.eml",
+      "fact": "sunday-work-premium",
+      "value": "100%",
+      "sourceType": "email",
+      "title": "Email: Hotel Ter Duinen Sunday shifts",
+      "author": "anna",
+      "date": "2026-06-17",
+      "scope": {
+        "country": "BE",
+        "pc": "302",
+        "client": "hotel-ter-duinen"
+      },
+      "expected": "trusted for Hotel Ter Duinen: matches the law"
+    },
+    {
+      "id": "sp-sun-nl",
+      "file": "sunday-work/05-nl-zondagstoeslag-confluence.md",
+      "fact": "sunday-work-premium",
+      "value": "50%",
+      "sourceType": "sharepoint",
+      "title": "Confluence: Zondagstoeslag (NL)",
+      "author": "emma",
+      "date": "2026-03-03",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "NL only: excluded for Belgian cases"
+    },
+    {
+      "id": "mt-sun-lotte",
+      "file": "sunday-work/06-meeting-payroll-sync-2026-09-15.txt",
+      "fact": "sunday-work-premium",
+      "value": "100%",
+      "sourceType": "meeting",
+      "title": "Meeting: Payroll sync",
+      "author": "lotte",
+      "date": "2026-09-15",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "usable: said in a meeting, matches the law"
+    },
+    {
+      "id": "sp-sun-draft",
+      "file": "sunday-work/07-sunday-work-faq-draft.md",
+      "fact": "sunday-work-premium",
+      "value": "200%",
+      "sourceType": "sharepoint",
+      "title": "Draft: Sunday work FAQ",
+      "author": "nora",
+      "date": "2026-08-19",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: draft, total pay instead of the premium"
+    },
+    {
+      "id": "off-sun-2022-fr",
+      "file": "sunday-work/08-travail-dominical-fr.txt",
+      "fact": "sunday-work-premium",
+      "value": "100%",
+      "sourceType": "official",
+      "title": "Officiel : travail du dimanche (FR)",
+      "author": null,
+      "date": "2022-06-15",
+      "effectiveFrom": "2022-07-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: French version of the law"
+    },
+    {
+      "id": "em-sun-techstart",
+      "file": "sunday-work/09-email-techstart-sunday-release.eml",
+      "fact": "sunday-work-premium",
+      "value": "100%",
+      "sourceType": "email",
+      "title": "Email: TechStart Sunday release",
+      "author": "pieter",
+      "date": "2026-09-04",
+      "scope": {
+        "country": "BE",
+        "pc": "200",
+        "client": "techstart-gent"
+      },
+      "expected": "trusted for TechStart: matches the law"
+    },
+    {
+      "id": "off-thuis-2026",
+      "file": "thuiswerk-nl/01-belastingdienst-thuiswerkvergoeding-2026.txt",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.45 per day",
+      "sourceType": "official",
+      "title": "Belastingdienst: thuiswerkvergoeding 2026",
+      "author": null,
+      "date": "2025-12-01",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "trusted: the rule in force"
+    },
+    {
+      "id": "off-thuis-2025",
+      "file": "thuiswerk-nl/02-belastingdienst-thuiswerkvergoeding-2025.txt",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.40 per day",
+      "sourceType": "official",
+      "title": "Belastingdienst: thuiswerkvergoeding 2025",
+      "author": null,
+      "date": "2024-12-02",
+      "effectiveFrom": "2025-01-01",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: replaced in 2026"
+    },
+    {
+      "id": "sp-thuis-confluence",
+      "file": "thuiswerk-nl/03-confluence-thuiswerkvergoeding.md",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.40 per day",
+      "sourceType": "sharepoint",
+      "title": "Confluence: Thuiswerkvergoeding (NL)",
+      "author": "emma",
+      "date": "2025-02-14",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: not updated for 2026"
+    },
+    {
+      "id": "tm-thuis-eva",
+      "file": "thuiswerk-nl/04-teams-payroll-nl-thuiswerk.json",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.35 per day",
+      "sourceType": "teams",
+      "title": "Teams #payroll-nl",
+      "author": "eva",
+      "date": "2026-01-12",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: amount from 2024"
+    },
+    {
+      "id": "tm-thuis-lars",
+      "file": "thuiswerk-nl/04-teams-payroll-nl-thuiswerk.json",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.45 per day",
+      "sourceType": "teams",
+      "title": "Teams #payroll-nl",
+      "author": "lars",
+      "date": "2026-01-12",
+      "scope": {
+        "country": "NL"
+      },
+      "reactions": [
+        "sanne"
+      ],
+      "corrects": "tm-thuis-eva",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "em-thuis-horizon",
+      "file": "thuiswerk-nl/05-email-zorggroep-horizon-thuiswerk.eml",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.00 per day",
+      "sourceType": "email",
+      "title": "Email: Zorggroep Horizon thuiswerkvergoeding",
+      "author": "lars",
+      "date": "2026-02-18",
+      "scope": {
+        "country": "NL",
+        "client": "zorggroep-horizon"
+      },
+      "expected": "trusted for Zorggroep Horizon: client exception"
+    },
+    {
+      "id": "sp-thuis-de",
+      "file": "thuiswerk-nl/06-de-homeoffice-pauschale.md",
+      "fact": "home-working-allowance-nl",
+      "value": "€6 per day",
+      "sourceType": "sharepoint",
+      "title": "Homeoffice-Pauschale (DE)",
+      "author": "lukas",
+      "date": "2026-01-09",
+      "scope": {
+        "country": "DE"
+      },
+      "expected": "DE only: filed in the wrong folder, excluded for NL"
+    },
+    {
+      "id": "em-thuis-draft",
+      "file": "thuiswerk-nl/07-draft-newsletter-thuiswerk.eml",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.40 per day",
+      "sourceType": "email",
+      "title": "Draft: nieuwsbrief thuiswerkvergoeding",
+      "author": "emma",
+      "date": "2025-12-19",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: draft with last year's amount"
+    },
+    {
+      "id": "em-thuis-groen",
+      "file": "thuiswerk-nl/09-email-groen-bv-thuiswerk-reiskosten.eml",
+      "fact": "home-working-allowance-nl",
+      "value": "€2.45 per day",
+      "sourceType": "email",
+      "title": "Email: Groen BV thuiswerk en reiskosten",
+      "author": "lars",
+      "date": "2026-05-05",
+      "scope": {
+        "country": "NL",
+        "client": "groen-bv"
+      },
+      "expected": "trusted for Groen BV: matches the rule"
+    },
+    {
+      "id": "off-bij-2026",
+      "file": "bijtelling-nl/01-belastingdienst-bijtelling-2026.txt",
+      "fact": "bijtelling-ev-nl",
+      "value": "22%",
+      "sourceType": "official",
+      "title": "Belastingdienst: bijtelling elektrische auto 2026",
+      "author": null,
+      "date": "2025-09-16",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "trusted: the rule in force"
+    },
+    {
+      "id": "off-bij-2025",
+      "file": "bijtelling-nl/02-belastingdienst-bijtelling-2025.txt",
+      "fact": "bijtelling-ev-nl",
+      "value": "17%",
+      "sourceType": "official",
+      "title": "Belastingdienst: bijtelling elektrische auto 2025",
+      "author": null,
+      "date": "2024-09-17",
+      "effectiveFrom": "2025-01-01",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: replaced in 2026"
+    },
+    {
+      "id": "sp-bij-confluence",
+      "file": "bijtelling-nl/03-confluence-auto-van-de-zaak.md",
+      "fact": "bijtelling-ev-nl",
+      "value": "17%",
+      "sourceType": "sharepoint",
+      "title": "Confluence: Auto van de zaak (NL)",
+      "author": "emma",
+      "date": "2025-03-10",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: not updated for 2026"
+    },
+    {
+      "id": "tm-bij-eva",
+      "file": "bijtelling-nl/04-teams-payroll-nl-bijtelling.json",
+      "fact": "bijtelling-ev-nl",
+      "value": "16%",
+      "sourceType": "teams",
+      "title": "Teams #payroll-nl",
+      "author": "eva",
+      "date": "2026-03-05",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: percentage from 2024"
+    },
+    {
+      "id": "tm-bij-lars",
+      "file": "bijtelling-nl/04-teams-payroll-nl-bijtelling.json",
+      "fact": "bijtelling-ev-nl",
+      "value": "22%",
+      "sourceType": "teams",
+      "title": "Teams #payroll-nl",
+      "author": "lars",
+      "date": "2026-03-05",
+      "scope": {
+        "country": "NL"
+      },
+      "reactions": [
+        "sanne"
+      ],
+      "corrects": "tm-bij-eva",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "em-bij-groen",
+      "file": "bijtelling-nl/05-email-groen-bv-lease-cars.eml",
+      "fact": "bijtelling-ev-nl",
+      "value": "22%",
+      "sourceType": "email",
+      "title": "Email: Groen BV lease cars",
+      "author": "sanne",
+      "date": "2026-04-23",
+      "scope": {
+        "country": "NL",
+        "client": "groen-bv"
+      },
+      "expected": "trusted for Groen BV: matches the rule"
+    },
+    {
+      "id": "sp-bij-be",
+      "file": "bijtelling-nl/06-be-company-car-ev-note.md",
+      "fact": "bijtelling-ev-nl",
+      "value": "4%",
+      "sourceType": "sharepoint",
+      "title": "Note: electric company cars (BE)",
+      "author": "pieter",
+      "date": "2026-06-11",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "BE only: wrong country for a bijtelling question"
+    },
+    {
+      "id": "sp-bij-draft",
+      "file": "bijtelling-nl/07-draft-client-letter-bijtelling-2027.md",
+      "fact": "bijtelling-ev-nl",
+      "value": "25%",
+      "sourceType": "sharepoint",
+      "title": "Concept: klantbrief bijtelling 2027",
+      "author": "emma",
+      "date": "2026-09-22",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "low: unapproved draft that contradicts the rule"
+    },
+    {
+      "id": "mt-bij-lars",
+      "file": "bijtelling-nl/08-meeting-payroll-nl-2026-09-17.txt",
+      "fact": "bijtelling-ev-nl",
+      "value": "22%",
+      "sourceType": "meeting",
+      "title": "Meeting: Payroll NL weekly",
+      "author": "lars",
+      "date": "2026-09-17",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "usable: said in a meeting, matches the rule"
+    },
+    {
+      "id": "off-first-2026",
+      "file": "first-hire/01-nsso-first-employee-reduction-2026.txt",
+      "fact": "first-employee-reduction",
+      "value": "€2,000 per quarter",
+      "sourceType": "official",
+      "title": "NSSO: first employee reduction 2026",
+      "author": null,
+      "date": "2025-11-28",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the rule in force"
+    },
+    {
+      "id": "off-first-2016",
+      "file": "first-hire/02-nsso-first-employee-reduction-2016.txt",
+      "fact": "first-employee-reduction",
+      "value": "€3,100 per quarter",
+      "sourceType": "official",
+      "title": "NSSO: first employee reduction 2016",
+      "author": null,
+      "date": "2015-12-18",
+      "effectiveFrom": "2016-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: replaced in 2026"
+    },
+    {
+      "id": "sp-first-guide",
+      "file": "first-hire/03-starter-employer-guide-2022.md",
+      "fact": "first-employee-reduction",
+      "value": "€3,100 per quarter",
+      "sourceType": "sharepoint",
+      "title": "Starter employers guide (2022)",
+      "author": "marc",
+      "date": "2022-02-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old rule, owner left"
+    },
+    {
+      "id": "tm-first-tom",
+      "file": "first-hire/04-teams-payroll-be-first-hire.json",
+      "fact": "first-employee-reduction",
+      "value": "€3,100 per quarter",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "tom",
+      "date": "2026-04-14",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: new hire, old rule"
+    },
+    {
+      "id": "tm-first-an",
+      "file": "first-hire/04-teams-payroll-be-first-hire.json",
+      "fact": "first-employee-reduction",
+      "value": "€2,000 per quarter",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "an",
+      "date": "2026-04-14",
+      "scope": {
+        "country": "BE"
+      },
+      "reactions": [
+        "jan"
+      ],
+      "corrects": "tm-first-tom",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "off-first-2026-fr",
+      "file": "first-hire/05-onss-premier-travailleur-fr.txt",
+      "fact": "first-employee-reduction",
+      "value": "€2,000 per quarter",
+      "sourceType": "official",
+      "title": "ONSS : réduction premier travailleur (FR)",
+      "author": null,
+      "date": "2025-11-28",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: French version"
+    },
+    {
+      "id": "em-first-noor",
+      "file": "first-hire/06-email-atelier-noor-first-hire.eml",
+      "fact": "first-employee-reduction",
+      "value": "€2,000 per quarter",
+      "sourceType": "email",
+      "title": "Email: Atelier Noor first hire",
+      "author": "jan",
+      "date": "2026-06-03",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: matches the rule"
+    },
+    {
+      "id": "em-first-draft",
+      "file": "first-hire/07-draft-email-first-hire-reform.eml",
+      "fact": "first-employee-reduction",
+      "value": "€1,500 per quarter",
+      "sourceType": "email",
+      "title": "Draft: first employee reduction reform",
+      "author": "sofie",
+      "date": "2025-10-08",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: draft based on press, wrong amount"
+    },
+    {
+      "id": "sp-first-nl",
+      "file": "first-hire/08-doelgroepvermindering-eerste-aanwerving.md",
+      "fact": "first-employee-reduction",
+      "value": "€2,000 per quarter",
+      "sourceType": "sharepoint",
+      "title": "Doelgroepvermindering eerste aanwerving (2026)",
+      "author": "lotte",
+      "date": "2026-01-20",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: expert page, matches the rule"
+    },
+    {
+      "id": "mt-first-nora",
+      "file": "first-hire/09-meeting-sales-handover-2026-09-10.txt",
+      "fact": "first-employee-reduction",
+      "value": "€3,100 per quarter",
+      "sourceType": "meeting",
+      "title": "Meeting: Sales handover new SME clients",
+      "author": "nora",
+      "date": "2026-09-10",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: said in a meeting, old rule"
+    },
+    {
+      "id": "off-short",
+      "file": "short-leave/01-royal-decree-short-leave.txt",
+      "fact": "short-leave-wedding",
+      "value": "2 days",
+      "sourceType": "official",
+      "title": "Official: short leave for family events",
+      "author": null,
+      "date": "2023-11-30",
+      "effectiveFrom": "2024-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the law"
+    },
+    {
+      "id": "sp-short-faq",
+      "file": "short-leave/02-klein-verlet-faq-2014.md",
+      "fact": "short-leave-wedding",
+      "value": "3 days",
+      "sourceType": "sharepoint",
+      "title": "Klein verlet FAQ (2014)",
+      "author": "koen",
+      "date": "2014-04-10",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old rule, owner left"
+    },
+    {
+      "id": "tm-short-pieter",
+      "file": "short-leave/04-teams-payroll-be-short-leave.json",
+      "fact": "short-leave-wedding",
+      "value": "3 days",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "pieter",
+      "date": "2026-06-22",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old rule from the FAQ"
+    },
+    {
+      "id": "tm-short-anna",
+      "file": "short-leave/04-teams-payroll-be-short-leave.json",
+      "fact": "short-leave-wedding",
+      "value": "2 days",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "anna",
+      "date": "2026-06-22",
+      "scope": {
+        "country": "BE"
+      },
+      "reactions": [
+        "lotte"
+      ],
+      "corrects": "tm-short-pieter",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "em-short-terduinen",
+      "file": "short-leave/05-email-hotel-ter-duinen-short-leave.eml",
+      "fact": "short-leave-wedding",
+      "value": "3 days",
+      "sourceType": "email",
+      "title": "Email: Hotel Ter Duinen short leave",
+      "author": "jan",
+      "date": "2026-05-06",
+      "scope": {
+        "country": "BE",
+        "pc": "302",
+        "client": "hotel-ter-duinen"
+      },
+      "expected": "trusted for Hotel Ter Duinen: client exception"
+    },
+    {
+      "id": "off-short-nl",
+      "file": "short-leave/06-klein-verlet-overzicht-nl.txt",
+      "fact": "short-leave-wedding",
+      "value": "2 days",
+      "sourceType": "official",
+      "title": "Officieel: klein verlet (NL)",
+      "author": null,
+      "date": "2023-11-30",
+      "effectiveFrom": "2024-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: Dutch version of the law"
+    },
+    {
+      "id": "sp-short-nl",
+      "file": "short-leave/07-nl-bijzonder-verlof-confluence.md",
+      "fact": "short-leave-wedding",
+      "value": "1 day",
+      "sourceType": "sharepoint",
+      "title": "Confluence: Bijzonder verlof (NL)",
+      "author": "emma",
+      "date": "2026-04-02",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "NL only: excluded for Belgian cases"
+    },
+    {
+      "id": "off-gift-2026",
+      "file": "gifts/01-circular-gifts-2026.txt",
+      "fact": "gift-tax-free-max",
+      "value": "€50 per employee",
+      "sourceType": "official",
+      "title": "FPS Finance circular: gifts 2026",
+      "author": null,
+      "date": "2025-12-18",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the rule in force"
+    },
+    {
+      "id": "sp-gift-manual",
+      "file": "gifts/02-benefits-manual-2019-gifts.md",
+      "fact": "gift-tax-free-max",
+      "value": "€40 per employee",
+      "sourceType": "sharepoint",
+      "title": "Benefits manual – gifts (2019)",
+      "author": "koen",
+      "date": "2019-10-07",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: old amount, owner left"
+    },
+    {
+      "id": "tm-gift-sofie",
+      "file": "gifts/03-teams-payroll-be-gifts.json",
+      "fact": "gift-tax-free-max",
+      "value": "€40 per employee",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "sofie",
+      "date": "2026-09-14",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: last year's amount"
+    },
+    {
+      "id": "tm-gift-lotte",
+      "file": "gifts/03-teams-payroll-be-gifts.json",
+      "fact": "gift-tax-free-max",
+      "value": "€50 per employee",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "lotte",
+      "date": "2026-09-14",
+      "scope": {
+        "country": "BE"
+      },
+      "reactions": [
+        "an"
+      ],
+      "corrects": "tm-gift-sofie",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "em-gift-kroon",
+      "file": "gifts/04-email-brouwerij-de-kroon-gifts.eml",
+      "fact": "gift-tax-free-max",
+      "value": "€50 per employee",
+      "sourceType": "email",
+      "title": "Email: Brouwerij De Kroon Christmas gifts",
+      "author": "anna",
+      "date": "2026-09-21",
+      "scope": {
+        "country": "BE",
+        "pc": "200",
+        "client": "brouwerij-de-kroon"
+      },
+      "expected": "trusted for De Kroon: matches the rule"
+    },
+    {
+      "id": "nl-gift-newsletter",
+      "file": "gifts/05-newsletter-gifts-december-2025.html",
+      "fact": "gift-tax-free-max",
+      "value": "€50 per employee",
+      "sourceType": "email",
+      "title": "Client Update Belgium – December 2025",
+      "author": "an",
+      "date": "2025-12-19",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: Legal newsletter, matches the rule"
+    },
+    {
+      "id": "sp-gift-draft",
+      "file": "gifts/07-draft-gift-policy-2027.md",
+      "fact": "gift-tax-free-max",
+      "value": "€60 per employee",
+      "sourceType": "sharepoint",
+      "title": "Draft: gift policy 2027",
+      "author": "nora",
+      "date": "2026-09-08",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: draft based on a guess, contradicts the rule"
+    },
+    {
+      "id": "em-gift-janssens",
+      "file": "gifts/08-email-bakkerij-janssens-gifts.eml",
+      "fact": "gift-tax-free-max",
+      "value": "€50 per employee",
+      "sourceType": "email",
+      "title": "Email: Bakkerij Janssens Sinterklaas",
+      "author": "pieter",
+      "date": "2026-09-22",
+      "scope": {
+        "country": "BE",
+        "pc": "118",
+        "client": "bakkerij-janssens"
+      },
+      "expected": "trusted for Janssens: matches the rule"
+    },
+    {
+      "id": "off-jub-2026",
+      "file": "anniversary-bonus/01-fps-finance-anniversary-bonus-2026.txt",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,640",
+      "sourceType": "official",
+      "title": "FPS Finance: anniversary bonus 2026",
+      "author": null,
+      "date": "2026-01-20",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: the rule in force"
+    },
+    {
+      "id": "off-jub-2025",
+      "file": "anniversary-bonus/02-fps-finance-anniversary-bonus-2025.txt",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,560",
+      "sourceType": "official",
+      "title": "FPS Finance: anniversary bonus 2025",
+      "author": null,
+      "date": "2025-01-22",
+      "effectiveFrom": "2025-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: replaced in 2026"
+    },
+    {
+      "id": "sp-jub-handbook",
+      "file": "anniversary-bonus/03-benefits-handbook-2024-anniversary.md",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,480",
+      "sourceType": "sharepoint",
+      "title": "Benefits handbook 2024 – anniversary bonus",
+      "author": "pieter",
+      "date": "2024-05-02",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: amount from 2024"
+    },
+    {
+      "id": "tm-jub-nora",
+      "file": "anniversary-bonus/04-teams-payroll-be-anniversary.json",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,560",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "nora",
+      "date": "2026-07-08",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "low: last year's amount"
+    },
+    {
+      "id": "tm-jub-jan",
+      "file": "anniversary-bonus/04-teams-payroll-be-anniversary.json",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,640",
+      "sourceType": "teams",
+      "title": "Teams #payroll-be",
+      "author": "jan",
+      "date": "2026-07-08",
+      "scope": {
+        "country": "BE"
+      },
+      "reactions": [
+        "anna"
+      ],
+      "corrects": "tm-jub-nora",
+      "expected": "trusted: expert correction"
+    },
+    {
+      "id": "em-jub-kroon",
+      "file": "anniversary-bonus/05-email-brouwerij-de-kroon-jubilee.eml",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,640",
+      "sourceType": "email",
+      "title": "Email: Brouwerij De Kroon anniversary bonus",
+      "author": "anna",
+      "date": "2026-07-23",
+      "scope": {
+        "country": "BE",
+        "pc": "200",
+        "client": "brouwerij-de-kroon"
+      },
+      "expected": "trusted for De Kroon: matches the rule"
+    },
+    {
+      "id": "off-jub-2026-nl",
+      "file": "anniversary-bonus/06-jubileumpremie-nl-versie.txt",
+      "fact": "anniversary-bonus-max",
+      "value": "€3,640",
+      "sourceType": "official",
+      "title": "FOD Financiën: jubileumpremie 2026 (NL)",
+      "author": null,
+      "date": "2026-01-20",
+      "effectiveFrom": "2026-01-01",
+      "scope": {
+        "country": "BE"
+      },
+      "expected": "trusted: Dutch version"
+    },
+    {
+      "id": "sp-jub-nl",
+      "file": "anniversary-bonus/07-nl-jubileumuitkering-confluence.md",
+      "fact": "anniversary-bonus-max",
+      "value": "1 monthly salary",
+      "sourceType": "sharepoint",
+      "title": "Confluence: Jubileumuitkering (NL)",
+      "author": "eva",
+      "date": "2026-05-06",
+      "scope": {
+        "country": "NL"
+      },
+      "expected": "NL only"
+    }
+  ],
+  "testQuestions": [
+    {
+      "question": "What is the night work premium per hour?",
+      "context": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expectedAnswer": "€2.15 per hour"
+    },
+    {
+      "question": "What night work premium does Logistiek Van Damme pay?",
+      "context": {
+        "client": "logistiek-van-damme"
+      },
+      "expectedAnswer": "€2.60 per hour"
+    },
+    {
+      "question": "What is the premium for Sunday work?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "100%"
+    },
+    {
+      "question": "What is the thuiswerkvergoeding per day?",
+      "context": {
+        "country": "NL"
+      },
+      "expectedAnswer": "€2.45 per day"
+    },
+    {
+      "question": "What home-working allowance does Zorggroep Horizon pay?",
+      "context": {
+        "client": "zorggroep-horizon"
+      },
+      "expectedAnswer": "€2.00 per day"
+    },
+    {
+      "question": "What is the bijtelling for an electric company car?",
+      "context": {
+        "country": "NL"
+      },
+      "expectedAnswer": "22%"
+    },
+    {
+      "question": "What is the social security reduction for a first employee?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€2,000 per quarter"
+    },
+    {
+      "question": "How many days of short leave does an employee get for their own wedding?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "2 days"
+    },
+    {
+      "question": "How many days of short leave for an own wedding at Hotel Ter Duinen?",
+      "context": {
+        "client": "hotel-ter-duinen"
+      },
+      "expectedAnswer": "3 days"
+    },
+    {
+      "question": "What is the tax-free maximum for a Christmas gift per employee?",
+      "context": {
+        "country": "BE",
+        "pc": "200"
+      },
+      "expectedAnswer": "€50 per employee"
+    },
+    {
+      "question": "What is the tax-free maximum for an anniversary bonus after 25 years?",
+      "context": {
+        "country": "BE"
+      },
+      "expectedAnswer": "€3,640"
+    }
+  ]
+}

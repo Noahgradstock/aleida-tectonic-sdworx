@@ -1,0 +1,112 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1789374600001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-09-14T08:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-sofie",
+          "displayName": "Sofie Maes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Clients are asking about Christmas gift vouchers again. Still €40 per employee tax-free?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1789375800002",
+          "replyToId": "1789374600001",
+          "messageType": "message",
+          "createdDateTime": "2026-09-14T08:50:00Z",
+          "from": {
+            "user": {
+              "id": "u-lotte",
+              "displayName": "Lotte Verbeke"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Sofie it went up: from 2026 the limit is €50 per employee, plus €40 per child. The 2019 manual still has the old amount.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-an",
+                  "displayName": "An Peeters"
+                }
+              }
+            }
+          ],
+          "replies": []
+        },
+        {
+          "id": "1789376400003",
+          "replyToId": "1789374600001",
+          "messageType": "message",
+          "createdDateTime": "2026-09-14T09:00:00Z",
+          "from": {
+            "user": {
+              "id": "u-sofie",
+              "displayName": "Sofie Maes"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>Great, I'll tell De Kroon and Janssens.</p>"
+          },
+          "attachments": [],
+          "reactions": [],
+          "replies": []
+        }
+      ]
+    },
+    {
+      "id": "1789461000004",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-09-15T08:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-tom",
+          "displayName": "Tom Claes"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Does the child amount also apply when only one parent works for the client?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1789462200005",
+          "replyToId": "1789461000004",
+          "messageType": "message",
+          "createdDateTime": "2026-09-15T08:50:00Z",
+          "from": {
+            "user": {
+              "id": "u-lotte",
+              "displayName": "Lotte Verbeke"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>Yes, per dependent child of the employee. Ask for the child's name and birth date.</p>"
+          },
+          "attachments": [],
+          "reactions": [],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

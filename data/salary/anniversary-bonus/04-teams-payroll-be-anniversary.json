@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1783503000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-07-08T09:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-nora",
+          "displayName": "Nora Willems"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Employee at De Kroon reaches 25 years in August. Tax-free anniversary bonus max is €3,560, right?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1783504200002",
+          "replyToId": "1783503000001",
+          "messageType": "message",
+          "createdDateTime": "2026-07-08T09:50:00Z",
+          "from": {
+            "user": {
+              "id": "u-jan",
+              "displayName": "Jan Wouters"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Nora that is the 2025 amount. In 2026 the limit is €3,640, and never more than one gross monthly salary.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-anna",
+                  "displayName": "Anna De Smet"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1770107400001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-02-03T08:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-nora",
+          "displayName": "Nora Willems"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Quick one: night shifts in PC 200 get €1.98 per hour extra, that's what the shift guide says. Can I use that for the February run?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1770108600002",
+          "replyToId": "1770107400001",
+          "messageType": "message",
+          "createdDateTime": "2026-02-03T08:50:00Z",
+          "from": {
+            "user": {
+              "id": "u-lotte",
+              "displayName": "Lotte Verbeke"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Nora no, that guide is from 2023. Since 1 January 2026 the night work premium in PC 200 is €2.15 per hour. The guide still has the old amount.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-anna",
+                  "displayName": "Anna De Smet"
+                }
+              }
+            }
+          ],
+          "replies": []
+        },
+        {
+          "id": "1770109200003",
+          "replyToId": "1770107400001",
+          "messageType": "message",
+          "createdDateTime": "2026-02-03T09:00:00Z",
+          "from": {
+            "user": {
+              "id": "u-nora",
+              "displayName": "Nora Willems"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>Thanks, I'll fix the wage code.</p>"
+          },
+          "attachments": [],
+          "reactions": [],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

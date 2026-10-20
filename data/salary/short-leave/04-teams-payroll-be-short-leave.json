@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1782117000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-06-22T08:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-pieter",
+          "displayName": "Pieter Jacobs"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Employee at a PC 200 client gets married in July: that's 3 days of short leave, right? That's what the FAQ says.</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1782118200002",
+          "replyToId": "1782117000001",
+          "messageType": "message",
+          "createdDateTime": "2026-06-22T08:50:00Z",
+          "from": {
+            "user": {
+              "id": "u-anna",
+              "displayName": "Anna De Smet"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Pieter no, since 2024 it's 2 days for an own wedding. The FAQ is from 2014 and nobody maintains it since Koen left.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-lotte",
+                  "displayName": "Lotte Verbeke"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

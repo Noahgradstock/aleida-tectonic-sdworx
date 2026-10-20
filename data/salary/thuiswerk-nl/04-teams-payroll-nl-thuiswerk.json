@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-nl')/messages",
+  "value": [
+    {
+      "id": "1768213800001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-01-12T10:30:00Z",
+      "from": {
+        "user": {
+          "id": "u-eva",
+          "displayName": "Eva Jansen"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Setting up the January run for the NL clients: thuiswerkvergoeding is €2.35 per day, correct?</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1768215000002",
+          "replyToId": "1768213800001",
+          "messageType": "message",
+          "createdDateTime": "2026-01-12T10:50:00Z",
+          "from": {
+            "user": {
+              "id": "u-lars",
+              "displayName": "Lars de Vries"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Eva that was 2024. From 1 January 2026 it is €2.45 per day. The Confluence page still says €2,40, Emma will update it.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-sanne",
+                  "displayName": "Sanne de Vries"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

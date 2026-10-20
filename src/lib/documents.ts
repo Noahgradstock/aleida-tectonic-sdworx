@@ -37,6 +37,14 @@ const FOLDER_LABELS: Record<string, string> = {
   "minimum-wage": "Minimum wage",
   "sick-note": "Sick note",
   process: "Payroll process",
+  "night-work": "Night work",
+  "sunday-work": "Sunday work",
+  "thuiswerk-nl": "Home working (NL)",
+  "bijtelling-nl": "Company car (NL)",
+  "first-hire": "First employee",
+  "short-leave": "Short leave",
+  gifts: "Gifts",
+  "anniversary-bonus": "Anniversary bonus",
 };
 const labelOf = (folder: string) => FOLDER_LABELS[folder] ?? folder.charAt(0).toUpperCase() + folder.slice(1).replace(/-/g, " ");
 

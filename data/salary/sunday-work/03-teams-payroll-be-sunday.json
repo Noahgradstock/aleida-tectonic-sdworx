@@ -1,0 +1,54 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#teams('3f1c9a52')/channels('19%3Apayroll-be')/messages",
+  "value": [
+    {
+      "id": "1778487000001",
+      "replyToId": null,
+      "messageType": "message",
+      "createdDateTime": "2026-05-11T08:10:00Z",
+      "from": {
+        "user": {
+          "id": "u-bram",
+          "displayName": "Bram Hermans"
+        }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<p>Sunday hours are 50% extra, same as normal overtime, right? Client wants to know before the inventory weekend.</p>"
+      },
+      "attachments": [],
+      "reactions": [],
+      "replies": [
+        {
+          "id": "1778488200002",
+          "replyToId": "1778487000001",
+          "messageType": "message",
+          "createdDateTime": "2026-05-11T08:30:00Z",
+          "from": {
+            "user": {
+              "id": "u-jan",
+              "displayName": "Jan Wouters"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "<p>@Bram no, Sunday work is 100% extra, plus a compensatory rest day within six days. 50% is the weekday overtime premium.</p>"
+          },
+          "attachments": [],
+          "reactions": [
+            {
+              "reactionType": "like",
+              "user": {
+                "user": {
+                  "id": "u-lotte",
+                  "displayName": "Lotte Verbeke"
+                }
+              }
+            }
+          ],
+          "replies": []
+        }
+      ]
+    }
+  ]
+}

@@ -76,3 +76,19 @@ The goal is not zero human involvement. The goal is zero unnecessary effort.
 - The target is the **unwritten rules** a mentor passes on ("be there Friday at 4, the professor notices"), not just documents.
 - "Thousands of mentors": the knowledge is spread over many people, so capturing it must cost each of them almost nothing.
 - "See where the experience lives and who gets asked what" is a hint about the signal (who gets asked, who answers), but **not** the solution. Do not build pure passive surveillance of chats.
+
+## SD Worx briefing slide on the day (transcribed from a photo)
+
+> **Beyond building the solution**
+> *Trust should not depend on continuous manual effort.*
+>
+> How will your solution remain useful, reliable and up to date while fitting naturally into people's work without demanding continuous attention or maintenance?
+
+| Pillar | Slide text |
+|---|---|
+| **Automate** | Maintain itself as much as reasonably possible. |
+| **Verify** | Ask for human input when it adds real value. |
+| **Minimise** | Keep employee effort focused and lightweight. |
+| **Integrate** | Fit naturally into existing workflows and only ask for attention when needed. |
+
+**Takeaway:** the slide is about time. An answer that is trusted today must still be trusted tomorrow, after rules, people and context change, without anyone maintaining it by hand.

@@ -215,6 +215,28 @@ export function ForecastLine({ forecast, compact }: { forecast: Forecast; compac
           <span className="text-xs text-neutral-500">The same rules, run forward 18 months</span>
         </div>
       )}
+      {/* the labels sit above the chart, so they never cross the line */}
+      {!compact && (
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ background: GREEN }} />
+            <span className="text-neutral-500">Today</span>
+            <span className="font-medium text-neutral-800">
+              {pts[0].value} · {pct(pts[0].score!)}
+            </span>
+          </span>
+          {bb && (
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ background: AMBER }} />
+              <span className="text-neutral-500">Best before</span>
+              <span className="font-medium" style={{ color: AMBER }}>
+                {fmtDate(bb.date)}
+              </span>
+              {segments[1]?.value && segments[1].value !== pts[0].value && <span className="text-neutral-500">· then {segments[1].value}</span>}
+            </span>
+          )}
+        </div>
+      )}
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full overflow-visible" role="img" aria-label={forecastSentence(forecast)}>
         <line x1={0} x2={W} y1={y(0.75)} y2={y(0.75)} stroke={BLUE} strokeOpacity={0.35} strokeDasharray="4 4" />
         {!compact && (
@@ -258,26 +280,11 @@ export function ForecastLine({ forecast, compact }: { forecast: Forecast; compac
         )}
         {/* today */}
         <circle cx={0} cy={y(pts[0].score!)} r={4} fill={GREEN} />
-        {!compact && (
-          <text x={6} y={y(pts[0].score!) + 18} fontSize={11} fill="#262626" fontWeight={600}>
-            Today: {pts[0].value} · {pct(pts[0].score!)}
-          </text>
-        )}
         {/* best before */}
         {bb && (
           <g>
             <line x1={x(bb.date)} x2={x(bb.date)} y1={padT - 6} y2={H - padB} stroke={AMBER} strokeWidth={1.5} strokeDasharray="3 3" />
             <circle cx={x(bb.date)} cy={padT - 6} r={3.5} fill={AMBER} />
-            {!compact && (
-              <text x={x(bb.date) + 6} y={padT - 2} fontSize={11} fill={AMBER} fontWeight={600}>
-                Best before {fmtDate(bb.date)}
-              </text>
-            )}
-            {!compact && segments[1]?.value && (
-              <text x={Math.min(W - 4, x(bb.date) + 6)} y={y(segments[1].points[segments[1].points.length - 1].score!) + 16} fontSize={11} fill={BLUE}>
-                then {segments[1].value}
-              </text>
-            )}
           </g>
         )}
       </svg>

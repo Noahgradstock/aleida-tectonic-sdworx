@@ -7,8 +7,8 @@ We cannot use our own device, so the demo is a **silent 1-minute video** (`video
 | Film time | On screen |
 |---|---|
 | 0:00 – 0:16 | A team meeting, "Payroll BE · weekly": Tom (new hire) and Jan (payroll expert). The blob sits in the corner. Tom says students can work 600 hours. The blob turns amber: the trusted value is 650 hours (official source, 96%). Jan says: "For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law." |
-| 0:16 – 0:18 | "Meeting ended · Transcript saved with speaker names." |
-| 0:18 – 0:27 | Company brain, "What changed today": the meeting transcript goes in. Tom's 600 hours is heard at 3%. Jan's 22 days for Brouwerij De Kroon is heard at 50%, "Waiting for Jan". |
+| 0:16 – 0:18 | "Meeting ended · Transcript sent to Company brain." |
+| 0:18 – 0:27 | Company brain, "What changed today", with no clicks: the meeting arrives by itself. Tom's 600 hours is heard at 3%. Jan's 22 days for Brouwerij De Kroon is heard at 50%, "Waiting for Jan". |
 | 0:27 – 0:34 | Jan's screen, "Waiting for you": one card with Jan's own words, ✓ That's right. One click: "Jan Wouters confirmed it · 20 days → 22 days · 97% · +47 pts". |
 | 0:34 – 0:41 | A week later, Sofie (not in the meeting) asks: "How many holiday days do employees get at Brouwerij De Kroon?" The brain reads its sources. |
 | 0:41 – 0:48 | **22 days · 97 · Trusted.** Reliable: Jan Wouters, expert. Applies here: the client's own agreement. Jan's exact words from the meeting. |
@@ -36,7 +36,7 @@ We cannot use our own device, so the demo is a **silent 1-minute video** (`video
 | 0:01 | **ISAK** (as Tom) | "Students can work 600 hours a year, right?" |
 | 0:06 | **NOAH** | "The blob sits in the meeting and stays quiet. Until something is wrong: it's 650." |
 | 0:11 | **ILKE** (as Jan) | "For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law." |
-| 0:16 | **NOAH** | "The meeting ends. Nobody writes anything down." |
+| 0:16 | **NOAH** | "The meeting ends. Nobody writes anything down, nobody pastes anything." |
 | 0:19 | **NOAH** | "The brain picks out each fact, who said it, and the exact words. Tom's guess: three percent. Jan's agreement: fifty, because it was only said out loud." |
 | 0:28 | **NOAH** | "So it asks one person one question. Jan clicks once. Ninety-seven." |
 | 0:34 | **NOAH** | "A week later, Sofie wasn't in that meeting. She asks." |
@@ -73,7 +73,7 @@ We cannot use our own device, so the demo is a **silent 1-minute video** (`video
 
 - **Real app, real engine:** every Company brain screen is the running app: extraction from the transcript, the 50% cap, Jan's confirmation, 97%, the client-specific answer, "Contact Jan Wouters first". Nothing is edited.
 - **The meeting screen is a stand-in** for Teams, built for the film. The blob in it is the real mascot interface; its correction ("600 hours is outdated, it's 650") is what the desktop mascot does in a live meeting.
-- **The transcript is fed through the Live loop page.** In production, Teams gives the transcript with speaker names (Microsoft Graph). The mascot does not learn from raw microphone audio, because a microphone cannot tell who is speaking.
+- **The hand-off from the meeting tool is simulated.** In the film the transcript (with speaker names) is sent to the brain's real ingest route, `/api/brain/ingest`, exactly as a Teams connector would; everything after that is the running app. The connector itself (Microsoft Graph meeting transcripts) is not built yet. The mascot does not learn from raw microphone audio, because a microphone cannot tell who is speaking.
 - People, clients and documents are synthetic.
 
 ---

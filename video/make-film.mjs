@@ -284,17 +284,17 @@ await key("4-ended");
 // ================= 2. The brain learns (18–27), as Tom, who ran the meeting =================
 await signIn("tom");
 await goTo("/loop", "company-brain · Live loop", () => app.getByText("Paste text yourself").waitFor({ timeout: 500 }));
-await until(now() + 0.6);
-await click(app.getByRole("button", { name: /Paste text yourself/ }), 0.6);
-const transcript = L("textarea").first();
-while (!(await transcript.isVisible())) await shot();
-await focus(transcript, 1.4, now(), 1.0, { sx: 720, sy: 420 });
-await until(now() + 0.6);
-await transcript.fill(TRANSCRIPT);
-await transcript.evaluate((el) => el.classList.add("__hl"));
-await until(now() + 1.4);
-await transcript.evaluate((el) => el.classList.remove("__hl"));
-await click(app.getByRole("button", { name: "Feed to the brain" }), 0.6);
+await cam(WIDE, now(), 0.01);
+await until(now() + 1.2);
+// Nobody pastes anything: the meeting tool hands the transcript (with speaker names) to the brain,
+// through the same ingest route a Teams connector would call. The page picks it up on its next poll.
+{
+  const r = await page.request.post(BASE + "/api/brain/ingest", {
+    headers: { origin: BASE },
+    data: { channel: "meeting", text: TRANSCRIPT, context: { country: "BE", pc: "200" } },
+  });
+  if (!r.ok()) throw new Error("ingest failed " + r.status());
+}
 const waiting = app.getByText("Waiting for Jan", { exact: true });
 while (!(await waiting.isVisible())) await shot();
 cursor.x = cursor.y = null;
@@ -322,7 +322,7 @@ cursor.x = cursor.y = null;
 const change = confirmed.locator("xpath=ancestor::*[contains(., '+47') or contains(., 'pts')][1]");
 await cam(WIDE, now(), 0.5);
 await bring(change, 0.5);
-await focus(change, 1.55, now(), 1.0, { sx: 720, sy: 420 });
+await focus(confirmed.locator("xpath=ancestor::*[contains(., '22 days')][1]"), 1.3, now(), 1.0, { sx: 720, sy: 430 });
 await change.evaluate((el) => el.classList.add("__hl"));
 await until(now() + 3.0);
 await key("7-jan-97");

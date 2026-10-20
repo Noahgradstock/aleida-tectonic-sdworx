@@ -225,10 +225,11 @@ function wordsToDigits(text) {
 }
 
 // Every sentence that states a value that disagrees with a trusted fact. Local and deterministic.
-async function checkAll(rawText) {
+async function checkAll(rawText, opts = {}) {
   const text = wordsToDigits(rawText);
   await loadClients();
-  const client = clientIn(text);
+  // In a meeting, "it's 22 holiday days" is about the client named earlier in the conversation.
+  const client = clientIn(text) || (opts.useLastClient ? lastClient : null);
   if (client) lastClient = client;
   const list = await factsFor(client);
   const issues = [];
@@ -255,8 +256,8 @@ async function checkAll(rawText) {
 
 const PAYROLL_WORDS = /\b(allowance|salary|wage|bonus|premium|voucher|contribution|leave|holiday|vacation|overtime|notice|pension|insurance|reimburse\w*|expenses?|per diem|commut\w*)\b/i;
 
-async function check(text) {
-  const [first] = await checkAll(text);
+async function check(text, opts = {}) {
+  const [first] = await checkAll(text, opts);
   return first ? { ok: false, ...first } : { ok: true };
 }
 

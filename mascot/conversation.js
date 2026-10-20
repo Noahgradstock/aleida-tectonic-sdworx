@@ -29,9 +29,12 @@ function remember(answer, said = null) {
 // Called when the mascot warns, so "what's the right answer?" refers to the warning.
 async function rememberWarning(issue) {
   try {
-    remember(await brain.ask(issue.label), issue.said);
+    const q = issue.client ? `${issue.label} for ${issue.client}` : issue.label;
+    const answer = await brain.ask(q);
+    remember(answer, issue.said);
+    return answer;
   } catch {
-    // Keep the old topic.
+    return null; // Keep the old topic.
   }
 }
 

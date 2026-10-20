@@ -138,7 +138,7 @@ async function checkWriting(text, where) {
   if (!issue) send("mascot:thinking");
   let result;
   try {
-    result = await brain.check(text);
+    result = await brain.check(text, { useLastClient: where === "meeting" });
   } catch {
     result = { ok: true };
   }
@@ -154,6 +154,17 @@ async function checkWriting(text, where) {
       conversation.rememberWarning(issue);
       if (result.kind !== "wrong") {
         // Unknown knowledge: a quiet card, never spoken.
+      } else if (where === "meeting" && result.client) {
+        const g = gen;
+        conversation.rememberWarning(issue).then((a) => {
+          const d = (a && a.detail) || {};
+          const who = /review/i.test((a && a.source) || "") && (d.supporters || [])[0];
+          const client = result.client.replace(/\s+(NV|BV)$/, "");
+          say(
+            `Quick note: for ${client} it's ${conversation.speakable(result.value)}, not ${conversation.speakable(result.said)}.${who ? ` ${who} agreed that with them, and it was approved.` : ""}`,
+            g,
+          );
+        });
       } else if (where === "meeting") {
         say(
           result.client
@@ -229,6 +240,7 @@ function stopMeeting() {
 
 async function say(text, g = gen) {
   if (g !== gen) return;
+  text = stage(text);
   const audio = await voice.speak(text);
   if (g !== gen) return; // turned off while the voice was being made
   const seconds = audio ? (audio.length * 0.75 * 8) / 32000 : text.length * 0.07;
@@ -287,8 +299,14 @@ async function onSegment(buffer, mime) {
 
   // In a meeting, a wrong value is corrected before anything else.
   if (activeContext === "meeting") {
-    const c = await brain.check(text);
+    const c = await brain.check(text, { useLastClient: true });
     if (!c.ok && c.kind === "wrong") return checkWriting(text, "meeting");
+    // You corrected yourself after a meeting note: confirm it and go calm.
+    if (c.ok && issue && issue.where === "meeting" && brain.findFactByText(text)) {
+      issue = null;
+      send("mascot:check", { ok: true });
+      return say("That's right.");
+    }
     if (c.ok === false && c.kind === "client-new") { /* the brain only knows the general rule here: stay quiet */ }
   }
 

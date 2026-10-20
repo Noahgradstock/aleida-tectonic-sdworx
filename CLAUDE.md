@@ -127,6 +127,8 @@ Most qualifier teams built "ask a question, get an answer plus a trust receipt".
 
 ## 8. Security (10% of the score; write it this way from the first commit)
 
+**Full rules: `AIKIDO-INSTRUCTIONS.md`** (PDF copy in `docs/`). Always follow its section 3 (agent contract). Before a feature, read the matching rules in its section 2. Use the ready-made security code in its section 5 for login, sessions, permissions and rate limits instead of writing your own. Run its section 4 checklist before the Aikido scan.
+
 - **Authentication:** a login or HMAC-signed session cookie with a secret from env. No user IDs trusted from the client.
 - **Authorization on every route and server action:** check who is asking and whether they may see this exact object. Never take a user or owner ID from the body or query string.
 - **No IDOR:** look up client-supplied IDs together with the session's scope; return 404 for objects outside it.

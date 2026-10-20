@@ -1,6 +1,6 @@
 import { extractClaims, parseContext, type Channel } from "@/trust-engine";
 import { currentUser, forbidden, notYourClient, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
-import { ctxOf, firstToLearn, LIVE_MAX_PER_USER_PER_DAY, LIVE_MAX_TOTAL, liveCount, liveKb, recordChange, saveLiveClaim, type LedgerEntry } from "@/lib/live";
+import { ctxOf, firstToLearn, LIVE_MAX_PER_USER_PER_DAY, LIVE_MAX_TOTAL, liveCount, liveKb, recordChange, retractions, saveLiveClaim, type LedgerEntry } from "@/lib/live";
 import { GUEST_ID, rateLimit, sameOrigin } from "@/lib/auth";
 import { canUseContext, canVote } from "@/lib/access";
 
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     }
     const learned: LedgerEntry[] = [];
     let k = before;
+    const takenBack = new Set((await retractions()).map((r) => r.claimId));
     for (const { claim, quote, speaker } of extracted) {
       const skip = (reason: string) => skipped.push({ sentence: quote, reason });
       if (learned.length >= MAX_CLAIMS_PER_REQUEST) {
@@ -55,6 +56,11 @@ export async function POST(request: Request) {
       }
       if (k.claims.some((c) => c.id === claim.id)) {
         skip("Already known");
+        continue;
+      }
+      // The speaker took these exact words back: feeding them again does not bring them back.
+      if (takenBack.has(claim.id)) {
+        skip("Taken back by the speaker");
         continue;
       }
       // Nobody could ever confirm it: the speaker left, or it is the shared read-only guest.

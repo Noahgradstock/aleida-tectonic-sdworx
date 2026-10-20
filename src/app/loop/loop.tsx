@@ -32,10 +32,10 @@ import {
 // The live loop: everyday work goes in (a meeting, a Teams message, an email), the brain learns,
 // and every score change is logged with the exact points that moved it.
 
-const CASES: { label: string; ctx: Ctx }[] = [
-  { label: "Brouwerij De Kroon (BE, PC 200)", ctx: { client: "brouwerij-de-kroon" } },
-  { label: "Belgium, PC 200", ctx: { country: "BE", pc: "200" } },
-];
+// Nobody picks a "case" here: the answer starts at the general level, and follows the client
+// that was named in what you fed in (the extraction already reads it from the text).
+const GENERAL: Ctx = { country: "BE", pc: "200" };
+const GENERAL_LABEL = "Belgium, PC 200";
 
 const DEMO: Record<"meeting" | "teams" | "email", string> = {
   meeting: [
@@ -86,7 +86,7 @@ export default function Loop() {
   const [people, setPeople] = useState<Record<string, string>>({});
   const [clients, setClients] = useState<Record<string, Client>>({});
   const [facts, setFacts] = useState<{ key: string; label: string }[]>([]);
-  const [caseIdx, setCaseIdx] = useState(0);
+  const [ctx, setCtx] = useState<Ctx>(GENERAL);
   const [factKey, setFactKey] = useState("annual-leave-days");
   const [channel, setChannel] = useState<keyof typeof DEMO>("meeting");
   const [text, setText] = useState(DEMO.meeting);
@@ -97,7 +97,6 @@ export default function Loop() {
   const [view, setView] = useState<View>({ key: "", answer: null, entries: [], fresh: [] });
   const [now, setNow] = useState(0);
 
-  const ctx = CASES[caseIdx].ctx;
 
   useEffect(() => {
     api<{ user: Me }>("/api/auth/me").then((r) => setMe(r.user)).catch(() => {});
@@ -112,11 +111,11 @@ export default function Loop() {
 
   const refresh = useCallback(
     async (quiet = false) => {
-      const key = `${factKey}|${caseIdx}`;
+      const key = `${factKey}|${ctx.client ?? GENERAL_LABEL}`;
       try {
         const label = facts.find((f) => f.key === factKey)?.label ?? factKey;
         const [a, l] = await Promise.all([
-          api<Answer>("/api/trust/ask", { question: label, context: CASES[caseIdx].ctx, factKey }),
+          api<Answer>("/api/trust/ask", { question: label, context: ctx, factKey }),
           api<{ entries: Entry[] }>(`/api/brain/ledger?fact=${encodeURIComponent(factKey)}`),
         ]);
         setNow(Date.now());
@@ -131,7 +130,7 @@ export default function Loop() {
         if (!quiet) setError((e as Error).message);
       }
     },
-    [factKey, facts, caseIdx],
+    [factKey, facts, ctx],
   );
 
   useEffect(() => {
@@ -150,6 +149,9 @@ export default function Loop() {
       const r = await api<{ learned: Entry[]; skipped: { sentence: string; reason: string }[] }>("/api/brain/ingest", { channel, text, context: ctx });
       setFed(r);
       if (r.learned[0]) setFactKey(r.learned[0].factKey);
+      // A client named in the text becomes the case; otherwise stay general.
+      const named = r.learned.find((e) => e.scope.client)?.scope.client;
+      setCtx(named ? { client: named } : GENERAL);
       await refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -174,7 +176,7 @@ export default function Loop() {
   const name = (id: string | null) => (id ? (people[id] ?? id) : "Unknown speaker");
   const canConfirm = (e: Entry) => !!me && (me.id === e.speaker || me.role === "expert");
   const scopeLabel = (sc: Scope) => (sc.client ? (clients[sc.client]?.name ?? sc.client) : `${country(sc.country)}${sc.pc ? `, PC ${sc.pc}` : ""}`);
-  const caseName = ctx.client ? (clients[ctx.client]?.name ?? CASES[caseIdx].label) : CASES[caseIdx].label;
+  const caseName = ctx.client ? (clients[ctx.client]?.name ?? ctx.client) : GENERAL_LABEL;
 
   // Which ledger entries are about this case. Exact scope for the history (its snapshots are per scope);
   // broader rules count too when asking "does something still wait for a confirmation here?".
@@ -235,17 +237,6 @@ export default function Loop() {
       </header>
 
       <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-neutral-600">Case</span>
-        {CASES.map((c, i) => (
-          <button
-            key={c.label}
-            onClick={() => setCaseIdx(i)}
-            aria-pressed={i === caseIdx}
-            className={`rounded-full px-3.5 py-1.5 ${i === caseIdx ? "bg-[#161616] text-white" : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:ring-neutral-400"}`}
-          >
-            {c.label}
-          </button>
-        ))}
         {me && (
           <span className="ml-auto text-neutral-500">
             Signed in as <span className="text-neutral-800">{me.name}</span>
@@ -336,6 +327,15 @@ export default function Loop() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-sm text-neutral-600">
                 The answer now for <span className="font-medium text-neutral-900">{caseName}</span>
+                {ctx.client && (
+                  <span className="text-neutral-400">
+                    {" "}
+                    · named in what you fed in ·{" "}
+                    <button onClick={() => setCtx(GENERAL)} className="text-[#1463ff] hover:underline">
+                      show all of Belgium
+                    </button>
+                  </span>
+                )}
               </h2>
               <select
                 value={factKey}

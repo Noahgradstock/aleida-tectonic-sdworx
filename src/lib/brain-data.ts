@@ -14,11 +14,20 @@ import type { BrainData } from "@/app/brain/brain-map";
 export type Exception = { client: string; value: string; score: number };
 export type TopicStatus = { status: BrainData["topics"][number]["status"]; answer: string | null; score: number | null; forecast: Forecast | null; exceptions: Exception[] };
 
-function listFiles(dir: string, base = dir): string[] {
+// The file list only ever walks this fixed folder: no path comes from the request, symlinks are skipped
+// and every entry is checked to stay inside the root.
+const DATA_ROOT = path.resolve(process.cwd(), "data", "salary");
+
+function listDataFiles(rel = ""): string[] {
+  const dir = path.resolve(DATA_ROOT, rel);
+  if (dir !== DATA_ROOT && !dir.startsWith(DATA_ROOT + path.sep)) return [];
   try {
-    return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-      e.isDirectory() ? listFiles(path.join(dir, e.name), base) : e.name.startsWith(".") ? [] : [path.relative(base, path.join(dir, e.name))],
-    );
+    return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      if (e.name.startsWith(".") || e.isSymbolicLink()) return [];
+      const child = path.join(rel, e.name);
+      if (e.isDirectory()) return listDataFiles(child);
+      return e.isFile() ? [child] : [];
+    });
   } catch {
     return [];
   }
@@ -109,7 +118,7 @@ export async function buildBrainData(user: Person): Promise<BrainData> {
       type,
       claims: visible.filter((c) => c.source.type === type).length,
     })),
-    files: listFiles(path.join(process.cwd(), "data", "salary")).filter((f) => !hiddenFiles.has(f)),
+    files: listDataFiles().filter((f) => !hiddenFiles.has(f)),
     documents: loadDocuments(kb).filter((d) => !hiddenFiles.has(d.path)),
     folders: docFolders(),
     scores: Object.fromEntries(topics.flatMap((t) => t.claims.map((c) => [c.id, { score: c.score, excluded: c.excluded }]))),

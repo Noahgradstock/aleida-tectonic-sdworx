@@ -84,12 +84,38 @@
   // ---- sprites: anything that enters and leaves on time ----
   const sprites = [];
   const fx = document.getElementById("fx");
+  // Sprite markup is parsed inertly and rebuilt from an allowlist: only these tags, only a class attribute.
+  const SAFE_TAGS = new Set(["B", "I", "EM", "STRONG", "SPAN", "DIV", "SMALL", "BR"]);
+  function safeNodes(html) {
+    const doc = new DOMParser().parseFromString(String(html ?? ""), "text/html");
+    const copy = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent);
+      if (node.nodeType !== Node.ELEMENT_NODE) return null;
+      if (!SAFE_TAGS.has(node.tagName)) return document.createTextNode(node.textContent);
+      const out = document.createElement(node.tagName.toLowerCase());
+      const cls = node.getAttribute("class");
+      if (cls) out.className = cls;
+      for (const child of node.childNodes) {
+        const c = copy(child);
+        if (c) out.appendChild(c);
+      }
+      return out;
+    };
+    return [...doc.body.childNodes].map(copy).filter(Boolean);
+  }
   window.__add = (s) => {
     const el = document.createElement("div");
     el.className = "sp " + (s.cls || "");
     // Titles animate word by word.
-    if (s.words) el.innerHTML = s.html.split(" ").map((w) => `<span class="w">${w}</span>`).join(" ");
-    else el.innerHTML = s.html;
+    if (s.words) {
+      String(s.html ?? "").split(" ").forEach((w, i) => {
+        if (i) el.appendChild(document.createTextNode(" "));
+        const span = document.createElement("span");
+        span.className = "w";
+        safeNodes(w).forEach((n) => span.appendChild(n));
+        el.appendChild(span);
+      });
+    } else safeNodes(s.html).forEach((n) => el.appendChild(n));
     el.style.left = s.x + "px";
     el.style.top = s.y + "px";
     if (s.align === "center") el.style.transform = "translateX(-50%)";

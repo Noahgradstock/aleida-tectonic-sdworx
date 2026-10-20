@@ -225,8 +225,18 @@ function wordsToDigits(text) {
 }
 
 // Every sentence that states a value that disagrees with a trusted fact. Local and deterministic.
+// How speech-to-text actually writes what people say: "De Kroon" -> "the cron", "holiday days" -> "holidays".
+const SPOKEN = [
+  [/\b(the|de|da|duh)[\s-]*(cron|crone|crown|krone|kroon|kron|crohn)\b/gi, "De Kroon"],
+  [/\b(jan\s*sens|jansen|janssen)\b/gi, "Janssens"],
+  [/\bholidays?\s+days?\b/gi, "holiday days"],
+  [/\b(\d+)\s+holidays\b/gi, "$1 holiday days"],
+  [/\b(\d+)\s+days\s+(of\s+)?(holiday|vacation|leave)\b/gi, "$1 holiday days"],
+];
+const spokenFixes = (t) => SPOKEN.reduce((out, [re, to]) => out.replace(re, to), t);
+
 async function checkAll(rawText, opts = {}) {
-  const text = wordsToDigits(rawText);
+  const text = spokenFixes(wordsToDigits(rawText));
   await loadClients();
   // In a meeting, "it's 22 holiday days" is about the client named earlier in the conversation.
   const client = clientIn(text) || (opts.useLastClient ? lastClient : null);
@@ -433,4 +443,4 @@ async function answerQuestion(id, answer) {
   return r;
 }
 
-module.exports = { nameOf, ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, useAccount, whoAmI, questionsForMe, answerQuestion, findFactByText: (t) => findFact(t) };
+module.exports = { nameOf, ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, useAccount, whoAmI, questionsForMe, answerQuestion, findFactByText: (t) => findFact(spokenFixes(wordsToDigits(t))) };

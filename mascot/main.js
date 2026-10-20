@@ -153,7 +153,11 @@ async function checkWriting(text, where) {
         say(`Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`);
       } else if (inConversation() && where === "Mail") {
         offerUntil = Date.now() + 60000;
-        say(`${conversation.speakable(result.said)} looks off. Want me to fix your email?`);
+        say(
+          result.client
+            ? `For ${result.client.replace(/\s+(NV|BV)$/, "")} it's ${conversation.speakable(result.value)}. Want me to fix your email?`
+            : `${conversation.speakable(result.said)} looks off. Want me to fix your email?`,
+        );
       }
     }
     return;

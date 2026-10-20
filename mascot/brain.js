@@ -7,8 +7,11 @@ const CONTEXT = { country: "BE", pc: "200" }; // demo case: a Belgian PC 200 emp
 const REFRESH_MS = 5 * 60 * 1000;
 
 let cookie = null;
-let facts = []; // [{ key, label, keywords, status, value, score, source }]
+let facts = []; // default case: [{ key, label, keywords, status, value, score, source }]
 let loadedAt = 0;
+const clientFacts = new Map(); // client id -> { facts, loadedAt }: a client's agreements change the answer
+let clients = []; // [{ id, name, match }]
+let lastClient = null; // the client of the last email or question, for follow-ups
 
 const ORIGIN = new URL(BRAIN_URL).origin; // the server's same-origin check
 let me = null; // { id, name, role } of the signed-in account; null for the read-only guest
@@ -39,20 +42,65 @@ async function call(path, init = {}, retry = true) {
   return res.json();
 }
 
-async function loadFacts() {
-  const q = new URLSearchParams(CONTEXT).toString();
+const toFact = (f) => ({
+  key: f.fact.key,
+  label: f.fact.label,
+  keywords: f.fact.keywords.map((k) => k.toLowerCase()),
+  status: f.status,
+  value: f.best ? f.best.claim.value : null,
+  score: f.best ? Math.round(f.best.score * 100) : null,
+  source: f.best ? f.best.claim.source.title : null,
+  clientSpecific: Boolean(f.best && f.best.claim.scope && f.best.claim.scope.client),
+});
+
+async function loadFacts(client = null) {
+  const q = new URLSearchParams(client ? { client } : CONTEXT).toString();
   const data = await call(`/api/trust/facts?${q}`);
-  facts = data.facts.map((f) => ({
-    key: f.fact.key,
-    label: f.fact.label,
-    keywords: f.fact.keywords.map((k) => k.toLowerCase()),
-    status: f.status,
-    value: f.best ? f.best.claim.value : null,
-    score: f.best ? Math.round(f.best.score * 100) : null,
-    source: f.best ? f.best.claim.source.title : null,
-  }));
+  const list = data.facts.map(toFact);
+  if (client) {
+    clientFacts.set(client, { facts: list, loadedAt: Date.now() });
+    return list.length;
+  }
+  facts = list;
   loadedAt = Date.now();
   return facts.length;
+}
+
+// Clients the brain knows, so "Brouwerij De Kroon" in an email switches to that client's answers.
+async function loadClients() {
+  if (clients.length) return;
+  try {
+    const meta = await call("/api/trust/meta");
+    clients = (meta.clients || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      match: c.name.toLowerCase().replace(/\s+(nv|bv|bvba|sa|srl)$/i, "").trim(),
+    }));
+  } catch {
+    // No client list: everything uses the default case.
+  }
+}
+
+function clientIn(text) {
+  const t = text.toLowerCase();
+  const c = clients.find((x) => t.includes(x.match) || t.includes(x.id.replace(/-/g, " ")));
+  return c || null;
+}
+
+async function factsFor(client) {
+  if (!client) {
+    await ensureFacts();
+    return facts;
+  }
+  const cached = clientFacts.get(client.id);
+  if (!cached || Date.now() - cached.loadedAt > REFRESH_MS) {
+    try {
+      await loadFacts(client.id);
+    } catch {
+      return cached ? cached.facts : facts;
+    }
+  }
+  return clientFacts.get(client.id).facts;
 }
 
 async function ensureFacts() {
@@ -66,10 +114,10 @@ async function ensureFacts() {
 }
 
 // The fact a sentence is about: the most keyword hits, then the longest keyword.
-function findFact(text) {
+function findFact(text, list = facts) {
   const t = ` ${text.toLowerCase()} `;
   let best = null;
-  for (const f of facts) {
+  for (const f of list) {
     const hits = f.keywords.filter((k) => t.includes(k));
     if (!hits.length) continue;
     const score = hits.length * 100 + Math.max(...hits.map((k) => k.length));
@@ -130,12 +178,15 @@ const answerCache = new Map();
 
 // Full answer with the expert, from the engine. Cached for the session.
 async function ask(question) {
-  const key = question.toLowerCase().replace(/[^a-z0-9€%.,\s]/g, "").replace(/\s+/g, " ").trim();
+  await loadClients();
+  const askClient = clientIn(question) || lastClient;
+  if (clientIn(question)) lastClient = askClient;
+  const key = `${askClient ? askClient.id : "-"}|${question.toLowerCase().replace(/[^a-z0-9€%.,\s]/g, "").replace(/\s+/g, " ").trim()}`;
   if (answerCache.has(key)) return answerCache.get(key);
   const r = await call("/api/trust/ask", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ question: question.slice(0, 500), context: CONTEXT }),
+    body: JSON.stringify({ question: question.slice(0, 500), context: askClient ? { client: askClient.id } : CONTEXT }),
   });
   const best = r.matched ? r.best : null;
   const out = !r.matched
@@ -158,18 +209,21 @@ async function ask(question) {
 
 // Every sentence that states a value that disagrees with a trusted fact. Local and deterministic.
 async function checkAll(text) {
-  await ensureFacts();
+  await loadClients();
+  const client = clientIn(text);
+  if (client) lastClient = client;
+  const list = await factsFor(client);
   const issues = [];
   const sentences = text.slice(0, 4000).split(/(?<=[.!?\n])\s+/);
   for (const sentence of sentences) {
     const said = sentence.match(VALUE);
     if (!said) continue;
-    const fact = findFact(sentence);
+    const fact = findFact(sentence, list);
     if (!fact || fact.status !== "trusted" || !fact.value || !/\d/.test(fact.value)) continue;
     const trusted = parse(fact.value);
     const sameUnit = said.map((v) => ({ raw: v.trim().replace(/[.,]$/, ""), ...parse(v) })).filter((v) => v.unit === trusted.unit);
     if (!sameUnit.length || sameUnit.some((v) => sameValue(v, trusted))) continue;
-    issues.push({ said: sameUnit[0].raw, sentence: sentence.trim(), ...fact });
+    issues.push({ said: sameUnit[0].raw, sentence: sentence.trim(), ...fact, client: client ? client.name : null });
   }
   return issues;
 }
@@ -208,6 +262,7 @@ async function learn(text, channel) {
   if (r.learned.length) {
     answerCache.clear(); // the next answer and check include what was just learned
     loadedAt = 0;
+    clientFacts.clear();
   }
   return {
     learned: r.learned.map((e) => ({

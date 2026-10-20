@@ -166,7 +166,9 @@ window.mascot.onCheck((r) => {
   pendingFix = r.where === "meeting" ? null : { from: r.said, to: r.value, native: r.where !== "email" };
   $("w-text").textContent = spoken
     ? `That last thing you said was off: ${r.said} for "${r.label.toLowerCase()}". The trusted value is ${r.value}.`
-    : `You wrote ${r.said} for "${r.label.toLowerCase()}" ${WHERE[r.where] ?? `in ${r.where}`}. The trusted value is ${r.value}.`;
+    : r.client
+      ? `You wrote ${r.said}, but for ${r.client} the ${r.label.toLowerCase()} is ${r.value}.`
+      : `You wrote ${r.said} for "${r.label.toLowerCase()}" ${WHERE[r.where] ?? `in ${r.where}`}. The trusted value is ${r.value}.`;
   $("w-chip").textContent = `Trusted · ${r.score}%`;
   $("w-source").textContent = r.source;
   $("fix").hidden = !pendingFix;

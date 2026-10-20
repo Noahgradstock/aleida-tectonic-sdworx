@@ -5,6 +5,8 @@ import Link from "next/link";
 import Blob from "../blob";
 import { channelIcon, Icon, type IconName } from "../icons";
 import YourInbox from "./inbox";
+import { Checker } from "../trust-visuals";
+import { CopilotLogo, DocsLogo, OutlookLogo, TeamsLogo } from "../logos";
 import { ago, CHANNEL, color, Meter, pct, type Client, type Entry, type Me } from "./parts";
 
 // What changed today: a feed of everything the mascot heard (meetings, emails, Teams) and what it did
@@ -20,10 +22,11 @@ const DEMO: Record<"meeting" | "teams" | "email", string> = {
   teams: "Reminder for the team: a full-time employee in a five-day week gets 20 days of annual leave.",
   email: "Dear client, your employees are entitled to 24 days of annual leave this year.",
 };
-const TAB: Record<keyof typeof DEMO, { label: string; icon: IconName }> = {
-  meeting: { label: "Meeting transcript", icon: "meeting" },
-  teams: { label: "Teams message", icon: "teams" },
-  email: { label: "Email", icon: "email" },
+const TAB: Record<keyof typeof DEMO | "document", { label: string; from: string; logo: React.ReactNode }> = {
+  meeting: { label: "Meeting", from: "Copilot transcript", logo: <CopilotLogo /> },
+  teams: { label: "Teams", from: "Chat message", logo: <TeamsLogo /> },
+  email: { label: "Email", from: "Outlook or Gmail", logo: <OutlookLogo /> },
+  document: { label: "Document", from: "Agreement or policy", logo: <DocsLogo /> },
 };
 const DEMO_AGREEMENT = `SERVICE AGREEMENT – PAYROLL (fictional, for the demo)
 Between Brouwerij De Kroon NV and SD Worx Belgium.
@@ -83,7 +86,12 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
     try {
       const r = await api<{ entries: Entry[] }>("/api/brain/ledger");
       const ids = new Set(r.entries.map((e) => e.id));
-      if (seen.current) setFresh(new Set([...ids].filter((id) => !seen.current!.has(id))));
+      if (seen.current) {
+        const added = r.entries.filter((e) => !seen.current!.has(e.id));
+        setFresh(new Set(added.map((e) => e.id)));
+        // Something new came in: open it, so the six checks can be seen ticking off.
+        if (added[0]) setOpen(added[0].id);
+      }
       seen.current = ids;
       setEntries(r.entries);
       setNow(Date.now());
@@ -226,24 +234,14 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
 
         <button onClick={() => setOpen(expanded ? null : e.id)} className="mt-3 flex items-center gap-1 text-xs font-medium text-[#1463ff] hover:underline" aria-expanded={expanded}>
           <Icon name="chevron" size={12} className={`transition-transform ${expanded ? "rotate-90" : ""}`} />
-          Why
+          {expanded ? "Hide the checks" : "Why: see the six checks"}
         </button>
         {expanded && (
           <div className="mt-2 rounded-xl bg-[#fbfaf7] p-3">
             {e.explain && <p className="text-sm text-neutral-800">{e.explain}</p>}
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {[...e.evidence]
-                .sort((x, y) => Math.abs(y.points) - Math.abs(x.points))
-                .map((ev, i) => (
-                  <span key={i} title={ev.label} className={`rounded-full px-2.5 py-0.5 text-xs ${ev.points >= 0 ? "bg-[#eef7f1] text-[#0f8a4f]" : "bg-[#fdecea] text-[#c0392b]"}`}>
-                    {ev.tag} <span className="font-semibold tabular-nums">{ev.points > 0 ? "+" : "−"}{Math.abs(ev.points)}</span>
-                  </span>
-                ))}
-              {e.caps.map((c) => (
-                <span key={c} className="rounded-full bg-[#fff4e0] px-2.5 py-0.5 text-xs text-[#9a6400]">
-                  {c}
-                </span>
-              ))}
+            <div className="mt-3 rounded-lg bg-white p-3">
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-neutral-400">The six checks</p>
+              <Checker evidence={e.evidence} score={e.claimScore.after} caps={e.caps} animate={isFresh} compact />
             </div>
             <div className="mt-3 flex gap-4 text-xs font-medium">
               <Link href="/" className="text-[#1463ff] hover:underline">
@@ -278,10 +276,12 @@ export default function Loop({ howItWorks }: { howItWorks?: React.ReactNode }) {
         </div>
         <button
           onClick={() => setFeeding(true)}
-          className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-neutral-200 hover:ring-neutral-400"
+          className="group flex items-center gap-2.5 rounded-full bg-[#161616] py-1.5 pl-1.5 pr-4 text-sm font-medium text-white shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition hover:bg-black"
         >
-          <Icon name="paste" />
-          Paste text yourself
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 transition group-hover:bg-white/25">
+            <Icon name="upload" size={14} />
+          </span>
+          Import
         </button>
       </header>
 
@@ -396,116 +396,157 @@ function Feeder({ onClose, onDone }: { onClose: () => void; onDone: (msg: string
     }
   }
 
+  const pick = (c: Mode) => {
+    setChannel(c);
+    setText(c === "document" ? DEMO_AGREEMENT : DEMO[c]);
+    setResult(null);
+    setError(null);
+  };
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" role="dialog" aria-modal="true" aria-label="Paste text yourself" onClick={onClose}>
-      <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-serif text-3xl">Paste text yourself</h2>
-            <p className="mt-1 text-sm text-neutral-500">Normally the mascot hears this by itself. Paste a meeting transcript, an email, a message or a whole document to try it.</p>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-label="Import" onClick={onClose}>
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between gap-4 px-6 pt-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#161616] text-white">
+              <Icon name="upload" size={18} />
+            </span>
+            <h2 className="font-serif text-3xl leading-none">Import</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
+          <button onClick={onClose} aria-label="Close" className="rounded-full p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
             <Icon name="cross" />
           </button>
         </div>
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {(Object.keys(DEMO) as (keyof typeof DEMO)[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => {
-                setChannel(c);
-                setText(DEMO[c]);
-                setResult(null);
-              }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${c === channel ? "bg-[#161616] text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"}`}
-            >
-              <Icon name={TAB[c].icon} size={14} />
-              {TAB[c].label}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              setChannel("document");
-              setText(DEMO_AGREEMENT);
-              setResult(null);
-            }}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${channel === "document" ? "bg-[#161616] text-white" : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"}`}
-          >
-            <Icon name="document" size={14} />
-            Document
-          </button>
-        </div>
-        {channel === "document" && !result && (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={120}
-              aria-label="Document title"
-              className="min-w-0 flex-1 rounded-full border border-neutral-200 px-3 py-1.5 text-sm focus:border-neutral-400 focus:outline-none"
-            />
-            <label className="cursor-pointer rounded-full bg-neutral-100 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200">
-              Upload a text file
-              <input
-                type="file"
-                accept=".txt,.md,.eml,text/plain"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (!f) return;
-                  if (f.size > 20_000) return setError("That file is too large for the demo");
-                  setText(await f.text());
-                  setTitle(f.name.replace(/\.[a-z]+$/i, ""));
-                }}
-              />
-            </label>
+
+        <div className="px-6 pb-6">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Source">
+            {(Object.keys(TAB) as Mode[]).map((c) => {
+              const on = c === channel;
+              return (
+                <button
+                  key={c}
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => pick(c)}
+                  className={`relative flex flex-col items-start gap-2 rounded-2xl p-3 text-left transition ${on ? "bg-white ring-2 ring-[#161616]" : "bg-[#f6f5f2] ring-1 ring-transparent hover:ring-neutral-300"}`}
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] [&_svg]:h-5 [&_svg]:w-5">{TAB[c].logo}</span>
+                  <span>
+                    <span className="block text-sm font-medium text-neutral-900">{TAB[c].label}</span>
+                    <span className="block text-[11px] text-neutral-500">{TAB[c].from}</span>
+                  </span>
+                  {on && (
+                    <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#161616] text-white">
+                      <Icon name="check" size={12} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        )}
-        {result && (
-          <div className="mt-4 rounded-2xl bg-[#fbfaf7] p-4">
-            <p className="text-sm font-medium">{result.title}</p>
-            <ul className="mt-2 space-y-1 text-sm">
-              {result.checks.map((c) => (
-                <li key={c.label} className={`flex items-center gap-2 ${c.ok ? "text-[#0f8a4f]" : "text-[#9a6400]"}`}>
-                  <Icon name={c.ok ? "check" : "cross"} size={14} />
-                  {c.label}
-                </li>
-              ))}
-            </ul>
-            {result.changes.length > 0 && (
-              <ul className="mt-3 space-y-0.5 border-t border-neutral-200 pt-2 text-xs text-neutral-600">
-                {result.changes.map((c) => (
-                  <li key={c}>{c}</li>
+
+          {channel === "document" && !result && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <label className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-neutral-200 px-3 py-2 focus-within:border-neutral-400">
+                <Icon name="document" size={14} className="text-neutral-400" />
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={120}
+                  aria-label="Document title"
+                  className="min-w-0 flex-1 bg-transparent text-sm focus:outline-none"
+                />
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-full bg-[#f6f5f2] px-3.5 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200">
+                <Icon name="upload" size={14} />
+                Upload a file
+                <input
+                  type="file"
+                  accept=".txt,.md,.eml,text/plain"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (f.size > 20_000) return setError("That file is too large for the demo");
+                    setText(await f.text());
+                    setTitle(f.name.replace(/\.[a-z]+$/i, ""));
+                  }}
+                />
+              </label>
+            </div>
+          )}
+
+          {result ? (
+            <div className="mt-4 rounded-2xl bg-[#fbfaf7] p-4 ring-1 ring-neutral-200">
+              <p className="flex items-center gap-2 text-sm font-medium">
+                <Icon name="document" size={14} className="text-neutral-400" />
+                {result.title}
+              </p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {result.checks.map((c) => (
+                  <li key={c.label} className={`flex items-center gap-2 ${c.ok ? "text-[#0f8a4f]" : "text-[#9a6400]"}`}>
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full ${c.ok ? "bg-[#e6f4ec]" : "bg-[#fff4e0]"}`}>
+                      <Icon name={c.ok ? "check" : "cross"} size={12} />
+                    </span>
+                    {c.label}
+                  </li>
                 ))}
               </ul>
-            )}
-            <p className="mt-3 text-xs text-neutral-500">It now waits for an expert who works on this client to approve it. Until then it counts for at most 50%.</p>
-          </div>
-        )}
-        {!result && (
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={6000}
-          rows={6}
-          aria-label="Text to feed to the brain"
-          className="mt-3 w-full resize-y rounded-2xl border border-neutral-200 bg-[#fbfaf7] p-3 font-mono text-[13px] leading-relaxed focus:border-neutral-400 focus:outline-none"
-        />
-        )}
-        {error && <p className="mt-2 text-sm text-[#c0392b]">{error}</p>}
-        <div className="mt-4 flex items-center justify-end gap-3">
-          <button onClick={onClose} className="text-sm text-neutral-500 hover:text-neutral-900">
-            Cancel
-          </button>
-          {result ? (
-            <button onClick={() => onDone(`Read "${result.title}": waiting for an expert to approve it.`)} className="rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black">
-              Done
-            </button>
+              {result.changes.length > 0 && (
+                <ul className="mt-3 space-y-0.5 border-t border-neutral-200 pt-2 text-xs text-neutral-600">
+                  {result.changes.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-neutral-500">
+                <Icon name="clock" size={12} />
+                Waits for an expert on this client to approve it. Until then it counts for at most 50%.
+              </p>
+            </div>
           ) : (
-            <button onClick={feed} disabled={busy || !text.trim()} className="rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-40">
-              {busy ? "Reading…" : channel === "document" ? "Read the document" : "Feed to the brain"}
-            </button>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-[#fbfaf7] focus-within:border-neutral-400">
+              <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-2 text-xs text-neutral-500">
+                <span className="flex items-center gap-1.5">
+                  <Icon name={channelIcon(channel)} size={13} />
+                  {TAB[channel].from}
+                </span>
+                <span className="tabular-nums">{text.length.toLocaleString("en")} / 6,000</span>
+              </div>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                maxLength={6000}
+                rows={7}
+                aria-label="Text to import"
+                className="block w-full resize-y bg-transparent px-4 py-3 font-mono text-[13px] leading-relaxed focus:outline-none"
+              />
+            </div>
           )}
+
+          {error && (
+            <p className="mt-3 flex items-center gap-1.5 text-sm text-[#c0392b]">
+              <Icon name="cross" size={14} />
+              {error}
+            </p>
+          )}
+
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={onClose} className="rounded-full px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">
+              Cancel
+            </button>
+            {result ? (
+              <button onClick={() => onDone(`Read "${result.title}": waiting for an expert to approve it.`)} className="flex items-center gap-2 rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black">
+                <Icon name="check" size={14} />
+                Done
+              </button>
+            ) : (
+              <button onClick={feed} disabled={busy || !text.trim()} className="flex items-center gap-2 rounded-full bg-[#161616] px-5 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-40">
+                {busy ? "Reading…" : channel === "document" ? "Read the document" : "Feed to the brain"}
+                {!busy && <Icon name="arrow" size={14} />}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Icon, type IconName } from "../icons";
 import { Flag } from "@/lib/demo-shared";
 import { CopilotLogo, DatabaseLogo, DocsLogo, GmailLogo, OutlookLogo, TeamsLogo } from "../logos";
 import { KIND } from "./documents";
+import { LAYERS } from "@/trust-engine";
 import type { BrainData } from "./brain-map";
 
 // How the brain reads: connect → find → scan → extract, in one calm row above the documents.
@@ -28,7 +29,7 @@ export function HowItWorks({ data }: { data: BrainData }) {
   const statements = data.topics.reduce((n, t) => n + t.claims.length, 0);
   const steps: { icon: IconName; title: string; text: string; stat: string }[] = [
     { icon: "meeting", title: "Hears", text: "Meetings, Teams, email and Copilot", stat: "" },
-    { icon: "document", title: "Finds", text: "Documents that mention the topic", stat: `${data.documents.length} documents` },
+    { icon: "document", title: "Finds", text: "Documents that mention the topic", stat: `${data.documents.length} documents in this demo` },
     { icon: "paste", title: "Reads", text: "The exact line, word for word", stat: `${statements} statements` },
     { icon: "check", title: "Scores", text: "Six questions, one trust score", stat: "Trusted from 75%" },
   ];
@@ -116,7 +117,7 @@ export default function Pipeline({ data, bare }: { data: BrainData; bare?: boole
           </div>
         </Step>
 
-        <Step n={2} title="Finds" text="Every document that already mentions the topic.">
+        <Step n={2} title="Finds" text="Every document that already mentions the topic. In this demo a sample; in use, all of SharePoint, Teams and email.">
           {/* a fan of the documents it found, by kind, and what came out of them */}
           <div className="flex items-end gap-4">
             <div className="relative h-16 w-24 shrink-0">
@@ -181,17 +182,23 @@ export default function Pipeline({ data, bare }: { data: BrainData; bare?: boole
 
         <Step n={4} title="Scores" text="What, who and when go through six questions and become a trust score.">
           {example && (
+            <>
             <div className="flex items-center gap-3 rounded-xl bg-[#f6f5f2] p-3">
               <ScoreRing score={example.score ?? 0} />
-              <dl className="grid min-w-0 grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 text-[11px]">
-                <dt className="text-neutral-400">Says</dt>
-                <dd className="font-medium">{example.value}</dd>
-                <dt className="text-neutral-400">Who</dt>
-                <dd className="truncate">{author}</dd>
-                <dt className="text-neutral-400">When</dt>
-                <dd>{example.date}</dd>
-              </dl>
+              {/* the six questions every statement goes through */}
+              <ol className="min-w-0 space-y-0.5 text-[11px] text-neutral-700">
+                {LAYERS.map((l, i) => (
+                  <li key={l.id} className="flex items-center gap-1.5">
+                    <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-white font-mono text-[8px] text-neutral-500 ring-1 ring-neutral-200">{i + 1}</span>
+                    {l.question}
+                  </li>
+                ))}
+              </ol>
             </div>
+            <p className="mt-2 truncate text-[11px] text-neutral-500">
+              Example: “{example.value}” from {author}, {example.date}
+            </p>
+            </>
           )}
         </Step>
       </ol>

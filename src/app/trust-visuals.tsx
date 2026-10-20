@@ -227,3 +227,52 @@ export function ForecastLine({ forecast, compact }: { forecast: Forecast; compac
     </div>
   );
 }
+
+// The checker: the six questions as a checklist, ticked off one by one (for the log and the "How it works" card).
+// Green tick = the question added trust, red cross = it took trust away, grey dash = nothing to add.
+export function Checker({ evidence, score, caps, animate = false, compact = false }: { evidence: Evidence[]; score: number; caps: string[]; animate?: boolean; compact?: boolean }) {
+  const on = useReveal();
+  const shown = !animate || on;
+  const cap = caps[0]?.replace(/^Capped at (\d+)%: /, "capped at $1%: ");
+  return (
+    <div>
+      <ol className={compact ? "space-y-1" : "space-y-1.5"}>
+        {LAYERS.map((layer, i) => {
+          const items = evidence.filter((e) => e.layer === layer.id);
+          const points = items.reduce((s, e) => s + e.points, 0);
+          const idle = items.length === 0 || Math.abs(points) < 0.05;
+          const tone = idle ? "#a3a3a3" : points > 0 ? GREEN : RED;
+          return (
+            <li
+              key={layer.id}
+              className="flex items-center gap-2.5 transition-all duration-300 ease-out"
+              style={{ opacity: shown ? 1 : 0, transform: shown ? "none" : "translateY(4px)", transitionDelay: animate ? `${150 + i * 260}ms` : "0ms" }}
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white" style={{ background: idle ? "#e5e5e5" : tone }}>
+                <svg viewBox="0 0 24 24" width={11} height={11} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d={idle ? "M7 12h10" : points > 0 ? "M5 12.5l4.5 4.5L19 7.5" : "M7 7l10 10M17 7L7 17"} />
+                </svg>
+              </span>
+              <span className={`w-36 shrink-0 ${compact ? "text-xs" : "text-sm"} font-medium ${idle ? "text-neutral-400" : "text-neutral-800"}`}>{layer.question}</span>
+              <span className={`min-w-0 flex-1 truncate ${compact ? "text-[11px]" : "text-xs"} text-neutral-500`} title={items.map((e) => e.label).join(" · ")}>
+                {idle ? "nothing to add" : items.map((e) => e.label).join(" · ")}
+              </span>
+              <span className={`w-10 shrink-0 text-right ${compact ? "text-xs" : "text-sm"} font-medium tabular-nums`} style={{ color: tone }}>
+                {idle ? "–" : signed(points)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <p
+        className={`mt-2 flex items-baseline justify-between gap-3 border-t border-neutral-200 pt-2 ${compact ? "text-xs" : "text-sm"} transition-opacity duration-300`}
+        style={{ opacity: shown ? 1 : 0, transitionDelay: animate ? `${150 + LAYERS.length * 260}ms` : "0ms" }}
+      >
+        <span className="text-neutral-500">{cap ? cap.charAt(0).toUpperCase() + cap.slice(1) : "Starts at 50%, the six questions move it."}</span>
+        <b className="shrink-0 font-serif text-lg" style={{ color: score >= 0.75 ? GREEN : score >= 0.5 ? AMBER : RED }}>
+          = {pct(score)}
+        </b>
+      </p>
+    </div>
+  );
+}

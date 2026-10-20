@@ -26,7 +26,16 @@ const CHANNEL: Record<string, string> = { official: "an official notice", sharep
 
 // Calendar days, so something said this morning is "today", not "yesterday" by the afternoon.
 const daysAgo = (date: string, now: Date) => Math.max(0, Math.round((Date.parse(now.toISOString().slice(0, 10)) - Date.parse(date.slice(0, 10))) / DAY));
-const when = (days: number) => (days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`);
+const when = (days: number) =>
+  days === 0
+    ? "today"
+    : days === 1
+      ? "yesterday"
+      : days < 60
+        ? `${days} days ago`
+        : days < 730
+          ? `${Math.round(days / 30)} months ago`
+          : `${Math.round(days / 365)} years ago`;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const newest = (claims: Claim[]) => [...claims].sort((a, b) => Date.parse(b.date) - Date.parse(a.date))[0];
 
@@ -168,4 +177,66 @@ function contactFor(person: Person, counted: Claim[], confirms: number, isRight:
 export function lastUpdated(result: FactResult): { date: string; source: string; by: string | null } | null {
   const latest = newest(result.claims.map((c) => c.claim));
   return latest ? { date: latest.date, source: latest.source.title, by: latest.author } : null;
+}
+
+// "Recently discussed by": everyone who touched this topic lately, in any country or client the asker may see,
+// newest first, and how it relates to the answer. Work context only: for meetings no words are shown,
+// just that it was discussed and the value; written sources keep their short quote.
+export type TrailEntry = {
+  person: { id: string; name: string; team: string; role: string; left: boolean };
+  date: string;
+  when: string; // "yesterday", "12 days ago"
+  channel: Claim["source"]["type"];
+  source: string;
+  country: string;
+  client: string | null;
+  value: string;
+  relation: "agrees" | "differs" | "other-scope";
+  relationLabel: string; // "Says the same", "Says 24 days", "Different rule for DE: 30 days"
+  quote: string | null; // null for meetings
+};
+
+export function recentTrail(
+  result: FactResult,
+  kb: KnowledgeBase,
+  now: Date,
+  opts: { limit?: number; canSee?: (c: Claim) => boolean; isHearsay?: (c: Claim) => boolean } = {},
+): TrailEntry[] {
+  const people = new Map(kb.people.map((p) => [p.id, p]));
+  const answer = result.best?.claim.value ?? null;
+  const inScope = new Set(result.claims.map((s) => s.claim.id));
+  const clientName = (id: string) => kb.clients.find((c) => c.id === id)?.name ?? id;
+  const claims = kb.claims
+    .filter((c) => c.factKey === result.fact.key && c.author && c.source.type !== "official")
+    .filter((c) => (opts.canSee ?? (() => true))(c) && !opts.isHearsay?.(c));
+
+  // One line per person: their most recent trace on this topic.
+  const latest = new Map<string, Claim>();
+  for (const c of claims) {
+    const prev = latest.get(c.author!);
+    if (!prev || c.date > prev.date) latest.set(c.author!, c);
+  }
+
+  return [...latest.values()]
+    .sort((a, b) => b.date.localeCompare(a.date) || a.author!.localeCompare(b.author!))
+    .slice(0, opts.limit ?? 6)
+    .map((c) => {
+      const p = people.get(c.author!);
+      const other = !inScope.has(c.id);
+      const where = c.scope.client ? clientName(c.scope.client) : c.scope.country;
+      const relation: TrailEntry["relation"] = other ? "other-scope" : answer && sameValue(c.value, answer) ? "agrees" : "differs";
+      return {
+        person: { id: c.author!, name: p?.name ?? c.author!, team: p?.team ?? "", role: p?.role ?? "regular", left: !!p?.left },
+        date: c.date,
+        when: when(daysAgo(c.date, now)),
+        channel: c.source.type,
+        source: c.source.title,
+        country: c.scope.country,
+        client: c.scope.client ? clientName(c.scope.client) : null,
+        value: c.value,
+        relation,
+        relationLabel: relation === "agrees" ? "Says the same" : relation === "differs" ? `Says ${c.value}` : `Different case (${where}): ${c.value}`,
+        quote: c.source.type === "meeting" ? null : c.text,
+      };
+    });
 }

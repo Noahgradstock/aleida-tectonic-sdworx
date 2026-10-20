@@ -284,3 +284,17 @@ test("after a client exception wins, whoever gave the country rule is still 'rig
   const anna = rankContacts(r, ctx, live, fb, now).ranked.find((c) => c.person.id === "anna")!;
   assert.ok(anna.reasons.some((x) => /Right 1 of 1/.test(x)), anna.reasons.join(", "));
 });
+
+test("recent trail: everyone who touched the topic, newest first, other countries labelled, no meeting words", async () => {
+  const { recentTrail } = await import("./contacts");
+  const r = evaluateFact(fact, kb, BE, [], now);
+  const trail = recentTrail(r, kb, now);
+  assert.equal(trail[0].person.id, "lukas");
+  assert.equal(trail[0].relation, "other-scope");
+  assert.match(trail[0].relationLabel, /DE/);
+  assert.equal(trail[0].quote, null);
+  const anna = trail.find((t) => t.person.id === "anna")!;
+  assert.equal(anna.relation, "agrees");
+  assert.ok(anna.quote);
+  assert.ok(trail.some((t) => t.person.id === "koen" && t.person.left));
+});

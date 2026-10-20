@@ -1,4 +1,4 @@
-import { ask, lastUpdated, matchFact, parseContext, rankContacts } from "@/trust-engine";
+import { ask, lastUpdated, matchFact, parseContext, rankContacts, recentTrail } from "@/trust-engine";
 import { matchFactWithGemini } from "@/lib/gemini-match";
 import { allFeedback, currentUser, forbidden, notYourClient, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
 import { liveKb, unconfirmedReport } from "@/lib/live";
@@ -44,5 +44,7 @@ export async function POST(request: Request) {
   // colleague's track record by putting words in their mouth.
   const vouched = { ...kb, claims: kb.claims.filter((c) => !unconfirmedReport(c, feedback, kb.people)) };
   const contacts = rankContacts(result, ctx, vouched, feedback, now());
-  return Response.json({ ...result, contacts, lastUpdated: lastUpdated(result), matchedBy, privacy });
+  // Who else dealt with this lately, in any country or client this user may see.
+  const trail = recentTrail(result, kb, now(), { canSee: (c) => canReadClaim(user, c, kb), isHearsay: (c) => unconfirmedReport(c, feedback, kb.people) });
+  return Response.json({ ...result, contacts, trail, lastUpdated: lastUpdated(result), matchedBy, privacy });
 }

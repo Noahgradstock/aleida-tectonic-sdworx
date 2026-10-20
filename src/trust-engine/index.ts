@@ -7,5 +7,5 @@ export { ask, matchFact, type AskResult } from "./ask";
 export { MemoryFeedbackStore, parseFeedback, parseContext, type FeedbackStore } from "./feedback";
 export { mockKnowledgeBase, MOCK_NOW } from "./mock";
 export { extractClaims, findValues, parseValue, unitOf, type Channel, type Extracted, type Quantity, type Skipped } from "./extract";
-export { rankContacts, lastUpdated, type Contact, type ContactRanking } from "./contacts";
+export { rankContacts, lastUpdated, recentTrail, type Contact, type ContactRanking, type TrailEntry } from "./contacts";
 export { buildKnowledgeGraph, DOMAINS, domainOf, type DomainId, type KnowledgeGraph, type GraphNode, type GraphEdge, type PersonCv, type CvEntry, type NodeKind } from "./graph";

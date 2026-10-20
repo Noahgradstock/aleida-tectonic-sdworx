@@ -167,6 +167,13 @@ export function Flag({ country, size = 12 }: { country: string; size?: number })
           <rect y="10" width="21" height="5" fill="#21468b" />
         </>
       )}
+      {country === "DE" && (
+        <>
+          <rect width="21" height="5" fill="#1a1a1a" />
+          <rect y="5" width="21" height="5" fill="#dd0000" />
+          <rect y="10" width="21" height="5" fill="#ffce00" />
+        </>
+      )}
       {country === "EU" && (
         <>
           <rect width="21" height="15" fill="#003399" />

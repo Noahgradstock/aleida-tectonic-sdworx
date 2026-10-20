@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Claim, FeedbackKind, ScoredClaim } from "@/trust-engine";
+import type { Claim, ContactRanking, FeedbackKind, ScoredClaim, TrailEntry } from "@/trust-engine";
 import { CHANNEL, color, Flag, pct, PdfIcon, shortReason, type Hit } from "@/lib/demo-shared";
 
 // The finished answer: one clear value, how the brain decided, and the documents behind it.
@@ -132,6 +132,9 @@ export function Result({
           </div>
         </div>
       )}
+
+      {/* Who to talk to: built from who actually dealt with this, not from an org chart */}
+      <WhoToTalkTo hit={hit as Hit & { contacts?: ContactRanking; trail?: TrailEntry[] }} />
 
       {/* Where the answer comes from: every source, grouped by what it did */}
       <div>
@@ -525,5 +528,72 @@ function Highlighted({ text, quote, value, markRef }: { text: string; quote: str
         </>
       )}
     </pre>
+  );
+}
+
+const SAID_IN: Record<string, string> = { sharepoint: "in a document", teams: "in Teams", email: "by email", meeting: "in a meeting", official: "in an official notice" };
+const RELATION_STYLE: Record<TrailEntry["relation"], string> = {
+  agrees: "bg-[#eef7f1] text-[#0f8a4f]",
+  differs: "bg-[#fff4e0] text-[#9a6400]",
+  "other-scope": "bg-neutral-100 text-neutral-600",
+};
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("");
+
+function WhoToTalkTo({ hit }: { hit: Hit & { contacts?: ContactRanking; trail?: TrailEntry[] } }) {
+  const first = hit.contacts?.ranked[0];
+  const trail = hit.trail ?? [];
+  if (!first && !trail.length) return null;
+  return (
+    <div>
+      <h2 className="font-serif text-2xl">Who to talk to</h2>
+      <p className="mt-1 text-sm text-neutral-500">From who actually dealt with this topic, not from an org chart. Work context only.</p>
+
+      {first && (
+        <div className="mt-4 rounded-2xl bg-[#eef3ff] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1463ff] text-xs font-semibold text-white">{initials(first.person.name)}</span>
+            <div>
+              <div className="text-sm">
+                Contact <b>{first.person.name}</b> first
+              </div>
+              <div className="text-xs text-neutral-600">{first.reasons.join(" · ")}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {trail.length > 0 && (
+        <>
+          <h3 className="mt-6 text-sm font-medium">Recently discussed by</h3>
+          <ol className="mt-3 space-y-3 border-l border-neutral-200 pl-5">
+            {trail.map((t) => (
+              <li key={t.person.id} className={`relative ${t.person.left ? "opacity-50" : ""}`}>
+                <span className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-neutral-300" />
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  <span className="font-medium">{t.person.name}</span>
+                  <span className="text-xs text-neutral-500">{t.person.team}</span>
+                  <Flag country={t.country} size={10} />
+                  <span className="text-xs text-neutral-500">
+                    · {SAID_IN[t.channel] ?? t.channel} · {t.when}
+                    {t.person.left ? " · has left" : ""}
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${RELATION_STYLE[t.relation]}`}>{t.relationLabel}</span>
+                </div>
+                {t.quote ? (
+                  <p className="mt-1 text-xs italic text-neutral-600">“{t.quote.length > 160 ? `${t.quote.slice(0, 159)}…` : t.quote}”</p>
+                ) : (
+                  <p className="mt-1 text-xs text-neutral-400">Discussed in a meeting. Only the topic and the value are kept, not what was said.</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+    </div>
   );
 }

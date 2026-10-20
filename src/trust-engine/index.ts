@@ -6,3 +6,5 @@ export { matchScope } from "./scope";
 export { ask, matchFact, type AskResult } from "./ask";
 export { MemoryFeedbackStore, parseFeedback, parseContext, type FeedbackStore } from "./feedback";
 export { mockKnowledgeBase, MOCK_NOW } from "./mock";
+export { extractClaims, parseValue, unitOf, type Channel, type Extracted, type Skipped } from "./extract";
+export { rankContacts, lastUpdated, type Contact, type ContactRanking } from "./contacts";

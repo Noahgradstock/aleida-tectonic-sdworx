@@ -59,6 +59,8 @@ function scoreClaim(
   else if (author?.role === "expert") add("authority", "Expert", `${author.name} is a topic expert`, POINTS.expertAuthor);
   else if (author?.role === "new") add("authority", "New hire", `${author.name} is new, no track record`, POINTS.newAuthor);
   if (author?.left) add("authority", "No owner", `${author.name} has left, nobody owns this anymore`, POINTS.ownerLeft);
+  if (claim.source.type === "meeting") add("authority", "Said in a meeting", "Said out loud in a meeting, not written down", POINTS.meeting);
+  if (claim.hedged) add("authority", "Unsure", "The speaker sounded unsure", POINTS.hedged);
 
   // Layer 2 – freshness. Official rules stay valid until replaced, so they do not age.
   if (!isOfficial) {
@@ -104,6 +106,13 @@ function scoreClaim(
       add("consistency", "Contradicts law", `Contradicts ${ref.source.title} (${ref.value})`, POINTS.contradictsOfficial);
       caps.push({ label: "contradicts the official source", max: CAPS.contradictsOfficial });
     }
+  }
+  // Spoken knowledge counts once the speaker or an expert confirms it, or it matches the law.
+  const confirmed =
+    thumbs > 0 ||
+    feedback.some((f) => f.claimId === claim.id && f.kind === "correct" && (f.userId === claim.author || people.get(f.userId)?.role === "expert"));
+  if (claim.source.type === "meeting" && !confirmed && !matchesRef) {
+    caps.push({ label: "said in a meeting, not confirmed yet", max: CAPS.unconfirmedMeeting });
   }
   if (!isOfficial && author?.role !== "expert" && thumbs === 0 && !matchesRef && !isException) {
     caps.push({ label: "no expert or official source backs it", max: CAPS.noExpertBacking });

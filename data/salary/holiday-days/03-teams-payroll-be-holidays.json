@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "createdDateTime": "2026-09-10T09:12:00Z",
+      "from": { "user": { "displayName": "Sofie Maes" } },
+      "body": { "content": "Quick one: how many holiday days does a full-time white-collar employee get in Belgium?" },
+      "replies": [
+        {
+          "createdDateTime": "2026-09-10T09:20:00Z",
+          "from": { "user": { "displayName": "Anna De Smet" } },
+          "body": { "content": "Full-time, five-day week, worked the whole previous year: 20 days. The 24 in the old manual is for a six-day week." }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "about": "Annual leave days (holiday days). All people, clients and documents are fictional. Used for the final-day demo: a fresh meeting statement for another country must not beat the Belgian rule, and the right person to contact is computed from scope, track record and recency.",
+  "facts": [
+    {
+      "key": "annual-leave-days",
+      "label": "Annual leave days (full-time)",
+      "topic": "holiday-pay",
+      "keywords": ["holiday days", "vacation days", "annual leave", "days off", "days of holiday", "days of leave", "days of annual leave", "leave days", "vakantiedagen", "jours de congé", "urlaubstage", "semesterdagar"]
+    }
+  ],
+  "people": {
+    "lukas": { "name": "Lukas Becker", "role": "expert", "team": "Payroll DE" }
+  },
+  "claims": [
+    { "id": "off-leave-days-be", "file": "holiday-days/01-be-annual-leave-law.txt", "fact": "annual-leave-days", "value": "20 days", "sourceType": "official", "title": "FPS Employment: annual holidays", "author": null, "date": "2023-12-15", "effectiveFrom": "2024-01-01", "scope": { "country": "BE" } },
+    { "id": "sp-leave-days-manual", "file": "holiday-days/02-payroll-manual-2021-holidays.md", "fact": "annual-leave-days", "value": "24 days", "sourceType": "sharepoint", "title": "Payroll manual Belgium v3 – Holidays", "author": "koen", "date": "2021-03-01", "scope": { "country": "BE" } },
+    { "id": "tm-leave-days-anna", "file": "holiday-days/03-teams-payroll-be-holidays.json", "fact": "annual-leave-days", "value": "20 days", "sourceType": "teams", "title": "Teams #payroll-be", "author": "anna", "date": "2026-09-10", "scope": { "country": "BE" } },
+    { "id": "mt-leave-days-lukas", "file": "holiday-days/04-meeting-payroll-sync-2026-09-29.txt", "fact": "annual-leave-days", "value": "30 days", "sourceType": "meeting", "title": "Meeting: Payroll sync", "author": "lukas", "date": "2026-09-29", "scope": { "country": "DE" } }
+  ],
+  "testQuestions": [
+    { "question": "How many holiday days does a full-time employee get?", "context": { "country": "BE", "pc": "200" }, "expectedAnswer": "20 days" }
+  ]
+}

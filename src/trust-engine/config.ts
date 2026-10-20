@@ -6,6 +6,8 @@ export const POINTS = {
   expertAuthor: 1.0,
   newAuthor: -0.5,
   ownerLeft: -1.0, // author left the company: nobody maintains this anymore
+  meeting: -0.3, // said out loud in a meeting: nobody wrote it down or reviewed it
+  hedged: -1.0, // "I think", "not sure": the speaker doubts it themselves
   // Layer 2 – freshness: when?
   maxAgePenalty: 2.0, // -1 point per topic half-life, capped here
   predatesRuleChange: -2.5,
@@ -32,6 +34,7 @@ export const CAPS = {
   contradictsOfficial: 0.2,
   predatesRuleChange: 0.3,
   noExpertBacking: 0.6,
+  unconfirmedMeeting: 0.5, // spoken in a meeting, until the speaker or an expert confirms it in writing
 } as const;
 
 // How fast knowledge on a topic goes stale.

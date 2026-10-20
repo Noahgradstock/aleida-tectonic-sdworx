@@ -4,24 +4,14 @@
 // Port to lib/trust.ts in the app; keep it deterministic.
 import { readFileSync } from 'node:fs'
 
-// Fixed file URLs only: nothing from the command line or environment decides which file is read.
-const FILES = {
-  caseCard: new URL('./case_card.json', import.meta.url),
-  sources: new URL('./sources.json', import.meta.url),
-  engine: new URL('./engine_params.json', import.meta.url),
-  registry: new URL('./legal_registry.json', import.meta.url),
-  people: new URL('./people.json', import.meta.url),
-  usage: new URL('./usage_log.json', import.meta.url),
-  questions: new URL('./teams_questions.json', import.meta.url),
-}
-const load = key => JSON.parse(readFileSync(FILES[key], 'utf8'))
-const { case_card: beCard, alt_case_card_for_demo_toggle: nlCard } = load('caseCard')
-const sources = load('sources')
-const engine = load('engine').params
-const registry = load('registry').rules
-const people = load('people')
-const usage = load('usage').usage
-const questions = load('questions').questions
+// Fixed file names only: nothing from the command line or environment decides which file is read.
+const { case_card: beCard, alt_case_card_for_demo_toggle: nlCard } = JSON.parse(readFileSync(new URL('./case_card.json', import.meta.url), 'utf8'))
+const sources = JSON.parse(readFileSync(new URL('./sources.json', import.meta.url), 'utf8'))
+const engine = JSON.parse(readFileSync(new URL('./engine_params.json', import.meta.url), 'utf8')).params
+const registry = JSON.parse(readFileSync(new URL('./legal_registry.json', import.meta.url), 'utf8')).rules
+const people = JSON.parse(readFileSync(new URL('./people.json', import.meta.url), 'utf8'))
+const usage = JSON.parse(readFileSync(new URL('./usage_log.json', import.meta.url), 'utf8')).usage
+const questions = JSON.parse(readFileSync(new URL('./teams_questions.json', import.meta.url), 'utf8')).questions
 
 const STRONG = ['text', 'metadata', 'registry', 'human', 'client_master_data']
 const isStrong = l => l && l.v != null && (STRONG.includes(l.via) || (l.via === 'llm' && l.conf >= 0.9))

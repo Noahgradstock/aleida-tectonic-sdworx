@@ -14,20 +14,15 @@ import type { BrainData } from "@/app/brain/brain-map";
 export type Exception = { client: string; value: string; score: number };
 export type TopicStatus = { status: BrainData["topics"][number]["status"]; answer: string | null; score: number | null; forecast: Forecast | null; exceptions: Exception[] };
 
-// The file list only ever walks this fixed folder: no path comes from the request, symlinks are skipped
-// and every entry is checked to stay inside the root.
-const DATA_ROOT = path.resolve(process.cwd(), "data", "salary");
-
-function listDataFiles(rel = ""): string[] {
-  const dir = path.resolve(DATA_ROOT, rel);
-  if (dir !== DATA_ROOT && !dir.startsWith(DATA_ROOT + path.sep)) return [];
+// The file list only ever walks this one fixed folder, in a single call with no path argument from anywhere else.
+// Hidden files and folders and symlinks are skipped.
+function listDataFiles(): string[] {
+  const root = path.join(process.cwd(), "data", "salary");
   try {
-    return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-      if (e.name.startsWith(".") || e.isSymbolicLink()) return [];
-      const child = path.join(rel, e.name);
-      if (e.isDirectory()) return listDataFiles(child);
-      return e.isFile() ? [child] : [];
-    });
+    return readdirSync(root, { withFileTypes: true, recursive: true })
+      .filter((e) => e.isFile() && !e.isSymbolicLink())
+      .map((e) => path.relative(root, path.join(e.parentPath, e.name)))
+      .filter((rel) => !rel.startsWith("..") && !rel.split(path.sep).some((part) => part.startsWith(".")));
   } catch {
     return [];
   }

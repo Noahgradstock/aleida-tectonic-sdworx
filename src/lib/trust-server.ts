@@ -30,13 +30,24 @@ export const currentUser = async (request: Request) => (await currentSession(req
 
 export const unauthorized = () => Response.json({ error: "not signed in" }, { status: 401 });
 export const forbidden = () => Response.json({ error: "cross-site request refused" }, { status: 403 });
-export const notYourClient = () => Response.json({ error: "you do not have access to this client or country" }, { status: 403 });
+// 404, not 403: the answer must not reveal whether another client's data exists.
+export const notYourClient = () => Response.json({ error: "not found, or you do not have access to this client or country" }, { status: 404 });
 export const tooManyRequests = () => Response.json({ error: "too many requests, try again in a minute" }, { status: 429 });
 
-// Bodies are small JSON objects. The limit is checked on the bytes actually read, not only on the header.
-const MAX_BODY_BYTES = 10_000;
+// Bodies are small JSON objects. The limit is checked on the bytes actually read, not only on the header
+// (the proxy already answers 413 when the header says the body is too large).
+export const MAX_BODY_BYTES = 10_000;
 
-export async function readJson(request: Request): Promise<unknown> {
+// With `allowed`, the body must be a plain JSON object with only those fields: anything else
+// (userId, role, isAdmin...) makes it null, so the route answers 400 instead of silently ignoring it.
+export async function readJson(request: Request, allowed?: readonly string[]): Promise<unknown> {
+  const body = await readJsonBody(request);
+  if (!allowed) return body;
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  return Object.keys(body).every((k) => allowed.includes(k)) ? body : null;
+}
+
+async function readJsonBody(request: Request): Promise<unknown> {
   if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES || !request.body) return null;
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];

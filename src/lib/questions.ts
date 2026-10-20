@@ -79,7 +79,7 @@ export async function askToConfirm(user: Person, claimId: string, ctx: Context, 
   const claim = k.claims.find((c) => c.id === claimId);
   // Unknown claim or a claim this user may not see: same answer, so ids cannot be probed.
   if (!claim || !canReadClaim(user, claim, k)) return { ok: false, status: 404, error: "Not found" };
-  if (!canUseContext(user, ctx, k)) return { ok: false, status: 403, error: "You do not work on this case" };
+  if (!canUseContext(user, ctx, k)) return { ok: false, status: 404, error: "Not found, or you do not work on this case" };
 
   // One question per asker per claim: asking again shows the same question.
   const existing = qs.find((q) => q.from === user.id && q.claimId === claimId && !forwardedFrom);

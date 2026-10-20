@@ -92,7 +92,7 @@ export default function Ask() {
       body: JSON.stringify({ question: q, context: c }),
     });
     if (res.status === 401) router.replace("/login");
-    // No access to that client or country (403), or too many questions (429): show the reason instead of an answer.
+    // No access to that client or country (404), or too many questions (429): show the reason instead of an answer.
     if (!res.ok) {
       const err = (await res.json().catch(() => null)) as { error?: string } | null;
       return { matched: false, message: err?.error ?? "Something went wrong, try again.", suggestions: [] } as AskResult;

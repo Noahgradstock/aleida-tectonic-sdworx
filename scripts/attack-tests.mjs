@@ -58,9 +58,9 @@ async function session(user) {
   return r.cookie;
 }
 
-const PROTECTED_GET = ["/api/auth/me", "/api/trust/meta", "/api/trust/facts?country=BE", "/api/trust/source?id=off-idx-200", "/api/brain/graph", "/api/brain/ledger"];
-const PROTECTED_POST = ["/api/trust/ask", "/api/trust/feedback", "/api/brain/ingest"];
-const MUTATIONS = ["/api/trust/ask", "/api/trust/feedback", "/api/brain/ingest", "/api/auth/login", "/api/auth/guest", "/api/auth/logout"];
+const PROTECTED_GET = ["/api/brain/questions", "/api/auth/me", "/api/trust/meta", "/api/trust/facts?country=BE", "/api/trust/source?id=off-idx-200", "/api/brain/graph", "/api/brain/ledger"];
+const PROTECTED_POST = ["/api/trust/ask", "/api/trust/feedback", "/api/brain/ingest", "/api/brain/questions", "/api/brain/questions/answer"];
+const MUTATIONS = ["/api/trust/ask", "/api/trust/feedback", "/api/brain/ingest", "/api/brain/questions", "/api/brain/questions/answer", "/api/auth/login", "/api/auth/guest", "/api/auth/logout"];
 const OTHER_CLIENT_CLAIM = "em-idx-janssens"; // client email of bakkerij-janssens; tom only works on brouwerij-de-kroon
 const leak = (r) => /at |\.ts:|\.js:|node_modules|Error:/.test(r.text);
 
@@ -125,13 +125,17 @@ async function main() {
 
   // 7. IDOR: tom asks for another client's data.
   const otherSource = await req(`/api/trust/source?id=${OTHER_CLIENT_CLAIM}`, { cookie: tom });
-  check("IDOR: tom opens another client's email -> 403/404", [403, 404].includes(otherSource.status) && !otherSource.text.includes("Janssens"));
+  check("IDOR: tom opens another client's email -> 404", otherSource.status === 404 && !otherSource.text.includes("Janssens"));
   const otherAsk = await req("/api/trust/ask", { method: "POST", cookie: tom, body: { question: "indexation", context: { client: "bakkerij-janssens" } } });
-  check("IDOR: tom asks about another client -> 403/404", [403, 404].includes(otherAsk.status));
+  check("IDOR: tom asks about another client -> 404", otherAsk.status === 404);
   const otherFacts = await req("/api/trust/facts?client=bakkerij-janssens", { cookie: tom });
-  check("IDOR: tom loads another client's facts -> 403/404", [403, 404].includes(otherFacts.status));
+  check("IDOR: tom loads another client's facts -> 404", otherFacts.status === 404);
   const otherVote = await req("/api/trust/feedback", { method: "POST", cookie: tom, body: { claimId: OTHER_CLIENT_CLAIM, kind: "wrong", context: { client: "bakkerij-janssens" } } });
-  check("IDOR: tom votes in another client's case -> 403/404", [403, 404].includes(otherVote.status));
+  check("IDOR: tom votes in another client's case -> 404", otherVote.status === 404);
+  const otherConfirm = await req("/api/brain/questions", { method: "POST", cookie: tom, body: { claimId: OTHER_CLIENT_CLAIM, context: { client: "bakkerij-janssens" } } });
+  check("IDOR: tom asks a colleague to confirm another client's claim -> 404", otherConfirm.status === 404);
+  const notMine = await req("/api/brain/questions/answer", { method: "POST", cookie: tom, body: { id: "someone-elses-question", answer: "correct" } });
+  check("IDOR: tom answers a question that was not sent to him -> 404", notMine.status === 404);
   const traversal = await req("/api/trust/source?id=../../.env", { cookie: tom });
   check("path traversal in source id -> 404", traversal.status === 404);
   const graph = await req("/api/brain/graph", { cookie: tom });
@@ -147,12 +151,18 @@ async function main() {
   });
   const ledgerAfterForge = await req("/api/brain/ledger?fact=indexation-2026", { cookie: tom });
   const forgedEntry = ledgerAfterForge.json?.entries?.find((e) => e.claimId === "sp-idx-draft" && e.kind === "outdated");
-  check("forged userId/role in a vote has no effect (actor stays tom)", forged.status !== 200 || !forgedEntry || forgedEntry.actor === "tom", `actor=${forgedEntry?.actor}`);
+  check("vote with extra fields (userId, role) -> 400", forged.status === 400, `status ${forged.status}`);
+  check("forged userId/role in a vote has no effect (actor stays tom)", !forgedEntry || forgedEntry.actor === "tom", `actor=${forgedEntry?.actor}`);
+  const extraAsk = await req("/api/trust/ask", { method: "POST", cookie: tom, body: { question: "indexation", context: { country: "BE", pc: "200" }, userId: "anna" } });
+  check("ask with an extra field (userId) -> 400", extraAsk.status === 400);
+  const extraIngest = await req("/api/brain/ingest", { method: "POST", cookie: tom, body: { channel: "teams", text: "x", context: { country: "BE" }, author: "anna" } });
+  check("ingest with an extra field (author) -> 400", extraIngest.status === 400);
+  const arrayBody = await req("/api/trust/feedback", { method: "POST", cookie: tom, raw: "[]" });
+  check("vote with a JSON array body -> 400", arrayBody.status === 400);
 
   // 9. Input validation.
   const bad = [
     ["broken JSON", { raw: "{not json" }],
-    ["oversized body (20 KB)", { raw: JSON.stringify({ question: "x".repeat(20_000), context: { country: "BE" } }) }],
     ["number as question", { body: { question: 1e300, context: { country: "BE" } } }],
     ["prototype pollution context", { raw: '{"question":"indexation","context":{"__proto__":{"client":"bakkerij-janssens"}}}' }],
   ];
@@ -160,6 +170,8 @@ async function main() {
     const r = await req("/api/trust/ask", { method: "POST", cookie: tom, ...opts });
     check(`ask with ${label} -> 4xx, no stack trace`, r.status >= 400 && r.status < 500 && !leak(r), `status ${r.status}`);
   }
+  const big = await req("/api/trust/ask", { method: "POST", cookie: tom, raw: JSON.stringify({ question: "x".repeat(20_000), context: { country: "BE" } }) });
+  check("ask with a 20 KB body -> 413", big.status === 413, `status ${big.status}`);
   const badVote = await req("/api/trust/feedback", { method: "POST", cookie: tom, body: { claimId: "sp-idx-draft", kind: "delete-everything", context: { country: "BE" } } });
   check("vote with unknown kind -> 400", badVote.status === 400);
   const badFact = await req("/api/brain/ledger?fact=../../etc", { cookie: tom });
@@ -216,6 +228,8 @@ async function main() {
     check(`header ${h} is set`, page.headers.has(h));
   }
   check("no X-Powered-By header", !page.headers.has("x-powered-by"));
+  const apiCache = (await req("/api/auth/me", { cookie: tom })).headers.get("cache-control") ?? "";
+  check("API answers are not cacheable (no-store)", apiCache.includes("no-store"), apiCache);
 
   console.log(`\n${passed} passed, ${failures.length} failed`);
   if (failures.length) {

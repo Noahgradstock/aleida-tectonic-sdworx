@@ -54,8 +54,8 @@ export async function matchFactWithGemini(question: string, facts: Fact[]): Prom
     if (cache.size >= 1_000) cache.delete(cache.keys().next().value!); // bounded: drop the oldest entry
     cache.set(cacheKey, match);
     return match;
-  } catch (err) {
-    console.error("Gemini topic match failed, using keywords:", err);
+  } catch {
+    console.error("Gemini topic match failed, using keywords");
     return null;
   }
 }

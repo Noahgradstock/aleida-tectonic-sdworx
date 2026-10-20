@@ -24,8 +24,8 @@ export async function GET(request: Request) {
       if (!prev || q.askedAt > prev.askedAt) latest.set(q.claimId, q);
     }
     return Response.json({ forMe: forMe.map(view), mine: [...latest.values()].map(view) });
-  } catch (err) {
-    console.error("questions failed:", err);
+  } catch {
+    console.error("questions failed");
     return Response.json({ error: "Could not load questions right now" }, { status: 500 });
   }
 }
@@ -37,15 +37,15 @@ export async function POST(request: Request) {
   if (!user) return unauthorized();
   if (!canVote(user)) return Response.json({ error: "Sign in with your own account to ask a colleague" }, { status: 403 });
   if (!(await rateLimit(`ask-confirm:${user.id}`, 10, 60_000))) return tooManyRequests();
-  const body = (await readJson(request)) as { claimId?: unknown; context?: unknown } | null;
+  const body = (await readJson(request, ["claimId", "context"])) as { claimId?: unknown; context?: unknown } | null;
   const claimId = typeof body?.claimId === "string" && /^[\w:.-]{1,120}$/.test(body.claimId) ? body.claimId : null;
   const ctx = parseContext(body?.context, kb);
   if (!claimId || !ctx) return Response.json({ error: "claimId and a valid context are required" }, { status: 400 });
   try {
     const r = await askToConfirm(user, claimId, ctx);
     return r.ok ? Response.json({ question: view(r.question) }) : Response.json({ error: r.error }, { status: r.status });
-  } catch (err) {
-    console.error("ask to confirm failed:", err);
+  } catch {
+    console.error("ask to confirm failed");
     return Response.json({ error: "Could not send the question right now" }, { status: 500 });
   }
 }

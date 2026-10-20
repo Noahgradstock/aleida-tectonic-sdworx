@@ -21,8 +21,8 @@ export async function GET(request: Request) {
       })
       .slice(0, 50);
     return Response.json({ entries });
-  } catch (err) {
-    console.error("ledger failed:", err);
+  } catch {
+    console.error("ledger failed");
     return Response.json({ error: "Could not load the ledger right now, try again" }, { status: 500 });
   }
 }

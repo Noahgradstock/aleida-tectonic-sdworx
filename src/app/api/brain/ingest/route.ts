@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   if (!canVote(user)) return bad("Sign in with your own account to teach the brain", 403);
   if (!(await rateLimit(`ingest:${user.id}`, 20, 60_000))) return tooManyRequests();
 
-  const body = await readJson(request);
+  const body = await readJson(request, ["channel", "text", "context"]);
   if (!body || typeof body !== "object") return bad("Send a JSON object of at most 10 KB");
   const { channel: rawChannel, text, context } = body as Record<string, unknown>;
   const channel = CHANNELS.find((c) => c === rawChannel);
@@ -81,8 +81,8 @@ export async function POST(request: Request) {
       k = after;
     }
     return Response.json({ learned, skipped });
-  } catch (err) {
-    console.error("ingest failed:", err);
+  } catch {
+    console.error("ingest failed");
     return bad("Could not learn from this text right now, try again", 500);
   }
 }

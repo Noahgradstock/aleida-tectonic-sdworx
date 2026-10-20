@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (!(await rateLimit(`vote:${user.id}`, 60, 60_000))) return tooManyRequests();
   try {
     const kb = await liveKb();
-    const parsed = parseFeedback(await readJson(request), user.id, kb, now());
+    const parsed = parseFeedback(await readJson(request, ["claimId", "kind", "context"]), user.id, kb, now());
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
     const vote = parsed.feedback;
     // Only for cases this consultant works on.
@@ -50,8 +50,8 @@ export async function POST(request: Request) {
         ? await recordChange({ kind, actor: user.id, claim, before: kb, after: kb, feedbackBefore, now: now() })
         : null;
     return Response.json({ ok: true, entry });
-  } catch (err) {
-    console.error("feedback failed:", err);
+  } catch {
+    console.error("feedback failed");
     return Response.json({ error: "Could not save your feedback right now, try again" }, { status: 500 });
   }
 }

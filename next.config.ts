@@ -17,7 +17,11 @@ const nextConfig: NextConfig = {
     "/brain": ["./data/salary/**/*"],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // API answers are per user: never cached by the browser or a shared cache.
+      { source: "/api/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }] },
+    ];
   },
 };
 

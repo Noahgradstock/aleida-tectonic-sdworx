@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!user) return unauthorized();
   // Each question can cost a Gemini call: 30 per user per minute is plenty for a person, not for a script.
   if (!(await rateLimit(`ask:${user.id}`, 30, 60_000))) return tooManyRequests();
-  const body = (await readJson(request)) as { question?: unknown; context?: unknown; factKey?: unknown } | null;
+  const body = (await readJson(request, ["question", "context", "factKey"])) as { question?: unknown; context?: unknown; factKey?: unknown } | null;
   const kb = await liveKb();
   const question = typeof body?.question === "string" ? body.question.slice(0, 500) : "";
   const ctx = parseContext(body?.context, kb);

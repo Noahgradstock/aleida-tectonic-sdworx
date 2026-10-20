@@ -8,6 +8,10 @@ const PUBLIC = new Set(["/login", "/api/auth/login", "/api/auth/guest"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // Same limit as readJson in lib/trust-server.ts; refused before anything is read. Chunked bodies are capped there.
+  if (pathname.startsWith("/api/") && Number(request.headers.get("content-length") ?? 0) > 10_000) {
+    return NextResponse.json({ error: "request too large" }, { status: 413 });
+  }
   if (PUBLIC.has(pathname)) return NextResponse.next();
   if (await activeSession(request.cookies.get(SESSION_COOKIE)?.value)) return NextResponse.next();
   if (pathname.startsWith("/api/")) return NextResponse.json({ error: "not signed in" }, { status: 401 });

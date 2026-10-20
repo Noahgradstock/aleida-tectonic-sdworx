@@ -9,7 +9,7 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 
 ## 0:00–0:15 · Title slide (Isak)
 
-**ISAK:** Hello, I'm the newest hire at SD Worx. Follow me through my first week: how I get onboarded, and how SD Worx will share what it knows in the future. Even the things nobody ever wrote down. My name is Isak, this is Noah, and this is Ilke. *(click: the video starts)*
+**ISAK:** Hello, I'm Isak, the newest hire at SD Worx. This is Noah, and this is Ilke. Follow my first week, and see how SD Worx shares what nobody ever wrote down. *(click: the video starts)*
 
 ## 0:15–1:27 · Video (Isak + Ilke)
 
@@ -51,7 +51,7 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 ## Lines per person
 
 ### Isak
-1. *(title slide)* "Hello, I'm the newest hire at SD Worx. Follow me through my first week: how I get onboarded, and how SD Worx will share what it knows in the future. Even the things nobody ever wrote down. My name is Isak, this is Noah, and this is Ilke."
+1. *(title slide)* "Hello, I'm Isak, the newest hire at SD Worx. This is Noah, and this is Ilke. Follow my first week, and see how SD Worx shares what nobody ever wrote down."
 2. *(0:04)* "First client. First email."
 3. *(0:16, amber)* "And it stops me before I send something wrong."
 4. *(0:20, fixed)* "Silent while I'm right. There the moment I'm not. But where does it know this from?"

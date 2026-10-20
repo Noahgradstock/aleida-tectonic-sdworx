@@ -128,7 +128,8 @@ function findFact(text, list = facts) {
 
 // ---------- Values: "€1,650", "8.91 euros", "50%", "18 weeks", "650 hours", "3 times", "20th" ----------
 
-const VALUE = /€\s?\d[\d.,]*|\d[\d.,]*\s?(?:%|percent\b|euros?\b|eur\b|hours?\b|weeks?\b|months?\b|days?\b|times\b)|\b\d{1,2}(?:st|nd|rd|th)\b/gi;
+// A number, then at most two words, then a unit: "650 hours", "22 holiday days", "18 weeks of notice" is cut at the unit.
+const VALUE = /€\s?\d[\d.,]*|\d[\d.,]*\s?(?:%|percent\b|euros?\b|eur\b)|\b\d[\d.,]*\s?(?:[a-z]+\s){0,2}?(?:hours?|weeks?|months?|days?|times)\b|\b\d{1,2}(?:st|nd|rd|th)\b/gi;
 
 function parse(v) {
   const s = v.toLowerCase();
@@ -238,7 +239,10 @@ async function corrected(text) {
   const issues = await checkAll(text);
   let out = text;
   for (const i of issues) {
-    const fixedSentence = i.sentence.replace(i.said, i.value);
+    // Swap only the number, keep the words: "22 holiday days" -> "20 holiday days", "€148.73" -> "€154.74".
+    const num = (i.value.match(/\d[\d.,]*/) || [i.value])[0];
+    const fixedSaid = /\d/.test(i.said) ? i.said.replace(/\d[\d.,]*/, num) : i.value;
+    const fixedSentence = i.sentence.replace(i.said, fixedSaid);
     out = out.replace(i.sentence, fixedSentence);
   }
   return { text: out, issues };

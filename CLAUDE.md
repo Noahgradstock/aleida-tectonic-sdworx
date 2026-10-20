@@ -63,7 +63,8 @@ Fill this in as soon as the case is known and the work is split. Update it (pull
 ## 3. The event
 
 - **Tectonic** is a European tech conference in Ghent (21 October 2026), organised by NextGen Belgium and In The Pocket. The hackathon final runs the day before. 2026 is the first edition.
-- The qualifier (30 September 2026, seven Belgian cities) is over. **The final has a new case**, revealed on the day. Nothing built for or planned around the qualifier case is the plan now.
+- The qualifier (30 September 2026, seven Belgian cities) is over. The final case (docs/final-case.md) says: **"Now take your solution one step further."**
+- **We build on our qualifier project, Company brain** (originally https://github.com/Noahgradstock/company-brain), copied into this repo on 20 Oct. Read `README.md` and `src/trust-engine/README.md` first: it is a Next.js app with a deterministic trust engine (six layers, hard caps), Gemini only for question routing, login and per-client access control. Its "Unfinished" list (claims entered by hand, votes as the only feedback) is exactly what the final case asks us to fix.
 - **32 teams, 16 per track.** Two tracks: **KBC** and **SD Worx**. **We are in the SD Worx track.**
 - **Prize:** €10,000, funded by Spott.
 
@@ -189,3 +190,7 @@ If we are behind at 13:00, cut scope, not quality.
 - Never commit secrets. Check `git diff --staged` before every commit.
 - **Language:** chat with the team in whatever language they write in (often Swedish). **Everything that ends up in the repo or the product is in English**: UI text, the live site, code, comments, commit messages, README, docs, synthetic data, prompts, the pitch slides and the pitch. Never write Swedish into a file. Plain wording, no hype.
 - Write unclear assumptions about the case into the README instead of guessing silently.
+
+---
+
+Next.js notes for agents: @AGENTS.md

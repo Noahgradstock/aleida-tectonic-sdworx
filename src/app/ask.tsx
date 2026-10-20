@@ -179,8 +179,11 @@ export default function Ask() {
               ask();
             }}
             className="mt-8 rounded-3xl bg-white p-5 shadow-[0_10px_40px_-16px_rgba(0,0,0,0.2)]"
+            // The browser must not restore old text or button state on back/reload: React owns this form.
+            autoComplete="off"
           >
             <textarea
+              autoComplete="off"
               autoFocus
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -198,7 +201,10 @@ export default function Ask() {
             <div className="mt-2 flex items-center gap-3 text-sm">
 <span className="text-xs text-neutral-400">Mention a client or country if it matters, e.g. “for Bakkerij Janssens”.</span>
               <button
+                type="submit"
                 disabled={!question.trim()}
+                // Browsers and extensions can touch this attribute before React loads; React sets it right after.
+                suppressHydrationWarning
                 className={`ml-auto rounded-full bg-[#161616] px-5 py-2 font-medium text-white transition hover:bg-black disabled:bg-neutral-200 disabled:text-neutral-400 ${pressing ? "scale-95 bg-black" : ""}`}
               >
                 Ask

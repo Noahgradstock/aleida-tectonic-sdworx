@@ -384,6 +384,17 @@ function useAccount(user, password) {
 
 const whoAmI = () => me;
 
+// The display name behind an account, without changing who the mascot is signed in as.
+async function nameOf(user, password) {
+  const res = await fetch(`${BRAIN_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: ORIGIN },
+    body: JSON.stringify({ username: user, password }),
+  });
+  if (!res.ok) return null;
+  return ((await res.json()).user || {}).name || null;
+}
+
 // Questions colleagues' shares sent to you ("Can you approve this?").
 async function questionsForMe() {
   if (!me) return [];
@@ -403,4 +414,4 @@ async function answerQuestion(id, answer) {
   return r;
 }
 
-module.exports = { ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, useAccount, whoAmI, questionsForMe, answerQuestion, findFactByText: (t) => findFact(t) };
+module.exports = { nameOf, ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, useAccount, whoAmI, questionsForMe, answerQuestion, findFactByText: (t) => findFact(t) };

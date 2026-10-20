@@ -148,7 +148,7 @@ async function checkWriting(text, where) {
   if (!result.ok) {
     const same = issue && issue.where === where && issue.said === result.said && issue.key === result.key;
     issue = { ...result, where };
-    send("mascot:check", issue); // the page ignores repeats of a warning it is already showing
+    send("mascot:check", stageObj(issue)); // the page ignores repeats of a warning it is already showing
     if (!same) {
       conversation.rememberWarning(issue);
       if (result.kind !== "wrong") {
@@ -248,6 +248,7 @@ async function answerAloud(question, explicit = true) {
     send("mascot:idle");
     return log("ignored, not a known topic:", question);
   }
+  r = stageObj(r);
   log("reply:", r.text);
   send("mascot:answer", { ...r, question });
   if (inConversation()) convoUntil = Math.max(convoUntil, Date.now() + CONVO_MS);
@@ -365,7 +366,7 @@ ipcMain.handle("brain:ask", async (event, question) => {
     return { text: "On it." };
   }
   try {
-    return await conversation.converse(question);
+    return stageObj(await conversation.converse(question));
   } catch {
     return { text: "The brain is not reachable right now." };
   }
@@ -412,7 +413,7 @@ ipcMain.handle("mascot:share", async (event) => {
     if (!r.ok && /not about a topic the brain knows/i.test(r.reason || "")) r = saveSuggestion(issue);
     log("share:", r.ok ? `${r.label} ${r.value} → review by ${r.toName || "a colleague"}` : r.reason);
     if (r.ok) issue = null;
-    return r;
+    return stageObj(r);
   } catch {
     return { ok: false, reason: "The brain is not reachable right now." };
   }
@@ -426,6 +427,26 @@ const ACCOUNTS = String(env.DEMO_ACCOUNTS || "")
   .filter((p) => p.length >= 3 && p[0] && p[1])
   .map(([label, user, ...rest]) => ({ label, user, password: rest.join(":") }));
 let account = ACCOUNTS.find((a) => a.user === env.BRAIN_USER) || null;
+
+// Stage names: "Jan Wouters" -> "Ilke", so what the mascot shows and says matches the story.
+const stageNames = new Map(); // full name -> label
+async function loadStageNames() {
+  for (const a of ACCOUNTS) {
+    try {
+      const name = await brain.nameOf(a.user, a.password);
+      if (name) stageNames.set(name, a.label);
+    } catch {
+      // Keep the real name.
+    }
+  }
+}
+function stage(text) {
+  if (typeof text !== "string" || !stageNames.size) return text;
+  let out = text;
+  for (const [name, label] of stageNames) out = out.split(name).join(label);
+  return out;
+}
+const stageObj = (o) => (o && typeof o === "object" ? JSON.parse(stage(JSON.stringify(o))) : o);
 
 ipcMain.handle("mascot:accounts", (event) => {
   if (!fromMascot(event)) return null;
@@ -459,8 +480,8 @@ async function pollQuestions() {
     if (key !== lastQuestions) {
       lastQuestions = key;
       // Stage names for the demo accounts ("Ilke" instead of the demo persona's name).
-      const stage = (q) => ({ ...q, fromName: (ACCOUNTS.find((a) => a.user === q.from) || {}).label || q.fromName });
-      send("mascot:questions", qs.map(stage));
+      const byAccount = (q) => ({ ...q, fromName: (ACCOUNTS.find((a) => a.user === q.from) || {}).label || q.fromName });
+      send("mascot:questions", stageObj(qs.map(byAccount)));
     }
   } catch {
     // Try again on the next tick.
@@ -509,6 +530,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((wc, permission) => permission === "media" && Boolean(listener) && wc === listener.webContents);
   createMascot();
   brain.warmUp();
+  loadStageNames();
   globalShortcut.register("CommandOrControl+Shift+M", () => send("mascot:toggle-ask"));
   globalShortcut.register("CommandOrControl+Shift+E", openCompose);
   globalShortcut.register("CommandOrControl+Shift+L", () => setOnline(!online));

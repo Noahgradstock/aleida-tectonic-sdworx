@@ -20,6 +20,7 @@ It answers the final case: "Can your solution stay trusted without becoming anot
 | **`/loop` page** | `src/app/loop/` | Works. Feed text in, see the answer, who to contact, and why each score moved; one-click "Still right" for the speaker or an expert. Demo data: `data/salary/sources-holiday-days.json`. |
 | Mascot → ingest | `mascot/brain.js` (Isak) | Not wired yet. Needs a real account (ingest refuses guests). Ready-made `learn()` snippet in `docs/context/12-live-loop.md`. |
 | Trust loop algorithm (proposal v2) | `docs/trusted-tomorrow-algorithm.md` | Partly built: the meeting setting (S1), track record for contacts, the ledger. Not built: AI gates A1–A4, best-before, lanes D1–D5, verification budget. |
+| **Who knows what** (knowledge web) | `src/trust-engine/graph.ts`, `/api/brain/graph`, `/graph` | Works. Obsidian-style force graph of people, topics, documents and clients, built only from claims people wrote, said in meetings and confirmed. Click a person for their knowledge CV (strength per topic, right x of y, confirmations, last quote), a topic for who to contact. Hearsay (unconfirmed meeting reports) never builds anyone's reputation. Polls every 8 s, so what the mascot learns appears live. |
 
 ## The trust loop (full design, from `docs/trusted-tomorrow-algorithm.md`; the live loop above is the first built slice)
 

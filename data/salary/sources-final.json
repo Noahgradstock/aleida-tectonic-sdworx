@@ -1,0 +1,6 @@
+{
+  "about": "Final-day demo data. All people, clients and documents are fictional. A rule that is published but not in force yet, so the brain can forecast when today's trusted answer stops being right (best before).",
+  "claims": [
+    { "id": "off-meal-2027", "file": "meal-vouchers/06-royal-decree-2027-meal-vouchers.txt", "fact": "meal-voucher-max", "value": "€9.50", "sourceType": "official", "title": "Royal decree: meal vouchers from 2027", "author": null, "date": "2026-09-15", "effectiveFrom": "2027-01-01", "scope": { "country": "BE" } }
+  ]
+}

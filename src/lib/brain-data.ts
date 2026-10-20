@@ -1,7 +1,7 @@
 import "server-only";
 import { readdirSync } from "node:fs";
 import path from "node:path";
-import { evaluateFact, type Context, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
+import { evaluateFact, forecast, type Context, type Feedback, type Forecast, type KnowledgeBase, type Person } from "@/trust-engine";
 import { allFeedback, now } from "@/lib/trust-server";
 import { liveKb } from "@/lib/live";
 import { canReadClaim, clientsOf, countriesOf } from "@/lib/access";
@@ -13,7 +13,7 @@ import type { BrainData } from "@/app/brain/brain-map";
 // Topics are scored for this client, so the brain shows what a BE PC 200 consultant would get.
 const REFERENCE_CLIENT = "brouwerij-de-kroon";
 
-export type TopicStatus = { status: BrainData["topics"][number]["status"]; answer: string | null; score: number | null };
+export type TopicStatus = { status: BrainData["topics"][number]["status"]; answer: string | null; score: number | null; forecast: Forecast | null };
 
 function listFiles(dir: string, base = dir): string[] {
   try {
@@ -38,7 +38,10 @@ export function topicStatuses(k: KnowledgeBase, ctx: Context, feedback: Feedback
   return Object.fromEntries(
     k.facts.map((fact) => {
       const r = evaluateFact(fact, k, ctx, feedback, now());
-      return [fact.key, { status: r.best ? r.status : ("empty" as const), answer: r.best?.claim.value ?? null, score: r.best?.score ?? null }];
+      return [
+        fact.key,
+        { status: r.best ? r.status : ("empty" as const), answer: r.best?.claim.value ?? null, score: r.best?.score ?? null, forecast: r.best ? forecast(fact, k, ctx, feedback, now()) : null },
+      ];
     }),
   );
 }

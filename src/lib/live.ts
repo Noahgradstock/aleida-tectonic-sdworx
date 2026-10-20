@@ -1,5 +1,5 @@
 import "server-only";
-import { evaluateFact, type Claim, type Context, type Evidence, type FactStatus, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
+import { LAYERS, evaluateFact, type Claim, type Context, type Evidence, type FactStatus, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
 import { allFeedback, kb } from "@/lib/trust-server";
 import { store } from "@/lib/store";
 
@@ -81,6 +81,7 @@ export type LedgerEntry = {
   answer: { before: Snapshot; after: Snapshot }; // the answer for the claim's own scope
   evidence: Evidence[];
   caps: string[];
+  explain: string; // one plain sentence: which question moved the score, and by how much
 };
 
 // The claim's own scope as a case, for scoring and for access checks.
@@ -127,6 +128,7 @@ export async function recordChange(opts: {
     answer: { before: b.answer, after: a.answer },
     evidence: a.mine?.evidence ?? [],
     caps: a.mine?.caps ?? [],
+    explain: explainChange(b.mine?.evidence ?? null, a.mine?.evidence ?? [], b.mine?.caps ?? [], a.mine?.caps ?? []),
   };
   // Ring buffer: slot = sequence number modulo the size, so the newest entry overwrites the oldest
   // and the ledger never grows beyond LEDGER_SIZE fields.
@@ -137,4 +139,26 @@ export async function recordChange(opts: {
 
 export async function ledger(): Promise<LedgerEntry[]> {
   return (await store.hvals("ledger")).map((v) => JSON.parse(v) as LedgerEntry).sort((x, y) => y.at.localeCompare(x.at));
+}
+
+// Written by code, not by a model: the difference between the evidence before and after, per question.
+export function explainChange(before: Evidence[] | null, after: Evidence[], capsBefore: string[], capsAfter: string[]): string {
+  const signed = (n: number) => `${n > 0 ? "+" : "−"}${Math.abs(n).toFixed(1)}`;
+  const sum = (ev: Evidence[], layer: string) => ev.filter((e) => e.layer === layer).reduce((t, e) => t + e.points, 0);
+  const capText = (c: string) => c.replace(/^Capped at /, "").replace(":", " cap:");
+  if (!before) {
+    const top = [...after].sort((x, y) => Math.abs(y.points) - Math.abs(x.points)).slice(0, 3);
+    const parts = top.map((e) => `${LAYERS.find((l) => l.id === e.layer)?.question ?? e.layer} ${signed(e.points)} (${e.label.charAt(0).toLowerCase() + e.label.slice(1)})`);
+    return `New claim. ${parts.join(", ")}${capsAfter[0] ? `. ${capText(capsAfter[0])}` : ""}.`;
+  }
+  const moved = LAYERS.map((l) => {
+    const d = sum(after, l.id) - sum(before, l.id);
+    if (Math.abs(d) < 0.05) return null;
+    const why = after.find((e) => e.layer === l.id && !before.some((x) => x.label === e.label))?.label;
+    return `${l.question} ${signed(d)}${why ? ` (${why.charAt(0).toLowerCase() + why.slice(1)})` : ""}`;
+  }).filter(Boolean);
+  const lifted = capsBefore.filter((c) => !capsAfter.includes(c)).map((c) => `lifted the ${capText(c)}`);
+  const added = capsAfter.filter((c) => !capsBefore.includes(c)).map((c) => `new ${capText(c)}`);
+  const all = [...moved, ...lifted, ...added];
+  return all.length ? `${all.join(", ")}.` : "No change to the score.";
 }

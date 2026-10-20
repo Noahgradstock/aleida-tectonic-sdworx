@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type Simulation, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
 import type { Doc } from "@/lib/documents";
-import { DOMAINS, type DomainId, type GraphEdge, type GraphNode, type KnowledgeGraph, type PersonCv } from "@/trust-engine";
+import { DOMAINS, type DomainId, type Forecast, type GraphEdge, type GraphNode, type KnowledgeGraph, type PersonCv } from "@/trust-engine";
 import { Viewer, type ClaimScores } from "./documents";
+import { ForecastLine } from "../trust-visuals";
 
 // The Brain: one living web of people, topics, documents and clients.
 // Two lenses on the same nodes: People (who knows what) and Sources (what is written where).
@@ -15,8 +16,13 @@ type N = GraphNode & SimulationNodeDatum;
 type E = Omit<GraphEdge, "source" | "target"> & SimulationLinkDatum<N> & { source: string | N; target: string | N };
 type Sel = { kind: GraphNode["kind"]; id: string } | null;
 type Lens = "people" | "sources";
-type TopicStatus = { status: "trusted" | "conflict" | "stale" | "orphan" | "empty"; answer: string | null; score: number | null };
-type BrainGraph = KnowledgeGraph & { topics: Record<string, TopicStatus>; reference: string; asked?: Record<string, number> };
+type TopicStatus = { status: "trusted" | "conflict" | "stale" | "orphan" | "empty"; answer: string | null; score: number | null; forecast: Forecast | null };
+type BrainGraph = KnowledgeGraph & { topics: Record<string, TopicStatus>; reference: string; asked?: Record<string, number>; today?: string };
+
+// An answer that stops being trusted within this many days gets a clock ring: it will need attention soon.
+const SOON_DAYS = 120;
+const changesSoon = (t: TopicStatus | null | undefined, today?: string) =>
+  !!t?.forecast?.bestBefore && !!today && (Date.parse(t.forecast.bestBefore.date) - Date.parse(today)) / 86_400_000 <= SOON_DAYS;
 
 const W = 1100;
 const H = 720;
@@ -416,6 +422,14 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                       />
                     )}
                     {st?.status === "conflict" && <circle r={r + 4} fill="none" stroke={STATUS.conflict.color} strokeWidth={1.5} className="animate-pulse" />}
+                    {changesSoon(st, graph?.today) && (
+                      <g>
+                        <circle r={r + 5} fill="none" stroke="#1463ff" strokeWidth={1.5} strokeDasharray="2 3" />
+                        <text x={r + 4} y={-r - 2} fontSize={11}>
+                          ⏱
+                        </text>
+                      </g>
+                    )}
                     {n.kind === "document" && n.meta.live === true && <circle r={r + 4} fill="none" stroke="#0f8a4f" strokeWidth={1.2} />}
                     {showLabel && (
                       <text
@@ -533,7 +547,7 @@ function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; on
     .filter((n) => n.kind === "concept")
     .map((n) => ({ n, t: graph.topics[keyOf(n.id)] }))
     .map((x) => ({ ...x, asked: graph.asked?.[keyOf(x.n.id)] ?? 0 }))
-    .filter((x) => x.t && (x.t.status === "conflict" || x.t.status === "orphan" || x.t.status === "stale" || x.asked > 0))
+    .filter((x) => x.t && (x.t.status === "conflict" || x.t.status === "orphan" || x.t.status === "stale" || x.asked > 0 || changesSoon(x.t, graph.today)))
     .sort((a, b) => b.asked - a.asked);
   const total = graph.nodes.filter((n) => n.kind === "concept").length;
   const people = Object.values(graph.cvs)
@@ -554,7 +568,7 @@ function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; on
                 <span className="flex-1">{n.label}</span>
                 <span className="text-xs text-neutral-500">
                   {asked ? <span className="mr-1 rounded-full bg-[#eef3ff] px-1.5 py-0.5 text-[#1463ff]">{asked} asked</span> : null}
-                  {STATUS[t.status].label}
+                  {changesSoon(t, graph.today) && t.status === "trusted" ? `⏱ Changes ${t.forecast!.bestBefore!.date}` : STATUS[t.status].label}
                 </span>
               </button>
             </li>
@@ -609,6 +623,11 @@ function Topic({ node, graph, onSelect, docByFile, onOpenDoc }: { node: GraphNod
         </div>
       )}
       <p className="mt-1 text-xs text-neutral-500">Scored for {graph.reference}</p>
+      {t?.forecast && (
+        <div className="mt-3 rounded-xl bg-[#fbfaf7] px-3 py-2">
+          <ForecastLine forecast={t.forecast} compact />
+        </div>
+      )}
       {(graph.asked?.[keyOf(node.id)] ?? 0) > 0 && (
         <p className="mt-2 text-xs text-[#1463ff]">
           {graph.asked![keyOf(node.id)]} colleague{graph.asked![keyOf(node.id)] > 1 ? "s are" : " is"} waiting for a confirmation on this.

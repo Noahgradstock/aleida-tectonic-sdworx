@@ -187,7 +187,10 @@ export function buildKnowledgeGraph(
     });
     for (const key of new Set(d.claims.map((c) => c.factKey))) {
       const best = Math.max(...d.claims.filter((c) => c.factKey === key).map((c) => scoreOf.get(c.id)?.score ?? 0));
-      edges.push({ source: `doc:${title}`, target: `concept:${key}`, kind: "states", weight: round(Math.max(0.15, best)), label: `States it (${Math.round(best * 100)}% trusted)` });
+      // A published rule that is not in force yet is not "untrusted": say when it starts.
+      const future = d.claims.find((c) => c.factKey === key && c.effectiveFrom && Date.parse(c.effectiveFrom) > now.getTime());
+      const label = future ? `Takes effect ${future.effectiveFrom}` : `States it (${Math.round(best * 100)}% trusted)`;
+      edges.push({ source: `doc:${title}`, target: `concept:${key}`, kind: "states", weight: round(Math.max(future ? 0.6 : 0.15, best)), label });
     }
     for (const author of new Set(d.claims.map((c) => c.author).filter(Boolean) as string[])) {
       edges.push({ source: `person:${author}`, target: `doc:${title}`, kind: "wrote", weight: 0.3, label: first.source.type === "meeting" ? "Said it in this meeting" : "Wrote it" });

@@ -1,4 +1,4 @@
-import { ask, lastUpdated, matchFact, parseContext, rankContacts, recentTrail } from "@/trust-engine";
+import { ask, explainScore, forecast, lastUpdated, matchFact, parseContext, rankContacts, recentTrail } from "@/trust-engine";
 import { matchFactWithGemini } from "@/lib/gemini-match";
 import { allFeedback, currentUser, forbidden, notYourClient, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
 import { liveKb, unconfirmedReport } from "@/lib/live";
@@ -52,5 +52,7 @@ export async function POST(request: Request) {
   const to = result.best ? await previewRecipient(user, result.best.claim.id, ctx) : null;
   const author = result.best?.claim.author ? kb.people.find((p) => p.id === result.best!.claim.author) : undefined;
   const confirmer = to ? { id: to.id, name: to.name, note: author && author.id !== to.id ? `${author.name.split(" ")[0]} wrote this, so a colleague confirms it` : null } : null;
-  return Response.json({ ...result, contacts, trail, confirmer, lastUpdated: lastUpdated(result), matchedBy, privacy });
+  // Will it still be trusted tomorrow? The same engine, run forward in time.
+  const ahead = forecast(result.fact, kb, ctx, feedback, now());
+  return Response.json({ ...result, contacts, trail, confirmer, forecast: ahead, explain: explainScore(result.best, ahead), lastUpdated: lastUpdated(result), matchedBy, privacy });
 }

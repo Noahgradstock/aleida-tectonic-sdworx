@@ -126,7 +126,7 @@ type DataFile = {
 };
 
 // Every file listed here adds claims, and optionally topics, people and clients.
-const SOURCE_FILES = ["sources.json", "sources-more.json", "sources-holiday-days.json"];
+const SOURCE_FILES = ["sources.json", "sources-more.json", "sources-holiday-days.json", "sources-final.json"];
 
 export function loadDataKnowledgeBase(): { kb: KnowledgeBase; testQuestions: TestQuestion[] } {
   const files = SOURCE_FILES.map((f) => JSON.parse(read(f) || "{}") as DataFile);

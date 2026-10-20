@@ -53,3 +53,13 @@ export const DEFAULT_HALF_LIFE_DAYS = 365;
 export const NOT_APPLICABLE_THRESHOLD = 3;
 
 export const STATUS = { trusted: 0.75, usable: 0.5 } as const;
+
+// The six layers as people say them: short, human questions for the UI and the pitch.
+export const LAYERS = [
+  { id: "authority", question: "Who said it?" },
+  { id: "freshness", question: "Still current?" },
+  { id: "corroboration", question: "Who agrees?" },
+  { id: "consistency", question: "Matches the law?" },
+  { id: "relevance", question: "Fits your case?" },
+  { id: "feedback", question: "Held up for others?" },
+] as const;

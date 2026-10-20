@@ -1,5 +1,6 @@
 "use client";
 
+import { ForecastLine } from "../trust-visuals";
 import { useCallback, useEffect, useState } from "react";
 import {
   ago,
@@ -420,6 +421,12 @@ export default function Loop() {
                 )}
 
                 {steps.length > 1 && <History points={steps} label={`How this answer changed, oldest to newest. Dashed line: 75%, the bar for trusted.`} />}
+                {/* …and where it goes next: the same rules run forward in time */}
+                {answer?.forecast && (
+                  <div className="mt-6 border-t border-neutral-100 pt-5">
+                    <ForecastLine forecast={answer.forecast} />
+                  </div>
+                )}
               </>
             ) : (
               <p className="mt-4 text-[15px] text-neutral-500">Nothing in the brain applies to this case yet. Feed it a meeting, a message or an email.</p>

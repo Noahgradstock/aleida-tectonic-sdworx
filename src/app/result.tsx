@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Claim, ContactRanking, FeedbackKind, ScoredClaim, TrailEntry } from "@/trust-engine";
+import type { Claim, ContactRanking, FeedbackKind, Forecast, ScoredClaim, TrailEntry } from "@/trust-engine";
+import { ForecastLine, Waterfall } from "./trust-visuals";
 import { CHANNEL, color, Flag, pct, PdfIcon, shortReason, type Hit } from "@/lib/demo-shared";
 
 // The finished answer: one clear value, how the brain decided, and the documents behind it.
@@ -124,6 +125,14 @@ export function Result({
             <Votes onVote={(k) => onVote(best.claim.id, k)} />
             {confirmer && <AskToConfirm claimId={best.claim.id} context={context} expertName={confirmer.name} note={confirmer.note ?? undefined} />}
           </div>
+        </div>
+      )}
+
+      {/* Why this score, and will it hold: the trust algorithm as two pictures */}
+      {best && (
+        <div className="grid gap-4 rounded-3xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-6">
+          <Waterfall evidence={best.evidence} score={best.score} caps={best.caps} />
+          {(hit as Hit & { forecast?: Forecast }).forecast && <ForecastLine forecast={(hit as Hit & { forecast: Forecast }).forecast} />}
         </div>
       )}
 

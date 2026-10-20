@@ -271,6 +271,24 @@ Map the `learn` result to quiet states. No pop-ups; this is background work.
 
 If the signed-in user is the speaker of a waiting claim, or an expert, the card can offer "✓ Still right" / "✗ Wrong": `POST /api/trust/feedback { claimId, kind: "correct" | "wrong", context: CONTEXT }` (use `{ client }` as the context for a client claim, as `/loop` does). The response's `entry.claimScore.after` is the new score. To pick up confirmations by others, poll `GET /api/brain/ledger?fact=<factKey>` (send the cookie) and look for an entry with `kind: "confirmed"` and the same `claimId`.
 
+## The trust algorithm, shown: waterfall, forecast and one sentence (for Isak too)
+
+The six layers now have human names, used everywhere in the UI and the pitch (`LAYERS` in `src/trust-engine/config.ts`):
+**Who said it? · Still current? · Who agrees? · Matches the law? · Fits your case? · Held up for others?**
+
+- **Waterfall** (`Waterfall` in `src/app/trust-visuals.tsx`, on the Ask answer): starts at 50%, one row per question, green up, red down, the cap as an amber line, ends at the score.
+- **Forecast** (`src/trust-engine/forecast.ts`): the same engine run forward 18 months. Returns `{ value, bestBefore: { date, kind: new-rule|ages|disputed, reason } | null, headroom, curve }`. Shown as "Will it hold?" on Ask and Live loop, compact in the Brain topic panel, and as a clock ring ⏱ on Brain nodes that change within 120 days. A rule that is published but not in force yet (`effectiveFrom` in the future) is set aside today ("Takes effect on …") and used by the forecast. Demo: fictional royal decree, meal voucher €9.50 from 1 Jan 2027 (`data/salary/sources-final.json`).
+- **One sentence** (`explainScore`): "€8.91 is 96% trusted: who said it +3.0 (official publication), fits your case +0.3. Trusted until 1 Jan 2027, then €9.50."
+- **Ledger**: every entry now has `explain`, written by code from the evidence difference, e.g. "Held up for others +0.9 (consultant feedback: 1 said correct), lifted the 50% cap: said in a meeting, not confirmed yet."
+
+### For the mascot (Isak)
+- `GET /api/trust/facts` now returns per fact: `bestBefore`, `headroom` and `explain`. The mascot already loads this list, so it can check locally.
+- `POST /api/trust/ask` returns `explain`, `forecast`, `contacts.why`, `confirmer` (who "Ask to confirm" would reach) and `trail`.
+- Suggested behaviour:
+  - When answering out loud, read `explain`. It already ends with the best-before date when there is one.
+  - When a draft uses today's value **and** talks about a date on or after `bestBefore.date` (e.g. "January 2027", "next year"), show a calm warning: "€8.91 is right today, but it changes to €9.50 on 1 January 2027." The new value is in `explain` (after "then") or in the ask route's `forecast.curve`.
+  - Questions for you: `GET /api/brain/questions` → `forMe` (open questions for the signed-in user). Answer with `POST /api/brain/questions/answer { id, answer: correct|wrong|not_mine }`. A badge "1 question for you" on the blob is enough.
+
 ## Not built yet, next steps
 
 - **AI gates A1–A4** from `docs/trusted-tomorrow-algorithm.md` (is this knowledge, speech act, extract + quote, stance). Extraction is rules only: it catches values, topics, speakers, scope and common hedges, but not corrections ("no, it's 22"), questions that contain a value, or new topics. The gates would add those, with the same rule: the model reads, code validates (verbatim quote, unit, scope registry) and decides.

@@ -176,6 +176,11 @@ export function evaluateFact(fact: Fact, kb: KnowledgeBase, ctx: Context, feedba
   const excluded: FactResult["excluded"] = [];
 
   for (const claim of kb.claims.filter((c) => c.factKey === fact.key)) {
+    // A rule that is published but not in force yet does not answer today's question; the forecast uses it.
+    if (claim.effectiveFrom && Date.parse(claim.effectiveFrom) > now.getTime()) {
+      excluded.push({ claim, reason: `Takes effect on ${claim.effectiveFrom}` });
+      continue;
+    }
     const m = matchScope(claim, ctx, feedback);
     if (m.ok) relevant.push({ claim, relevance: m.relevance });
     else excluded.push({ claim, reason: m.reason });

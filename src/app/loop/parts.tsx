@@ -27,6 +27,7 @@ export type Entry = {
   answer: { before: Snapshot; after: Snapshot };
   evidence: Evidence[];
   caps: string[];
+  explain?: string; // older entries have none
 };
 export type SetAside = { person: { id: string; name: string }; reason: string };
 export type Answer = {
@@ -36,6 +37,7 @@ export type Answer = {
   best?: { claim: { value: string; source: { title: string; type?: string } }; score: number } | null;
   contacts?: { ranked: Contact[]; setAside: SetAside[] };
   lastUpdated?: { date: string; source: string; by: string | null } | null;
+  forecast?: import("@/trust-engine").Forecast;
 };
 export type Client = { id: string; name: string; country: string; pc?: string };
 
@@ -311,6 +313,8 @@ export function LedgerRow({
           <>The answer stayed {a.after.value ?? "empty"} ({pct(a.after.score)}).</>
         )}
       </p>
+
+      {e.explain && <p className="mt-2 text-sm font-medium text-neutral-800">{e.explain}</p>}
 
       {(e.evidence.length > 0 || e.caps.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-1.5">

@@ -1,4 +1,4 @@
-import { evaluateFact, parseContext } from "@/trust-engine";
+import { evaluateFact, explainScore, forecast, parseContext } from "@/trust-engine";
 import { allFeedback, currentUser, notYourClient, now, unauthorized } from "@/lib/trust-server";
 import { liveKb } from "@/lib/live";
 import { canReadClaim, canUseContext } from "@/lib/access";
@@ -16,7 +16,15 @@ export async function GET(request: Request) {
   const feedback = await allFeedback();
   const facts = kb.facts.map((f) => {
     const r = evaluateFact(f, kb, ctx, feedback, now());
-    return { ...r, excluded: r.excluded.filter((e) => canReadClaim(user, e.claim, kb)) };
+    // Best before and one spoken sentence per fact, so the mascot can warn about a value that is about to change.
+    const ahead = r.best ? forecast(f, kb, ctx, feedback, now()) : null;
+    return {
+      ...r,
+      excluded: r.excluded.filter((e) => canReadClaim(user, e.claim, kb)),
+      bestBefore: ahead?.bestBefore ?? null,
+      headroom: ahead?.headroom ?? null,
+      explain: explainScore(r.best, ahead),
+    };
   });
   return Response.json({ context: ctx, facts });
 }

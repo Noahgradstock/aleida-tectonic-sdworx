@@ -87,13 +87,14 @@ Record with the mascot online, sound on, the menu bar hidden. Keep each clip sho
 | Real Outlook and Teams? | Today: Apple Mail via macOS Accessibility, Teams detection by app. Production: Microsoft Graph for mail and meeting transcripts with speaker metadata. |
 | Security? | Aikido scan, per-client access on every route, 58 negative security tests, sandboxed desktop app. |
 
-## How to run the demo (tested 20 Oct, local server)
+## How to run the demo (one computer, tested 20 Oct)
 
-Local server: `npm run dev`, accounts in `.env.local` (`node scripts/create-users.mjs jan tom anna sofie`), mascot `.env`: `BRAIN_URL=http://localhost:3000`. Restarting the server resets everything learned, which is handy between takes.
+Local server: `npm run dev` (accounts in `.env.local`); mascot `.env`: `BRAIN_URL=http://localhost:3000` and `DEMO_ACCOUNTS=Ilke:jan:…;Isak:tom:…;Anna:anna:…`. Restarting the server resets everything learned, which is handy between takes. Click the blob and switch **Online**; the card shows **You are: Ilke · Isak · Anna**.
 
-1. **Up (Ilke = account `jan`):** mascot `.env` `BRAIN_USER=jan`. In Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → amber (brain says 20) → **I know better** → *"Shared for review · Anna De Smet will approve it"*. The claim is learned at 50% with the `review` rule; the De Kroon answer stays 20.
-2. **Approve (Anna = account `anna`):** in Company brain, "Questions for you" → ✓. De Kroon's answer becomes **22 days, 98%**.
-3. **Down (Isak = account `tom`):** mascot `.env` `BRAIN_USER=tom`, restart the mascot. In Mail: *"Dear Brouwerij De Kroon, your employees get 20 holiday days this year."* → amber *20 holiday days → 22 days (Brouwerij De Kroon)* → "Hey SD Worx, fix it" → *22 holiday days*. TechStart Gent stays at 20.
+1. **Up (You are: Ilke).** In Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → amber (brain says 20) → **I know better** → *"Shared for review · Anna De Smet will approve it"*.
+2. **Approve (You are: Anna).** The card shows *"Can you approve this? Ilke shared: …"* → **Approve ✓** → De Kroon is now **22 days, 98%**.
+3. **Down (You are: Isak).** In Mail: *"Dear Brouwerij De Kroon, your employees get 20 holiday days this year."* → amber *→ 22 days (Brouwerij De Kroon)* → "Hey SD Worx, fix it" → *22 holiday days* → "How did you get that?".
+4. **Meeting.** Teams in front (or `Cmd+Shift+T`): "Students can work 600 hours a year, right?" → the blob corrects it out loud.
 
 ## Open items
 

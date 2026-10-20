@@ -199,14 +199,18 @@ window.mascot.onSpeak(({ audio: b64 }) => {
 
 $("fix").addEventListener("click", () => {
   if (pendingFix && pendingFix.native) {
-    const { from, to } = pendingFix;
-    window.mascot.copy(to);
-    closeCard();
-    return pill(`Copied ${to}. Paste it over ${from}`, 4000);
+    window.mascot.fixMail();
+    setMood("thinking");
+    return pill("Fixing your email…", 3000);
   }
   if (pendingFix) window.mascot.fix(pendingFix.from, pendingFix.to);
   closeCard();
 });
 $("ignore").addEventListener("click", closeCard);
+
+window.mascot.onFixed(({ count }) => {
+  closeCard();
+  pill(`Fixed ${count} value${count > 1 ? "s" : ""} in your email ✓`, 3000);
+});
 
 setMood("calm");

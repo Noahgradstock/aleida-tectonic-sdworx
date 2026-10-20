@@ -33,6 +33,10 @@ The mascot picks its setting from the app in front, and shows it as a badge on t
 
 The Auto · Email · Meeting switch in the card forces a setting (useful for demos).
 
+## Auto-fix your email
+
+When an email in Apple Mail has wrong values, **Fix it** in the warning card rewrites the draft with every wrong value replaced by the trusted one (only inside the sentence where it was found). You can also type or say **"fix my email"**. With talking on, the mascot offers out loud ("€148.73 looks off. Want me to fix your email?") and a **"yes"** / **"ja"** does it. It selects the draft body and pastes the corrected text through macOS Accessibility, then restores your clipboard. Formatting in the draft becomes plain text.
+
 ## Conversation
 
 The mascot remembers the topic of the last answer or warning, so follow-ups work: "what's the right answer?", "where does that come from?", "how did you get this?", "how sure are you?", "who should I ask?". Fixed patterns catch the usual phrasing; for anything else Claude Haiku only classifies the intent from a fixed list. Every answer is built by code from the trust engine's data (source, evidence, supporters, sources set aside), never written by the model.

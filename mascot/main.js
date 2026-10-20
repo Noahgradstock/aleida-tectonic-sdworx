@@ -5,6 +5,7 @@ const brain = require("./brain");
 const voice = require("./voice");
 const { createWatcher } = require("./watcher");
 const conversation = require("./conversation");
+const { replaceMailBody } = require("./mailfix");
 
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -88,6 +89,26 @@ function updateContext() {
 
 // The current warning stays until the same place (Mail, the meeting, the demo email) says it is fixed.
 let issue = null;
+let lastMailText = "";
+let offerUntil = 0; // after "Want me to fix that?", a "yes" fixes the email
+
+const FIX_COMMAND = /\b(fix|correct|update|repair)\b.*\b(e-?mail|mail)\b|\bfix (it|that|this|everything|them)\b/i;
+const YES = /^\s*(yes|yeah|yep|yup|sure|please|do it|go ahead|ja|japp|gör det|fix it)\b/i;
+
+async function fixMail(spoken) {
+  const reply = (text) => (spoken ? say(text) : send("mascot:answer", { text }));
+  offerUntil = 0;
+  if (!lastMailText) return reply("I don't see an email you're writing.");
+  const { text, issues } = await brain.corrected(lastMailText);
+  if (!issues.length) return reply("Your email already looks right.");
+  const r = await replaceMailBody(text);
+  log("fix mail:", r.ok ? `fixed ${issues.length}` : r.reason);
+  if (!r.ok) return reply(r.reason);
+  lastMailText = text;
+  const what = issues.map((i) => `${i.said} to ${i.value}`).join(" and ");
+  send("mascot:fixed", { count: issues.length });
+  if (spoken) say(`Done. I changed ${conversation.speakable(what)}.`);
+}
 
 async function checkWriting(text, where) {
   if (!text.trim()) {
@@ -111,6 +132,10 @@ async function checkWriting(text, where) {
     if (!same) {
       send("mascot:check", issue);
       conversation.rememberWarning(issue);
+      if (talkMode && where === "Mail") {
+        offerUntil = Date.now() + 60000;
+        say(`${conversation.speakable(result.said)} looks off. Want me to fix your email?`);
+      }
     }
     return;
   }
@@ -122,6 +147,7 @@ async function checkWriting(text, where) {
 const watcher = createWatcher(
   (appName, text) => {
     log("writing in", appName, `(${text.length} chars)`);
+    if (appName === "Mail") lastMailText = text;
     checkWriting(text, appName);
   },
   (error) => {
@@ -172,6 +198,7 @@ async function say(text) {
 
 async function answerAloud(question) {
   log("question:", question);
+  if (FIX_COMMAND.test(question) || (Date.now() < offerUntil && YES.test(question))) return fixMail(true);
   send("mascot:thinking");
   let r;
   try {
@@ -198,6 +225,9 @@ async function onSegment(buffer, mime) {
   send("mascot:heard", { text });
 
 
+  if ((Date.now() < offerUntil && YES.test(text)) || (talkMode && FIX_COMMAND.test(text) && /\b(e-?mail|mail)\b/i.test(text))) {
+    return fixMail(true);
+  }
   const wake = text.match(WAKE);
   if (wake) {
     const question = wake[1].trim();
@@ -268,6 +298,10 @@ ipcMain.on("mascot:set-online", (event, on) => {
 
 ipcMain.handle("brain:ask", async (event, question) => {
   if (!fromMascot(event) || !isText(question, 500)) return { error: "Ask a short question." };
+  if (FIX_COMMAND.test(question)) {
+    await fixMail(false);
+    return { text: "On it." };
+  }
   try {
     return await conversation.converse(question);
   } catch {
@@ -288,6 +322,8 @@ ipcMain.on("mascot:fix", (event, from, to) => {
 ipcMain.on("mascot:copy", (event, text) => {
   if (fromMascot(event) && isText(text, 40)) clipboard.writeText(text);
 });
+
+ipcMain.on("mascot:fix-mail", (event) => fromMascot(event) && fixMail(false));
 
 ipcMain.on("listener:segment", (event, buffer, mime) => {
   if (!fromListener(event) || !(buffer instanceof ArrayBuffer) || buffer.byteLength > MAX_SEGMENT) return;

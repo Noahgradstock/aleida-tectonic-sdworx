@@ -144,9 +144,10 @@ async function ask(question) {
   return out;
 }
 
-// Checks every sentence that states a value against the trusted facts. Local and deterministic.
-async function check(text) {
+// Every sentence that states a value that disagrees with a trusted fact. Local and deterministic.
+async function checkAll(text) {
   await ensureFacts();
+  const issues = [];
   const sentences = text.slice(0, 4000).split(/(?<=[.!?\n])\s+/);
   for (const sentence of sentences) {
     const said = sentence.match(VALUE);
@@ -156,9 +157,25 @@ async function check(text) {
     const trusted = parse(fact.value);
     const sameUnit = said.map((v) => ({ raw: v.trim().replace(/[.,]$/, ""), ...parse(v) })).filter((v) => v.unit === trusted.unit);
     if (!sameUnit.length || sameUnit.some((v) => sameValue(v, trusted))) continue;
-    return { ok: false, said: sameUnit[0].raw, sentence: sentence.trim(), ...fact };
+    issues.push({ said: sameUnit[0].raw, sentence: sentence.trim(), ...fact });
   }
-  return { ok: true };
+  return issues;
+}
+
+async function check(text) {
+  const [first] = await checkAll(text);
+  return first ? { ok: false, ...first } : { ok: true };
+}
+
+// The text with every wrong value replaced by the trusted one, only inside the sentence it was found in.
+async function corrected(text) {
+  const issues = await checkAll(text);
+  let out = text;
+  for (const i of issues) {
+    const fixedSentence = i.sentence.replace(i.said, i.value);
+    out = out.replace(i.sentence, fixedSentence);
+  }
+  return { text: out, issues };
 }
 
 // Signs in and loads all facts up front, so the first check and question are fast.
@@ -171,4 +188,4 @@ async function warmUp() {
   }
 }
 
-module.exports = { ask, check, warmUp, findFactByText: (t) => findFact(t) };
+module.exports = { ask, check, checkAll, corrected, warmUp, findFactByText: (t) => findFact(t) };

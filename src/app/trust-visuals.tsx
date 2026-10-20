@@ -131,7 +131,7 @@ export function ForecastLine({ forecast, compact }: { forecast: Forecast; compac
   const W = 600;
   const H = compact ? 70 : 140;
   const padT = 18;
-  const padB = compact ? 6 : 22;
+  const padB = compact ? 6 : 34;
   const t0 = Date.parse(pts[0].date);
   const t1 = Date.parse(pts[pts.length - 1].date);
   const x = (d: string) => ((Date.parse(d) - t0) / (t1 - t0)) * W;
@@ -168,8 +168,8 @@ export function ForecastLine({ forecast, compact }: { forecast: Forecast; compac
           <g key={yr}>
             <line x1={x(`${yr}-01-01`)} x2={x(`${yr}-01-01`)} y1={padT} y2={H - padB} stroke="#e5e5e5" />
             {!compact && (
-              <text x={x(`${yr}-01-01`) + 3} y={H - 6} fontSize={10} fill="#a3a3a3">
-                {yr}
+              <text x={x(`${yr}-01-01`)} y={H - 12} textAnchor="middle" fontSize={11} fill="#737373">
+                Jan {yr}
               </text>
             )}
           </g>
@@ -186,6 +186,18 @@ export function ForecastLine({ forecast, compact }: { forecast: Forecast; compac
             style={{ strokeDashoffset: on ? 0 : 1, transition: "stroke-dashoffset 1.2s ease-out" }}
           />
         ))}
+        {/* the time axis: today on the left, 18 months ahead on the right */}
+        {!compact && (
+          <g fontSize={11} fill="#737373">
+            <line x1={0} x2={W} y1={H - padB + 6} y2={H - padB + 6} stroke="#e5e5e5" />
+            <text x={0} y={H - 12}>
+              Today
+            </text>
+            <text x={W} y={H - 12} textAnchor="end">
+              {new Date(pts[pts.length - 1].date).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
+            </text>
+          </g>
+        )}
         {/* today */}
         <circle cx={0} cy={y(pts[0].score!)} r={4} fill={GREEN} />
         {!compact && (

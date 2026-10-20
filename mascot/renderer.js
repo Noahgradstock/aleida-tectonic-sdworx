@@ -4,6 +4,8 @@ const stage = $("stage");
 const card = $("card");
 const audio = $("audio");
 let pendingFix = null;
+let lastQuestion = ""; // for "See in Company brain"
+let lastIssue = null;
 let shownIssue = ""; // the warning on screen, so repeats do not re-animate it
 let online = false;
 let mood = "calm";
@@ -16,7 +18,7 @@ const CONTEXT_TEXT = { email: "Email", meeting: "Meeting" };
 function setMood(next) {
   mood = next;
   const base = !online && next === "calm" ? "offline" : next;
-  stage.className = `stage ${base}${next === "warning" ? " warning-mode" : ""}`;
+  stage.className = `stage ${base}${next === "warning" ? " warning-mode" : ""}${next === "curious" ? " unknown-mode" : ""}`;
   stage.dataset.ctx = context;
   stage.classList.toggle("talk-on", $("talk").classList.contains("on"));
 }
@@ -138,6 +140,7 @@ $("ask-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const question = $("question").value.trim();
   if (!question) return;
+  lastQuestion = question;
   setMood("thinking");
   const r = await window.mascot.ask(question);
   setMood("calm");
@@ -162,6 +165,22 @@ window.mascot.onCheck((r) => {
   const id = `${r.where}|${r.key}|${r.said}`;
   if (id === shownIssue && !$("warning").hidden) return;
   shownIssue = id;
+  lastIssue = r;
+  if (r.kind === "unknown") {
+    pendingFix = null;
+    $("w-title").textContent = "Not in the Company brain yet";
+    $("w-text").textContent = `“${r.sentence}” isn't something the Company brain can confirm${r.client ? ` for ${r.client}` : ""}. Share this sentence for review? A colleague approves it before anyone sees it.`;
+    $("w-meta").hidden = true;
+    $("fix").hidden = true;
+    $("share").textContent = "Share for review";
+    $("ignore").textContent = "Not now";
+    setMood("curious");
+    return show("warning");
+  }
+  $("w-title").textContent = "Heads up before you send";
+  $("w-meta").hidden = false;
+  $("share").textContent = "I know better";
+  $("ignore").textContent = "Ignore";
   const spoken = r.where === "meeting";
   pendingFix = r.where === "meeting" ? null : { from: r.said, to: r.value, native: r.where !== "email" };
   $("w-text").textContent = spoken
@@ -186,6 +205,7 @@ window.mascot.onWake(() => {
 });
 
 window.mascot.onAnswer((r) => {
+  if (r.question) lastQuestion = r.question;
   card.hidden = false;
   renderAnswer(r);
 });
@@ -211,6 +231,24 @@ $("fix").addEventListener("click", () => {
 });
 $("ignore").addEventListener("click", closeCard);
 
+// Share one sentence for review: only after this click, never automatically.
+$("share").addEventListener("click", async () => {
+  $("share").disabled = true;
+  setMood("thinking");
+  const r = await window.mascot.share();
+  $("share").disabled = false;
+  closeCard();
+  if (r.ok && r.suggestion) pill("New topic · saved as a suggestion for the knowledge team ✓", 4500);
+  else if (r.ok) pill(`Shared for review · ${r.toName ? `${r.toName} will approve it` : "waiting for approval"} ✓`, 4500);
+  else pill(r.reason || "Could not share it.", 4500);
+});
+
+$("a-open").addEventListener("click", () => window.mascot.openBrain(lastQuestion));
+$("w-open").addEventListener("click", () => {
+  const i = lastIssue;
+  window.mascot.openBrain(i ? `${i.label}${i.client ? ` for ${i.client}` : ""}` : lastQuestion, i && i.client);
+});
+
 window.mascot.onIdle(() => {
   if (mood === "thinking") setMood("calm");
 });
@@ -223,12 +261,6 @@ window.mascot.onSilence(() => {
 });
 
 // Background learning: one quiet line, no state change. A meeting claim waits for the speaker or an expert.
-window.mascot.onLearned((learned) => {
-  if (mood === "warning" || mood === "speaking") return; // never cover a warning or an answer
-  const l = learned[0];
-  const more = learned.length > 1 ? ` (+${learned.length - 1} more)` : "";
-  pill(l.waiting ? `Learned: ${l.topic} ${l.value}, waiting for a confirmation${more}` : `Learned: ${l.topic} ${l.value} (${l.score}%)${more}`, 4000);
-});
 
 window.mascot.onFixed(({ count }) => {
   closeCard();

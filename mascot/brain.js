@@ -216,18 +216,26 @@ async function checkAll(text) {
   const list = await factsFor(client);
   const issues = [];
   const sentences = text.slice(0, 4000).split(/(?<=[.!?\n])\s+/);
+  const unknown = [];
   for (const sentence of sentences) {
     const said = sentence.match(VALUE);
-    if (!said) continue;
+    if (!said || isPending(sentence)) continue;
     const fact = findFact(sentence, list);
-    if (!fact || fact.status !== "trusted" || !fact.value || !/\d/.test(fact.value)) continue;
+    // A value about payroll that the brain cannot vouch for: offer to share it for review.
+    if ((!fact && (client || PAYROLL_WORDS.test(sentence))) || (fact && (fact.status !== "trusted" || !fact.value))) {
+      unknown.push({ kind: "unknown", said: said[0].trim().replace(/[.,]$/, ""), sentence: sentence.trim(), label: fact ? fact.label : "this", client: client ? client.name : null });
+      continue;
+    }
+    if (!fact || !/\d/.test(fact.value)) continue;
     const trusted = parse(fact.value);
     const sameUnit = said.map((v) => ({ raw: v.trim().replace(/[.,]$/, ""), ...parse(v) })).filter((v) => v.unit === trusted.unit);
     if (!sameUnit.length || sameUnit.some((v) => sameValue(v, trusted))) continue;
-    issues.push({ said: sameUnit[0].raw, sentence: sentence.trim(), ...fact, client: client ? client.name : null });
+    issues.push({ kind: "wrong", said: sameUnit[0].raw, sentence: sentence.trim(), ...fact, client: client ? client.name : null });
   }
-  return issues;
+  return [...issues, ...unknown]; // wrong values first
 }
+
+const PAYROLL_WORDS = /\b(allowance|salary|wage|bonus|premium|voucher|contribution|leave|holiday|vacation|overtime|notice|pension|insurance|reimburse\w*|expenses?|per diem|commut\w*)\b/i;
 
 async function check(text) {
   const [first] = await checkAll(text);
@@ -236,7 +244,7 @@ async function check(text) {
 
 // The text with every wrong value replaced by the trusted one, only inside the sentence it was found in.
 async function corrected(text) {
-  const issues = await checkAll(text);
+  const issues = (await checkAll(text)).filter((i) => i.kind === "wrong");
   let out = text;
   for (const i of issues) {
     // Swap only the number, keep the words: "22 holiday days" -> "20 holiday days", "€148.73" -> "€154.74".
@@ -304,10 +312,59 @@ function stopLearning() {
 async function warmUp() {
   try {
     const n = await loadFacts();
-    console.log(`brain: ${n} facts loaded, ${me ? `signed in as ${me.name} (learns from your work)` : "guest (read-only, add BRAIN_USER and BRAIN_PASSWORD to .env to learn)"}`);
+    console.log(`brain: ${n} facts loaded, ${me ? `signed in as ${me.name} (can share for review)` : "guest (read-only, add BRAIN_USER and BRAIN_PASSWORD to .env to share)"}`);
   } catch (e) {
     console.log("brain: could not load facts:", e.message);
   }
 }
 
-module.exports = { ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, findFactByText: (t) => findFact(t) };
+// ---------- Sharing (only when you click "Share for review") ----------
+
+const pendingShares = new Set(); // sentences you shared that wait for approval: no warning on them meanwhile
+const normSentence = (t) => t.toLowerCase().replace(/\s+/g, " ").trim();
+const isPending = (sentence) => pendingShares.has(normSentence(sentence));
+
+// Sends ONE sentence (never the whole email) to the brain, marked for review, and asks a colleague to approve it.
+async function share(sentence, clientName) {
+  if (!cookie) await signIn().catch(() => {});
+  if (!me) return { ok: false, reason: "Sign in with your own account to share knowledge." };
+  await loadClients();
+  const client = clientName ? clients.find((c) => c.name === clientName) : clientIn(sentence);
+  const context = client ? { client: client.id } : CONTEXT;
+  const r = await call("/api/brain/ingest", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ channel: "email", review: true, text: sentence.slice(0, 1000), context }),
+  });
+  const entry = r.learned && r.learned[0];
+  if (!entry) {
+    const why = (r.skipped && r.skipped[0] && r.skipped[0].reason) || "Nothing to share in that sentence.";
+    return { ok: false, reason: why };
+  }
+  pendingShares.add(normSentence(sentence));
+  answerCache.clear();
+  clientFacts.clear();
+  loadedAt = 0;
+  let toName = null;
+  try {
+    const q = await call("/api/brain/questions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ claimId: entry.claimId, context }),
+    });
+    toName = q.question ? q.question.toName : null;
+  } catch {
+    // The claim is shared and capped; asking a colleague can be retried from the web app.
+  }
+  return { ok: true, label: entry.factLabel, value: entry.value, toName };
+}
+
+// Link to the same question in the Company brain web app.
+function webLink(question, clientName) {
+  const client = clientName ? clients.find((c) => c.name === clientName) : clientIn(question || "");
+  const q = new URLSearchParams({ q: (question || "").slice(0, 300) });
+  if (client) q.set("client", client.id);
+  return `${BRAIN_URL}/?${q.toString()}`;
+}
+
+module.exports = { ask, check, checkAll, corrected, warmUp, learn, learnWhenSettled, stopLearning, share, webLink, isPending, BRAIN_URL, findFactByText: (t) => findFact(t) };

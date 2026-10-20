@@ -146,3 +146,9 @@ button { font: inherit; cursor: pointer; }
 .mic-badge i:nth-child(4) { animation-delay: .45s !important; }
 .ask .talk.on { background: #1D9E75; }
 @keyframes wave { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1.15); } }
+
+/* Not in the Company brain yet */
+.unknown-mode .warn { background: #EEF5FD; border-color: #B5D4F4; }
+.unknown-mode .warn-title { color: #0C447C; }
+.curious .body { fill: #5AA6E8; }
+.warn .link { margin-top: 8px; display: block; }

@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld("mascot", {
   toggleTalk: () => ipcRenderer.send("mascot:toggle-talk"),
   setContext: (mode) => ipcRenderer.send("mascot:set-context", String(mode)),
   fixMail: () => ipcRenderer.send("mascot:fix-mail"),
+  share: () => ipcRenderer.invoke("mascot:share"),
+  openBrain: (question, client) => ipcRenderer.send("mascot:open-brain", String(question || ""), client ? String(client) : ""),
   onFixed: on("mascot:fixed"),
   onSilence: on("mascot:silence"),
   onIdle: on("mascot:idle"),

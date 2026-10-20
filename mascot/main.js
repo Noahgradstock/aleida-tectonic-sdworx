@@ -1,5 +1,5 @@
 // Company brain mascot: an always-on-top blob that watches two settings, email and meetings.
-const { app, BrowserWindow, clipboard, globalShortcut, ipcMain, screen, session, systemPreferences } = require("electron");
+const { app, BrowserWindow, clipboard, globalShortcut, ipcMain, screen, session, shell, systemPreferences } = require("electron");
 const path = require("node:path");
 const brain = require("./brain");
 const voice = require("./voice");
@@ -142,14 +142,18 @@ async function checkWriting(text, where) {
   } catch {
     result = { ok: true };
   }
-  log("check", where, result.ok ? "ok" : `WRONG ${result.said} (trusted ${result.value})`, "| issue:", issue ? `${issue.where} ${issue.said}` : "none");
+  // Unknown knowledge is only offered for sharing in your own writing, never from meeting audio.
+  if (!result.ok && result.kind === "unknown" && where === "meeting") result = { ok: true };
+  log("check", where, result.ok ? "ok" : result.kind === "unknown" ? `NOT IN BRAIN ${result.said}` : `WRONG ${result.said} (trusted ${result.value})`, "| issue:", issue ? `${issue.where} ${issue.said}` : "none");
   if (!result.ok) {
     const same = issue && issue.where === where && issue.said === result.said && issue.key === result.key;
     issue = { ...result, where };
     send("mascot:check", issue); // the page ignores repeats of a warning it is already showing
     if (!same) {
       conversation.rememberWarning(issue);
-      if (where === "meeting") {
+      if (result.kind !== "wrong") {
+        // Unknown knowledge: a quiet card, never spoken.
+      } else if (where === "meeting") {
         say(`Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`);
       } else if (inConversation() && where === "Mail") {
         offerUntil = Date.now() + 60000;
@@ -167,19 +171,9 @@ async function checkWriting(text, where) {
   send("mascot:check", { ok: true });
 }
 
-// What you write and say also teaches the brain (online only). Quiet: a short pill, never a pop-up.
-function onLearned(r) {
-  if (!r || !r.learned.length) return;
-  log("learned:", r.learned.map((l) => `${l.topic} ${l.value} (${l.score}%${l.waiting ? ", waiting" : ""})`).join("; "));
-  send("mascot:learned", r.learned);
-}
-// Only text you wrote yourself: Apple Mail's outgoing message and the demo compose window.
-// Not other apps: the focused element there can contain messages written by others.
-const LEARN_CHANNEL = { Mail: "email", email: "email" };
-function learnFromWriting(text, where) {
-  const channel = LEARN_CHANNEL[where];
-  if (online && channel && text.trim()) brain.learnWhenSettled(text.slice(0, 8000), channel, onLearned);
-}
+// Privacy: the mascot never sends what you write to the brain on its own. It only reads trusted answers
+// down. Knowledge goes up only when you click "Share for review", one sentence at a time, and a colleague
+// has to approve it before it counts.
 
 const watcher = createWatcher(
   (appName, text) => {
@@ -187,7 +181,6 @@ const watcher = createWatcher(
     if (appName === "Mail") lastMailText = text;
     if (!text.trim()) return checkWriting("", appName);
     checkWriting(text, appName);
-    learnFromWriting(text, appName);
   },
   (error) => {
     log("watcher error:", error);
@@ -256,7 +249,7 @@ async function answerAloud(question, explicit = true) {
     return log("ignored, not a known topic:", question);
   }
   log("reply:", r.text);
-  send("mascot:answer", r);
+  send("mascot:answer", { ...r, question });
   if (inConversation()) convoUntil = Math.max(convoUntil, Date.now() + CONVO_MS);
   await say(conversation.speakable(r.text), g);
 }
@@ -289,7 +282,7 @@ async function onSegment(buffer, mime) {
   // In a meeting, a wrong value is corrected before anything else.
   if (activeContext === "meeting") {
     const c = await brain.check(text);
-    if (!c.ok) return checkWriting(text, "meeting");
+    if (!c.ok && c.kind === "wrong") return checkWriting(text, "meeting");
   }
 
   if (waitingForQuestion) {
@@ -381,7 +374,6 @@ ipcMain.handle("brain:ask", async (event, question) => {
 ipcMain.on("compose:changed", (event, text) => {
   if (!fromCompose(event) || typeof text !== "string") return;
   checkWriting(text.slice(0, 4000), "email");
-  learnFromWriting(text, "email");
 });
 
 ipcMain.on("mascot:fix", (event, from, to) => {
@@ -395,6 +387,43 @@ ipcMain.on("mascot:copy", (event, text) => {
 });
 
 ipcMain.on("mascot:fix-mail", (event) => fromMascot(event) && fixMail(false));
+
+// Suggestions for new topics, kept locally (one JSON file in the app's data folder) until the knowledge team adds the topic.
+function saveSuggestion(i) {
+  const fs = require("node:fs");
+  const file = path.join(app.getPath("userData"), "suggestions.json");
+  let list = [];
+  try {
+    list = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch {
+    // First suggestion.
+  }
+  list.push({ sentence: i.sentence.slice(0, 500), client: i.client || null, at: new Date().toISOString() });
+  fs.writeFileSync(file, JSON.stringify(list.slice(-200), null, 2));
+  return { ok: true, suggestion: true };
+}
+
+// "Share for review": the one sentence of the current issue, after you clicked. Never the whole email.
+ipcMain.handle("mascot:share", async (event) => {
+  if (!fromMascot(event) || !issue || !issue.sentence) return { ok: false, reason: "Nothing to share." };
+  try {
+    let r = await brain.share(issue.sentence, issue.client);
+    // A brand-new topic the brain cannot learn yet: keep it as a suggestion for the knowledge team, on this device.
+    if (!r.ok && /not about a topic the brain knows/i.test(r.reason || "")) r = saveSuggestion(issue);
+    log("share:", r.ok ? `${r.label} ${r.value} → review by ${r.toName || "a colleague"}` : r.reason);
+    if (r.ok) issue = null;
+    return r;
+  } catch {
+    return { ok: false, reason: "The brain is not reachable right now." };
+  }
+});
+
+// "See in Company brain": the same question in the web app, in the browser.
+ipcMain.on("mascot:open-brain", (event, question, clientName) => {
+  if (!fromMascot(event) || (question && !isText(question, 500))) return;
+  const url = brain.webLink(question || "", typeof clientName === "string" ? clientName : null);
+  if (url.startsWith(brain.BRAIN_URL)) shell.openExternal(url);
+});
 
 ipcMain.on("listener:segment", (event, buffer, mime) => {
   if (!fromListener(event) || !(buffer instanceof ArrayBuffer) || buffer.byteLength > MAX_SEGMENT) return;

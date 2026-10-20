@@ -69,7 +69,10 @@ The goal is not zero human involvement. The goal is zero unnecessary effort.
 >
 > Another example: the fly on the wall. A fly can observe and see where the experience lives, and can also see who gets asked what. Mind you, that's an example. That's not the solution we want you to build.
 
+> Think electricity. Think wifi.
+
 **Takeaways for us:**
+- "Think electricity, think wifi": infrastructure you never think about. It is invisible when it works, and you only notice it when it fails. That is the bar for our UI.
 - The target is the **unwritten rules** a mentor passes on ("be there Friday at 4, the professor notices"), not just documents.
 - "Thousands of mentors": the knowledge is spread over many people, so capturing it must cost each of them almost nothing.
 - "See where the experience lives and who gets asked what" is a hint about the signal (who gets asked, who answers), but **not** the solution. Do not build pure passive surveillance of chats.

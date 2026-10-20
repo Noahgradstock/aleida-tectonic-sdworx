@@ -32,9 +32,15 @@ export function Waterfall({ evidence, score, caps }: { evidence: Evidence[]; sco
     const items = evidence.filter((e) => e.layer === layer.id);
     const points = items.reduce((s, e) => s + e.points, 0);
     const before = acc.length ? acc[acc.length - 1].sum : 0;
-    return [...acc, { ...layer, items, points, from: sigmoid(before), to: sigmoid(before + points), sum: before + points }];
+    return [...acc, { ...layer, items, points, from: before, to: before + points, sum: before + points }];
   }, []);
-  const raw = sigmoid(rows[rows.length - 1]?.sum ?? 0);
+  const total = rows[rows.length - 1]?.sum ?? 0;
+  const raw = sigmoid(total);
+  // The bars are drawn in points, so +1 is a third of +3. Zero (= 50%) and the trusted line (75%) are marked.
+  const TRUSTED = Math.log(3); // 75% in points, about +1.1
+  const lo = Math.min(0, ...rows.map((r) => r.sum)) - 0.3;
+  const hi = Math.max(TRUSTED + 0.4, ...rows.map((r) => r.sum)) + 0.3;
+  const x = (pts: number) => ((pts - lo) / (hi - lo)) * 100;
   const capped = score < raw - 0.005;
   const capLabel = caps[0]?.replace(/^Capped at \d+%: /, "");
 
@@ -42,28 +48,27 @@ export function Waterfall({ evidence, score, caps }: { evidence: Evidence[]; sco
     <div className="rounded-2xl bg-[#fbfaf7] p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-serif text-xl">How we got to {pct(score)}</h3>
-        <span className="text-xs text-neutral-500">Every claim starts at 50%. Six questions move it.</span>
+        <span className="text-xs text-neutral-500">Every claim starts at 0 points (50%). Six questions add or take away points.</span>
       </div>
 
       <div className="relative mt-7">
-        {/* the scale: 50% start and the 75% trusted line */}
+        {/* the scale in points: 0 is the start (50%), +1.1 is the trusted line (75%) */}
         <div className="pointer-events-none absolute inset-y-0 left-[38%] right-[64px] sm:left-[34%]">
-          <div className="absolute inset-y-0 border-l border-dashed border-neutral-300" style={{ left: "50%" }} />
-          <div className="absolute inset-y-0 border-l border-dashed" style={{ left: "75%", borderColor: `${BLUE}55` }} />
-          <span className="absolute -top-5 -translate-x-1/2 text-[10px] text-neutral-400" style={{ left: "50%" }}>
-            start 50%
+          <div className="absolute inset-y-0 border-l border-dashed border-neutral-300" style={{ left: `${x(0)}%` }} />
+          <div className="absolute inset-y-0 border-l border-dashed" style={{ left: `${x(TRUSTED)}%`, borderColor: `${BLUE}55` }} />
+          <span className="absolute -top-5 -translate-x-1/2 whitespace-nowrap text-[10px] text-neutral-400" style={{ left: `${x(0)}%` }}>
+            start 0
           </span>
-          <span className="absolute -top-5 -translate-x-1/2 text-[10px]" style={{ left: "75%", color: BLUE }}>
-            trusted 75%
+          <span className="absolute -top-5 -translate-x-1/2 whitespace-nowrap text-[10px]" style={{ left: `${x(TRUSTED)}%`, color: BLUE }}>
+            trusted +1.1
           </span>
-          {capped && <div className="absolute inset-y-0 border-l-2 border-dashed" style={{ left: `${score * 100}%`, borderColor: AMBER }} />}
         </div>
 
         <ol className="relative space-y-1.5">
           {rows.map((r, i) => {
             const up = r.points >= 0;
-            const left = Math.min(r.from, r.to) * 100;
-            const width = Math.abs(r.to - r.from) * 100;
+            const left = x(Math.min(r.from, r.to));
+            const width = x(Math.max(r.from, r.to)) - left;
             const idle = r.items.length === 0;
             return (
               <li key={r.id} className={`flex items-center gap-3 ${idle ? "opacity-45" : ""}`}>
@@ -93,8 +98,28 @@ export function Waterfall({ evidence, score, caps }: { evidence: Evidence[]; sco
               </li>
             );
           })}
+          {/* the sum of the six rows */}
+          <li className="flex items-center gap-3 border-t border-dashed border-neutral-200 pt-2">
+            <div className="w-[38%] min-w-0 text-sm font-medium sm:w-[34%]">Total</div>
+            <div className="relative h-6 flex-1">
+              <span
+                className="absolute top-1 h-4 rounded-[5px] transition-all duration-700 ease-out"
+                style={{
+                  left: `${x(Math.min(0, total))}%`,
+                  width: on ? `${Math.max(x(Math.max(0, total)) - x(Math.min(0, total)), 0.8)}%` : "0%",
+                  background: total >= 0 ? GREEN : RED,
+                  transitionDelay: `${rows.length * 120}ms`,
+                }}
+              />
+            </div>
+            <span className="w-[52px] shrink-0 text-right text-sm font-semibold tabular-nums" style={{ color: total >= 0 ? GREEN : RED }}>
+              {signed(total)}
+            </span>
+          </li>
         </ol>
       </div>
+
+      <PointsToPercent total={total} />
 
       <div className="mt-4 flex flex-wrap items-baseline justify-between gap-2 border-t border-neutral-200 pt-3">
         <span className="text-sm text-neutral-600">
@@ -103,11 +128,44 @@ export function Waterfall({ evidence, score, caps }: { evidence: Evidence[]; sco
               Adds up to {pct(raw)}, <span style={{ color: AMBER }}>capped at {pct(score)}</span>: {capLabel}.
             </>
           ) : (
-            <>Points add up, then turn into a percentage. +2 is about 88%, −2 about 12%.</>
+            <>
+              {signed(total)} points = {pct(raw)}. Each extra point counts for less near the top: close to 100%, never there.
+            </>
           )}
         </span>
         <span className="font-serif text-3xl leading-none" style={{ color: score >= 0.75 ? GREEN : score >= 0.5 ? AMBER : RED }}>
           = {pct(score)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Points → percentage, once, on one scale: the marker is the total, the ticks show the same curve as the engine.
+function PointsToPercent({ total }: { total: number }) {
+  const LO = -3;
+  const HI = 5;
+  const at = (pts: number) => ((Math.min(HI, Math.max(LO, pts)) - LO) / (HI - LO)) * 100;
+  const ticks = [-2, 0, Math.log(3), 2, 4];
+  const tone = sigmoid(total) >= 0.75 ? GREEN : sigmoid(total) >= 0.5 ? AMBER : RED;
+  return (
+    <div className="mt-5" aria-label={`${signed(total)} points is ${pct(sigmoid(total))}`}>
+      <div className="mb-1 text-[11px] text-neutral-500">From points to a percentage</div>
+      <div className="relative mx-3 h-12">
+        <span className="absolute left-0 right-0 top-5 h-1.5 rounded-full" style={{ background: `linear-gradient(to right, ${RED}55, ${AMBER}55 ${at(0)}%, ${GREEN}55 ${at(Math.log(3))}%)` }} />
+        {ticks.map((t) => (
+          <span key={t} className="absolute top-[18px] flex -translate-x-1/2 flex-col items-center" style={{ left: `${at(t)}%` }}>
+            <span className="h-2.5 w-px bg-neutral-400" />
+            <span className="mt-0.5 whitespace-nowrap text-[10px] leading-tight text-neutral-500">
+              {t === 0 ? "0" : signed(t)} · <span style={{ color: t === Math.log(3) ? BLUE : undefined }}>{pct(sigmoid(t))}</span>
+            </span>
+          </span>
+        ))}
+        <span className="absolute top-0 flex -translate-x-1/2 flex-col items-center" style={{ left: `${at(total)}%` }}>
+          <span className="whitespace-nowrap rounded-full px-1.5 text-[10px] font-semibold leading-4 text-white" style={{ background: tone }}>
+            {pct(sigmoid(total))}
+          </span>
+          <span className="mt-0.5 h-3 w-3 rounded-full border-2 border-white" style={{ background: tone }} />
         </span>
       </div>
     </div>

@@ -19,6 +19,10 @@ tell application "System Events"
   set n to name of p
   set v to ""
   set r to ""
+  set w to ""
+  try
+    set w to name of front window of p
+  end try
   try
     set f to value of attribute "AXFocusedUIElement" of p
     set r to role of f
@@ -47,7 +51,7 @@ tell application "System Events"
     end if
   end try
 end tell
-return n & "<<SEP>>" & v & "<<ROLE>>" & r`;
+return n & "<<SEP>>" & v & "<<ROLE>>" & r & "<<WIN>>" & w`;
 
 function run(script) {
   return new Promise((resolve) => {
@@ -58,9 +62,10 @@ function run(script) {
 }
 
 const split = (out) => {
-  const [head, role = ""] = out.split("<<ROLE>>");
+  const [rest0, win = ""] = out.split("<<WIN>>");
+  const [head, role = ""] = rest0.split("<<ROLE>>");
   const [app, ...rest] = head.split("<<SEP>>");
-  return { app: app.trim(), role: role.trim(), text: rest.join("<<SEP>>").trim().slice(0, 4000) };
+  return { app: app.trim(), role: role.trim(), window: win.trim(), text: rest.join("<<SEP>>").trim().slice(0, 4000) };
 };
 
 async function readWriting() {

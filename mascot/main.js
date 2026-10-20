@@ -65,7 +65,12 @@ function openCompose() {
 // ---------- Setting 1: email (demo window, plus opt-in reading of the app in front) ----------
 
 // ---------- Settings: which app you are in decides what the mascot does ----------
-const MEETING_APPS = ["Microsoft Teams", "Microsoft Teams (work or school)", "Teams", "zoom.us", "FaceTime", "Webex", "Slack"];
+// Meeting apps by process name (the Teams app is "MSTeams"), or a browser tab with Teams, Meet or Zoom.
+const MEETING_APP = /teams|zoom|facetime|webex|slack|meet/i;
+const MEETING_TAB = /\b(microsoft teams|teams|google meet|meet\.google|zoom)\b/i;
+const BROWSERS = /safari|chrome|firefox|edge|arc|brave|opera/i;
+let frontWindow = "";
+const isMeeting = (app, win) => MEETING_APP.test(app) || (BROWSERS.test(app) && MEETING_TAB.test(win));
 const MEETING_LINGER_MS = 2 * 60 * 1000;
 let contextMode = "auto"; // auto | email | meeting
 let activeContext = "email";
@@ -82,12 +87,12 @@ function openConversation() {
 }
 
 function updateContext() {
-  if (MEETING_APPS.includes(frontApp)) lastMeetingSeen = Date.now();
+  if (isMeeting(frontApp, frontWindow)) lastMeetingSeen = Date.now();
   const next =
     contextMode !== "auto" ? contextMode : Date.now() - lastMeetingSeen < MEETING_LINGER_MS ? "meeting" : "email";
   if (next !== activeContext) {
     activeContext = next;
-    log("context:", next, `(${frontApp})`);
+    log("context:", next, `(${frontApp}${frontWindow ? ` · ${frontWindow.slice(0, 40)}` : ""})`);
   }
   const wantMic = online;
   if (wantMic) startMeeting();
@@ -167,8 +172,9 @@ const watcher = createWatcher(
   (() => {
     let lastLine = "";
     return (r) => {
-      if (r.app && !["Electron", "Company brain"].includes(r.app) && r.app !== frontApp) {
+      if (r.app && !["Electron", "Company brain"].includes(r.app) && (r.app !== frontApp || (r.window || "") !== frontWindow)) {
         frontApp = r.app;
+        frontWindow = r.window || "";
         updateContext();
       }
       const line = r.error ? `error: ${r.error}` : `${r.app} role=${r.role || "-"} chars=${(r.text || "").length}`;

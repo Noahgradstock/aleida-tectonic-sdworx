@@ -1,0 +1,13 @@
+{
+  "name": "company-brain-mascot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop mascot for Company brain: a calm blob that only asks for attention when needed.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^38.0.0"
+  }
+}

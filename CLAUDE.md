@@ -56,7 +56,8 @@ Fill this in as soon as the case is known and the work is split. Update it (pull
 
 | Area / folder | Owner |
 |---|---|
-| _to be decided_ | |
+| Desktop mascot (Electron app in `mascot/`) | Isak (`kasikasikasi`) |
+| _rest to be decided_ | |
 
 ---
 

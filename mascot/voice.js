@@ -14,6 +14,8 @@ async function transcribe(buffer, mime) {
   for (const model of sttModel ? [sttModel] : STT_MODELS) {
     const form = new FormData();
     form.append("model_id", model);
+    form.append("language_code", "en");
+    form.append("tag_audio_events", "false");
     form.append("file", new Blob([buffer], { type: mime }), "segment.webm");
     const res = await fetch(`${API}/speech-to-text`, {
       method: "POST",
@@ -22,7 +24,8 @@ async function transcribe(buffer, mime) {
     });
     if (res.ok) {
       sttModel = model;
-      return ((await res.json()).text || "").trim();
+      // Drop sound-event tags like "[background noise]".
+      return ((await res.json()).text || "").replace(/\[[^\]]*\]|\([^)]*\)/g, "").trim();
     }
     if (res.status !== 400 && res.status !== 422) throw new Error(`Speech-to-text failed (${res.status})`);
   }

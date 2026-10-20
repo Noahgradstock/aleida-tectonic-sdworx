@@ -18,11 +18,36 @@ tell application "System Events"
   set p to first application process whose frontmost is true
   set n to name of p
   set v to ""
+  set r to ""
   try
-    set v to value of attribute "AXValue" of (value of attribute "AXFocusedUIElement" of p)
+    set f to value of attribute "AXFocusedUIElement" of p
+    set r to role of f
+    try
+      set v to value of attribute "AXValue" of f
+    end try
+    if v is missing value or v is "" then
+      set parts to {}
+      repeat with a in UI elements of f
+        if role of a is "AXStaticText" then
+          set end of parts to (value of a as text)
+        else
+          repeat with b in UI elements of a
+            if role of b is "AXStaticText" then
+              set end of parts to (value of b as text)
+            else
+              repeat with c in UI elements of b
+                if role of c is "AXStaticText" then set end of parts to (value of c as text)
+              end repeat
+            end if
+          end repeat
+        end if
+      end repeat
+      set AppleScript's text item delimiters to linefeed
+      set v to parts as text
+    end if
   end try
 end tell
-return n & "<<SEP>>" & v`;
+return n & "<<SEP>>" & v & "<<ROLE>>" & r`;
 
 function run(script) {
   return new Promise((resolve) => {
@@ -33,11 +58,17 @@ function run(script) {
 }
 
 const split = (out) => {
-  const [app, ...rest] = out.split("<<SEP>>");
-  return { app: app.trim(), text: rest.join("<<SEP>>").trim().slice(0, 4000) };
+  const [head, role = ""] = out.split("<<ROLE>>");
+  const [app, ...rest] = head.split("<<SEP>>");
+  return { app: app.trim(), role: role.trim(), text: rest.join("<<SEP>>").trim().slice(0, 4000) };
 };
 
 async function readWriting() {
+  const first = await run(FOCUSED);
+  if (first.out) {
+    const r = split(first.out);
+    if (r.text || r.app !== "Mail") return r;
+  }
   const mail = await run(MAIL);
   if (mail.out) {
     const r = split(mail.out);
@@ -52,7 +83,7 @@ async function readWriting() {
   return { error: mail.error || any.error };
 }
 
-function createWatcher(onText, onError, ignoreApps = ["Electron", "Company brain"]) {
+function createWatcher(onText, onError, onDebug = () => {}, ignoreApps = ["Electron", "Company brain"]) {
   let timer = null;
   let last = "";
   let reported = false;
@@ -61,6 +92,7 @@ function createWatcher(onText, onError, ignoreApps = ["Electron", "Company brain
       if (timer || process.platform !== "darwin") return;
       timer = setInterval(async () => {
         const r = await readWriting();
+        onDebug(r);
         if (r.error) {
           if (!reported) onError(r.error);
           reported = true;

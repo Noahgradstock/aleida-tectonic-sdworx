@@ -108,14 +108,16 @@ $("ask-form").addEventListener("submit", async (e) => {
 
 window.mascot.onToggleAsk(toggleCard);
 window.mascot.onThinking(() => {
-  if (card.hidden || !$("warning").hidden) setMood("thinking");
+  if (card.hidden) setMood("thinking");
 });
 
 // Something written or said does not match trusted knowledge.
 window.mascot.onCheck((r) => {
   if (r.ok) {
-    if (!$("warning").hidden) closeCard();
-    else if (mood === "thinking") setMood("calm");
+    if (!$("warning").hidden) {
+      closeCard();
+      pill("Fixed. All good ✓", 2000);
+    } else if (mood === "thinking") setMood("calm");
     return;
   }
   const spoken = r.where === "meeting";

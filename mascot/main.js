@@ -63,14 +63,33 @@ function openCompose() {
 
 // ---------- Setting 1: email (demo window, plus opt-in reading of the app in front) ----------
 
+// The current warning stays until the same place (Mail, the meeting, the demo email) says it is fixed.
+let issue = null;
+
 async function checkWriting(text, where) {
-  if (!text.trim()) return send("mascot:check", { ok: true });
-  send("mascot:thinking");
-  try {
-    send("mascot:check", { ...(await brain.check(text)), where });
-  } catch {
-    send("mascot:check", { ok: true });
+  if (!text.trim()) {
+    if (issue && issue.where === where) {
+      issue = null;
+      send("mascot:check", { ok: true });
+    }
+    return;
   }
+  if (!issue) send("mascot:thinking");
+  let result;
+  try {
+    result = await brain.check(text);
+  } catch {
+    result = { ok: true };
+  }
+  if (!result.ok) {
+    const same = issue && issue.where === where && issue.said === result.said && issue.key === result.key;
+    issue = { ...result, where };
+    if (!same) send("mascot:check", issue);
+    return;
+  }
+  if (issue && issue.where !== where) return; // something else is still wrong
+  issue = null;
+  send("mascot:check", { ok: true });
 }
 
 const watcher = createWatcher(
@@ -82,6 +101,14 @@ const watcher = createWatcher(
     log("watcher error:", error);
     send("mascot:heard", { error: "Allow access to Mail in System Settings → Privacy & Security (Automation and Accessibility)" });
   },
+  (() => {
+    let lastLine = "";
+    return (r) => {
+      const line = r.error ? `error: ${r.error}` : `${r.app} role=${r.role || "-"} chars=${(r.text || "").length}`;
+      if (line !== lastLine) log("watch:", line);
+      lastLine = line;
+    };
+  })(),
 );
 
 // ---------- Setting 2: meetings (microphone → speech-to-text → check or answer) ----------

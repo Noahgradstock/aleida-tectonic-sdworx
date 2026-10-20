@@ -1,3 +1,4 @@
+import "server-only";
 import { MOCK_NOW, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
 import { loadDataKnowledgeBase } from "@/trust-engine/data";
 import { activeSession, readCookie, SESSION_COOKIE, type Session } from "@/lib/auth";

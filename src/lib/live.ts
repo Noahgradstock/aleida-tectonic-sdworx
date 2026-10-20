@@ -1,3 +1,4 @@
+import "server-only";
 import { evaluateFact, type Claim, type Context, type Evidence, type FactStatus, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
 import { allFeedback, kb } from "@/lib/trust-server";
 import { store } from "@/lib/store";

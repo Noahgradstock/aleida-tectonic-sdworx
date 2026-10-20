@@ -1,3 +1,4 @@
+import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Person } from "@/trust-engine";

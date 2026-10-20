@@ -6,7 +6,9 @@ import { forbidden, tooManyRequests } from "@/lib/trust-server";
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return forbidden();
   if (!guestEnabled()) return Response.json({ error: "Guest access is switched off" }, { status: 403 });
-  if (!(await rateLimit(`guest:${clientIp(request)}`, 10, 60_000))) return tooManyRequests();
+  // Per IP where the platform guarantees it (Vercel); elsewhere one global cap, high enough for a room of judges.
+  const ip = clientIp(request);
+  if (!(await rateLimit(ip ? `guest:${ip}` : "guest-all", ip ? 10 : 300, 60_000))) return tooManyRequests();
   try {
     (await cookies()).set(SESSION_COOKIE, createSession(GUEST_ID), cookieOptions);
   } catch {

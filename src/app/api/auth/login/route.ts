@@ -1,38 +1,41 @@
 import { cookies } from "next/headers";
+import { z } from "zod";
 import {
   authConfigured,
-  clearLoginFailures,
   clientIp,
   cookieOptions,
   createSession,
-  loginBlocked,
-  recordLoginFailure,
+  reserveLoginAttempt,
   sameOrigin,
   SESSION_COOKIE,
   verifyPassword,
 } from "@/lib/auth";
 import { forbidden, kb, readJson } from "@/lib/trust-server";
 
+// Only these two fields; anything else (role, userId, isAdmin) is refused, not ignored.
+const schema = z
+  .object({ username: z.string().trim().toLowerCase().min(1).max(64), password: z.string().min(1).max(200) })
+  .strict();
+
 // POST { username, password } -> sets the signed session cookie
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return forbidden();
   if (!authConfigured()) return Response.json({ error: "Login is not configured on this server" }, { status: 503 });
 
-  const body = (await readJson(request)) as { username?: unknown; password?: unknown } | null;
-  const username = typeof body?.username === "string" ? body.username.trim().toLowerCase().slice(0, 64) : "";
-  const password = typeof body?.password === "string" ? body.password.slice(0, 200) : "";
-  if (!username || !password) return Response.json({ error: "Username and password are required" }, { status: 400 });
+  const parsed = schema.safeParse(await readJson(request));
+  if (!parsed.success) return Response.json({ error: "Username and password are required" }, { status: 400 });
+  const { username, password } = parsed.data;
 
-  const ip = clientIp(request);
-  if (await loginBlocked(username, ip)) return Response.json({ error: "Too many attempts, try again in 15 minutes" }, { status: 429 });
+  // Reserved BEFORE the password check, so parallel guesses cannot all get through.
+  const refund = await reserveLoginAttempt(username, clientIp(request));
+  if (!refund) return Response.json({ error: "Too many attempts, try again in 15 minutes" }, { status: 429 });
 
   const person = kb.people.find((p) => p.id === username && !p.left);
   if (!verifyPassword(username, password) || !person) {
-    await recordLoginFailure(username, ip);
-    return Response.json({ error: "Wrong username or password" }, { status: 401 });
+    return Response.json({ error: "Wrong username or password" }, { status: 401 }); // same message for unknown users
   }
 
-  await clearLoginFailures(username, ip);
+  await refund(); // a correct password does not count against the limits
   (await cookies()).set(SESSION_COOKIE, createSession(person.id), cookieOptions);
-  return Response.json({ user: { id: person.id, name: person.name, role: person.role } });
+  return Response.json({ user: { id: person.id, name: person.name, role: person.role } }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -3,11 +3,11 @@ import { test } from "node:test";
 import {
   activeSession,
   createSession,
+  clientIp,
   hashPassword,
-  loginBlocked,
   rateLimit,
   readSession,
-  recordLoginFailure,
+  reserveLoginAttempt,
   revokeSession,
   sameOrigin,
   SESSION_TTL_S,
@@ -63,10 +63,38 @@ test("passwords are checked against scrypt hashes", () => {
 });
 
 test("repeated failed logins block that account from that IP only", async () => {
-  for (let i = 0; i < 5; i++) await recordLoginFailure("tom", "1.1.1.1");
-  assert.equal(await loginBlocked("tom", "1.1.1.1"), true);
-  assert.equal(await loginBlocked("tom", "2.2.2.2"), false); // a stranger cannot lock Tom out everywhere
-  assert.equal(await loginBlocked("sofie", "1.1.1.1"), false);
+  for (let i = 0; i < 5; i++) assert.ok(await reserveLoginAttempt("tom", "1.1.1.1"));
+  assert.equal(await reserveLoginAttempt("tom", "1.1.1.1"), null);
+  assert.ok(await reserveLoginAttempt("tom", "2.2.2.2"), "a stranger cannot lock Tom out everywhere");
+  assert.ok(await reserveLoginAttempt("sofie", "1.1.1.1"));
+});
+
+test("20 parallel login attempts: at most 5 get through per account and IP", async () => {
+  const results = await Promise.all(Array.from({ length: 20 }, () => reserveLoginAttempt("anna", "3.3.3.3")));
+  assert.equal(results.filter(Boolean).length, 5);
+});
+
+test("a correct password is refunded, so the real user is not locked out", async () => {
+  for (let i = 0; i < 10; i++) {
+    const refund = await reserveLoginAttempt("pieter", "4.4.4.4");
+    assert.ok(refund, `attempt ${i + 1} should still be allowed`);
+    await refund!(); // correct password each time
+  }
+});
+
+test("rotating IPs still hits the per-account limit", async () => {
+  let allowed = 0;
+  for (let i = 0; i < 110; i++) if (await reserveLoginAttempt("emma", `10.0.0.${i}`)) allowed++;
+  assert.equal(allowed, 100);
+});
+
+test("x-forwarded-for is only trusted on Vercel", () => {
+  const req = new Request("https://app.example/api/auth/login", { headers: { "x-forwarded-for": "6.6.6.6, 10.0.0.1" } });
+  delete process.env.VERCEL;
+  assert.equal(clientIp(req), null);
+  process.env.VERCEL = "1";
+  assert.equal(clientIp(req), "6.6.6.6");
+  delete process.env.VERCEL;
 });
 
 test("rate limits stop after the maximum", async () => {
@@ -74,11 +102,17 @@ test("rate limits stop after the maximum", async () => {
   assert.equal(await rateLimit("test:x", 3, 60_000), false);
 });
 
-test("cross-site requests are refused", () => {
-  const req = (origin: string | null) =>
-    new Request("https://app.example/api/trust/feedback", { method: "POST", headers: origin ? { origin } : {} });
-  assert.equal(sameOrigin(req("https://app.example")), true);
+test("cross-site requests are refused; the Origin is compared with the Host header", () => {
+  const req = (origin: string | null, extra: Record<string, string> = {}) =>
+    new Request("http://localhost:3000/api/trust/feedback", {
+      method: "POST",
+      headers: { host: "127.0.0.1:3000", ...(origin ? { origin } : {}), ...extra },
+    });
+  assert.equal(sameOrigin(req("http://127.0.0.1:3000")), true, "the app's own buttons work on 127.0.0.1");
   assert.equal(sameOrigin(req("https://evil.example")), false);
+  assert.equal(sameOrigin(req("null")), false);
+  assert.equal(sameOrigin(req(null, { "sec-fetch-site": "cross-site" })), false);
+  assert.equal(sameOrigin(req(null)), true, "non-browser clients without Origin (the mascot)");
 });
 
 test("the Upstash store sends the right Redis commands", async () => {
@@ -88,13 +122,26 @@ test("the Upstash store sends the right Redis commands", async () => {
     assert.equal((init.headers as Record<string, string>).authorization, "Bearer t0ken");
     const cmds = JSON.parse(String(init.body)) as unknown[][];
     sent.push(...cmds);
-    return new Response(JSON.stringify(cmds.map((c) => ({ result: c[0] === "INCR" ? 4 : c[0] === "EXISTS" ? 1 : "OK" }))));
+    return new Response(JSON.stringify(cmds.map((c) => ({ result: c[0] === "INCR" ? 4 : c[0] === "EXISTS" ? 1 : c[0] === "DECR" ? 3 : "OK" }))));
   }) as typeof fetch;
   const s = new UpstashStore("https://redis.example/", "t0ken", fakeFetch);
   assert.equal(await s.count("rl:a", 60_000), 4);
   assert.equal(await s.flagged("revoked:x"), true);
   await s.flag("revoked:y", 1000);
-  assert.deepEqual(sent, [["INCR", "rl:a"], ["PEXPIRE", "rl:a", 60_000, "NX"], ["EXISTS", "revoked:x"], ["SET", "revoked:y", "1", "PX", 1000]]);
+  await s.uncount("rl:a");
+  assert.deepEqual(sent, [
+    ["INCR", "rl:a"],
+    ["PEXPIRE", "rl:a", 60_000, "NX"],
+    ["EXISTS", "revoked:x"],
+    ["SET", "revoked:y", "1", "PX", 1000],
+    ["DECR", "rl:a"],
+  ]);
+});
+
+test("an unreachable Upstash store throws, so the limiter and the revocation check fail closed", async () => {
+  const failing = new UpstashStore("https://redis.example", "t0ken", (async () => new Response("down", { status: 500 })) as typeof fetch);
+  await assert.rejects(failing.count("rl:x", 1000));
+  await assert.rejects(failing.flagged("revoked:x"));
 });
 
 test("consultants only reach their own clients; experts all clients in their country", () => {

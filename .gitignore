@@ -46,3 +46,7 @@ next-env.d.ts
 # python
 __pycache__/
 .venv/
+
+# local test accounts and keys (never commit)
+*.local.md
+*.key

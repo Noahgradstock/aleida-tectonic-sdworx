@@ -1,3 +1,4 @@
+import "server-only";
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { store } from "@/lib/store";
 
@@ -5,7 +6,8 @@ import { store } from "@/lib/store";
 // Sessions are signed cookies: base64url(payload).HMAC-SHA256(payload, SESSION_SECRET).
 // Passwords live only as scrypt hashes in AUTH_USERS ("id:salt:hash,id:salt:hash"), never in the repo.
 
-export const SESSION_COOKIE = "session";
+// __Host- prefix in production: the browser only accepts it over HTTPS, with Secure, Path=/ and no Domain.
+export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-session" : "session";
 export const SESSION_TTL_S = 8 * 60 * 60;
 
 export const cookieOptions = {
@@ -79,8 +81,8 @@ export async function revokeSession(session: Session, now = Date.now()) {
 export async function isRevoked(session: Session): Promise<boolean> {
   try {
     return await store.flagged(`revoked:${session.sid}`);
-  } catch (err) {
-    console.error("revocation check failed, refusing the session:", err);
+  } catch {
+    console.error("revocation check failed, refusing the session");
     return true; // fail closed
   }
 }
@@ -114,33 +116,52 @@ export function verifyPassword(userId: string, password: string): boolean {
   return safeEqual(actual, hash) && !!known;
 }
 
-// Allows `max` calls per window; returns false once the limit is reached. Fails open if the store is down.
+// Allows `max` calls per window; returns false once the limit is reached.
+// Counts first (atomic INCR), then decides. Fails closed: if the store is down, nothing gets through.
 export async function rateLimit(key: string, max: number, windowMs: number): Promise<boolean> {
   try {
     return (await store.count(`rl:${key}`, windowMs)) <= max;
-  } catch (err) {
-    console.error("rate limit store failed:", err);
-    return true;
+  } catch {
+    console.error("rate limit store failed, refusing the request");
+    return false;
   }
 }
 
-// Failed logins: 5 per account per IP, and 50 per IP overall, per 15 minutes.
-// Keying on account + IP means a stranger cannot lock a colleague out by guessing wrong on purpose.
+// Login attempts are reserved BEFORE the password is checked, so parallel guesses cannot all slip through,
+// and handed back after a correct password, so only failures keep counting (no lockout of the real user).
+// Three limits per 15 minutes: account + IP 5 (strict), IP 50, and account from any IP 100. The last one stops
+// guessing by rotating IPs; it is high, so it slows an attacker down rather than locking a colleague out.
+// Returns a refund function, or null when a limit is reached (or the store is down: fail closed).
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
-export async function loginBlocked(userId: string, ip = "unknown"): Promise<boolean> {
-  const [perAccount, perIp] = await Promise.all([store.peek(`login:${userId}|${ip}`), store.peek(`login-ip:${ip}`)]);
-  return perAccount >= 5 || perIp >= 50;
+export async function reserveLoginAttempt(userId: string, ip: string | null): Promise<(() => Promise<void>) | null> {
+  const limits: [string, number][] = [[`login-acct:${userId}`, 100]];
+  if (ip) limits.unshift([`login:${userId}|${ip}`, 5], [`login-ip:${ip}`, 50]);
+  const reserved: string[] = [];
+  const refund = async () => {
+    for (const key of reserved) await store.uncount(key).catch(() => {});
+  };
+  for (const [key, max] of limits) {
+    let n: number;
+    try {
+      n = await store.count(`rl:${key}`, LOGIN_WINDOW_MS);
+    } catch {
+      console.error("login limiter store failed, refusing the attempt");
+      return null;
+    }
+    reserved.push(`rl:${key}`);
+    if (n > max) return null;
+  }
+  return refund;
 }
 
-export async function recordLoginFailure(userId: string, ip = "unknown") {
-  await Promise.all([store.count(`login:${userId}|${ip}`, LOGIN_WINDOW_MS), store.count(`login-ip:${ip}`, LOGIN_WINDOW_MS)]);
+// Client IP, only from a header the platform guarantees: Vercel overwrites x-forwarded-for, so clients cannot fake it.
+// Anywhere else the IP is unknown (null), and limits fall back to per-account or global buckets,
+// never one shared "unknown" bucket that a few bad requests could lock for everyone.
+export function clientIp(request: Request): string | null {
+  if (!process.env.VERCEL) return null;
+  return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || null;
 }
-
-export const clearLoginFailures = (userId: string, ip = "unknown") => store.del(`login:${userId}|${ip}`);
-
-// Client IP as set by the hosting proxy (Vercel puts the real client first).
-export const clientIp = (request: Request) => request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
 
 export function readCookie(request: Request, name: string): string | null {
   for (const part of (request.headers.get("cookie") ?? "").split(";")) {
@@ -151,11 +172,16 @@ export function readCookie(request: Request, name: string): string | null {
 }
 
 // CSRF guard for state-changing requests: a browser request must come from our own origin.
+// Same rule Next.js uses for server actions: Origin must match the Host header (not request.url, which says
+// "localhost" under `next start` even when the browser opened 127.0.0.1).
+// No Origin at all (curl, the desktop mascot) is allowed unless the browser marks the request as cross-site;
+// those clients carry no ambient browser cookies, so there is nothing to forge.
 export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return request.headers.get("sec-fetch-site") !== "cross-site";
+  const host = request.headers.get("host");
   try {
-    return new URL(origin).host === new URL(request.url).host;
+    return !!host && new URL(origin).host === host;
   } catch {
     return false;
   }

@@ -1,3 +1,4 @@
+import "server-only";
 import type { Fact } from "@/trust-engine";
 
 // Gemini only maps a free-text question to one known topic. It never scores: the trust engine

@@ -1,3 +1,4 @@
+import "server-only";
 import type { Claim, Client, Context, KnowledgeBase, Person } from "@/trust-engine";
 import { GUEST_ID } from "@/lib/auth";
 

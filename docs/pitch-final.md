@@ -9,21 +9,21 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 
 ## 0:00–0:10 · Title slide (Isak)
 
-**ISAK:** Hello, I'm Isak, the newest hire at SD Worx. This is Noah, and this is Ilke. Follow my first week, and see how SD Worx shares what nobody ever wrote down. *(click: the video starts)*
+**ISAK:** Hello, I'm Isak, the newest hire at SD Worx. Follow my first week, and see how I tap into SD Worx's knowledge: what's already known, and what nobody wrote down yet. Meet my colleagues Noah and Ilke. *(click: the video starts)*
 
 ## 0:10–1:22 · Video (Isak, then Ilke)
 
 | In the video | Who | Line |
 |---|---|---|
 | 0:00 the blob lands | | *(silent)* |
-| 0:04 "01 · The new hire" | **ISAK** | First client. First email. |
-| 0:16 the blob turns amber | **ISAK** | And it stops me before I send something wrong. |
-| 0:20 €8.91, fixed | **ISAK** | Silent while I'm right. There the moment I'm not. But where does it know this from? |
+| 0:04 "01 · The new hire" | **ISAK** | Day one: my first email to a client. A colleague told me the employer part of a meal voucher is €6.91. |
+| 0:16 the blob turns amber | **ISAK** | Company brain checks me as I type. The law changed this year: it's €8.91. It shows me the source, and I fix it in one click. |
+| 0:21 €8.91, fixed | **ISAK** | But where does that knowledge come from? |
 | 0:23 "02 · The expert" | **ILKE** | From people like me. |
 | 0:29 Ilke's email | **ILKE** | I just agreed 22 holiday days with this client. That isn't written in any document. |
 | 0:32 blue card | **ILKE** | So I share it. Just this sentence. |
 | 0:37 "Shared for review" | **ILKE** | Nothing leaves my laptop until I click. And it counts for nobody until a colleague approves. |
-| 0:42 "03 · The client meeting" | | *(silent until the meeting ends)* |
+| 0:42 "03 · The client meeting" | | *(silent until the meeting ends: the client asks about holiday days, Isak says 20, Company brain corrects him to 22 in real time)* |
 | 1:06 outro | **ILKE** | It didn't just say 22. It said who it came from: me. |
 
 ## 1:22–2:35 · How it works: Wikipedia and the six checks (Noah, Ilke, Noah)
@@ -32,7 +32,7 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 
 **ILKE:** Six checks, every time. Who said it? Is it still current? Who agrees? Does it match the law? Does it fit your client? Has it held up for others? AI only reads the sentence. Code adds up the six checks into one score, and shows the source and the exact sentence. Only said in a meeting? It stays at fifty percent until a colleague backs it. Contradicts the law? Never above twenty. And every change is in the history.
 
-**NOAH:** And two things Wikipedia can't do. It knows what's different for your client. And when it isn't sure, it tells you who to ask: the colleague who was right on this before. When the law changes, old answers lose trust by themselves. People approve only when it matters.
+**NOAH:** And two things Wikipedia can't do. It knows what's different for your client. And you can just ask it, by voice or with a click: it answers with the source, and if it isn't sure, it tells you who to call, the colleague who was right on this before. When the law changes, old answers lose trust by themselves. People approve only when it matters.
 
 ## 2:35–3:00 · Close (Ilke + Noah)
 
@@ -44,10 +44,10 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 ## Lines per person
 
 ### Isak
-1. *(title slide)* "Hello, I'm Isak, the newest hire at SD Worx. This is Noah, and this is Ilke. Follow my first week, and see how SD Worx shares what nobody ever wrote down."
-2. *(0:04)* "First client. First email."
-3. *(0:16, amber)* "And it stops me before I send something wrong."
-4. *(0:20, fixed)* "Silent while I'm right. There the moment I'm not. But where does it know this from?"
+1. *(title slide)* "Hello, I'm Isak, the newest hire at SD Worx. Follow my first week, and see how I tap into SD Worx's knowledge: what's already known, and what nobody wrote down yet. Meet my colleagues Noah and Ilke."
+2. *(0:04)* "Day one: my first email to a client. A colleague told me the employer part of a meal voucher is €6.91."
+3. *(0:16, amber)* "Company brain checks me as I type. The law changed this year: it's €8.91. It shows me the source, and I fix it in one click."
+4. *(0:21)* "But where does that knowledge come from?"
 
 ### Ilke
 1. *(0:23)* "From people like me."
@@ -60,7 +60,7 @@ Slides: title → video (`company-brain-pitch-v3.mp4`, 72 s) → Wikipedia logo 
 
 ### Noah
 1. *(Wikipedia slide)* "How do you trust knowledge anyone can add? Ask Wikipedia. Millions of strangers write it, and we still trust it, because of its rules: every sentence needs a source, and every edit is in the history. So how does Company brain decide what to trust?"
-2. *(after Ilke's six checks)* "And two things Wikipedia can't do. It knows what's different for your client. And when it isn't sure, it tells you who to ask: the colleague who was right on this before. When the law changes, old answers lose trust by themselves. People approve only when it matters."
+2. *(after Ilke's six checks)* "And two things Wikipedia can't do. It knows what's different for your client. And you can just ask it, by voice or with a click: it answers with the source, and if it isn't sure, it tells you who to call, the colleague who was right on this before. When the law changes, old answers lose trust by themselves. People approve only when it matters."
 3. *(close)* "And Isak never had to ask. Keep it trusted, without making it another task. Thank you."
 
 ---

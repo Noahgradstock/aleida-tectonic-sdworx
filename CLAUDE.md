@@ -6,6 +6,8 @@ This repository is **public** and the judges may read this file. Keep everything
 
 The final case (verbatim): @docs/final-case.md
 
+**Current team status (what is built, what is planned, open decisions): @docs/context/11-team-status.md** Full context library: `docs/context/README.md`.
+
 Background on SD Worx (company, products, AI in house, competitors, regulations, vocabulary): @docs/sd-worx-briefing.md
 
 ---

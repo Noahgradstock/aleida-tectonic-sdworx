@@ -15,6 +15,7 @@ This library is background context for the team and its Claude sessions. Read it
 | [08-playbook.md](08-playbook.md) | Final day: process, differentiation, security and submission checklists, demo script |
 | [09-final-task.md](09-final-task.md) | **THE FINAL TASK** + analysis + our pitch slot |
 | [10-our-round1-company-brain.md](10-our-round1-company-brain.md) | **Our Round 1 solution** Company Brain: architecture, trust algorithm, security, unfinished work |
+| [11-team-status.md](11-team-status.md) | **Current state**: what is built (mascot, brain), the planned trust loop, demo story, open decisions |
 | [tectonic-finals-guide.pdf](../tectonic-finals-guide.pdf) | Finals guide (PDF). The original source folder also held its text version, the SD Worx page as an image, and KBC_Ecosystems (xlsx + csv, KBC track), which are not published here |
 | participants guide (qualifier, not published here) | Participants guide (PDF + text) |
 

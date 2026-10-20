@@ -227,21 +227,13 @@ export default function Loop() {
     <main className="mx-auto w-full max-w-7xl px-4 pb-24 pt-20 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
         <div className="max-w-3xl">
-          <h1 className="font-serif text-4xl leading-tight tracking-tight sm:text-5xl">The brain learns from work that already happens</h1>
+          <h1 className="font-serif text-4xl leading-tight tracking-tight sm:text-5xl">What changed today</h1>
           <p className="mt-2 text-[15px] leading-relaxed text-neutral-600">
-            A meeting, a Teams message or an email goes in. Code pulls out each statement with its exact quote, scores it with six visible rules, and
-            logs how every score moved. Something said in a meeting counts for at most 50% until the speaker or an expert confirms it.
+            Meetings, emails and Teams keep the answers current. Check what was heard and confirm what&apos;s yours.
           </p>
         </div>
       </header>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-        {me && (
-          <span className="ml-auto text-neutral-500">
-            Signed in as <span className="text-neutral-800">{me.name}</span>
-          </span>
-        )}
-      </div>
 
       {error && (
         <p role="alert" className="mt-4 rounded-xl bg-[#fdecea] px-4 py-2.5 text-sm text-[#c0392b]">

@@ -35,9 +35,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${serif.variable} ${signature.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col lg:flex-row">
         <Nav />
-        {children}
+        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
       </body>
     </html>
   );

@@ -5,7 +5,7 @@ import Pipeline from "../brain/pipeline";
 import Loop from "./loop";
 
 export const metadata: Metadata = {
-  title: "Company brain – live loop",
+  title: "Company brain – what changed today",
   description: "What the brain learned from everyday work, and exactly how every trust score moved.",
 };
 export const dynamic = "force-dynamic";

@@ -18,6 +18,7 @@ export default async function LoopPage() {
       {/* How a document or a meeting becomes a statement the brain can score. */}
       <div className="mx-auto max-w-6xl px-4 pb-24">
         <Pipeline data={data} />
+        <p className="mt-12 text-center text-xs text-neutral-400">All people, clients and documents are fictional.</p>
       </div>
     </>
   );

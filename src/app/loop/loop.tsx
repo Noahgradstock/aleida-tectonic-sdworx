@@ -233,7 +233,6 @@ export default function Loop() {
             logs how every score moved. Something said in a meeting counts for at most 50% until the speaker or an expert confirms it.
           </p>
         </div>
-        <p className="rounded-full bg-white/70 px-3 py-1 text-sm text-neutral-600 ring-1 ring-neutral-200">All people, clients and documents are fictional</p>
       </header>
 
       <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">

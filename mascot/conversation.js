@@ -143,6 +143,13 @@ async function converse(question) {
   }
 
   const answer = await brain.ask(question);
+  // "Why does De Kroon get 22 holiday days?": a new topic with a follow-up intent gets that reply, not just the value.
+  const newIntent = (PATTERNS.find(([, re]) => re.test(question)) || [])[0];
+  if (answer.matched && answer.value && newIntent) {
+    remember(answer);
+    const text = reply(newIntent, answer);
+    if (text) return { text, answer, known: true };
+  }
   if (!answer.matched || !answer.value) {
     return { text: answer.message && !answer.matched ? "I don't have a trusted answer for that yet. I'll flag it for an expert." : "Nothing in the brain applies to this case yet.", answer, known: false };
   }

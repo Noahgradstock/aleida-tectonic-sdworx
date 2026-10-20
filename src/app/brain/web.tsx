@@ -425,9 +425,11 @@ export default function BrainWeb({ docs, scores }: { docs: Doc[]; scores: ClaimS
                     {changesSoon(st, graph?.today) && (
                       <g>
                         <circle r={r + 5} fill="none" stroke="#1463ff" strokeWidth={1.5} strokeDasharray="2 3" />
-                        <text x={r + 4} y={-r - 2} fontSize={11}>
-                          ⏱
-                        </text>
+                        {/* a small clock: this answer changes soon */}
+                        <g transform={`translate(${r + 2} ${-r - 10})`}>
+                          <circle cx={5} cy={5} r={5.5} fill="#fbfaf7" stroke="#1463ff" strokeWidth={1.3} />
+                          <path d="M5 2.4V5l1.8 1.2" fill="none" stroke="#1463ff" strokeWidth={1.3} strokeLinecap="round" />
+                        </g>
                       </g>
                     )}
                     {n.kind === "document" && n.meta.live === true && <circle r={r + 4} fill="none" stroke="#0f8a4f" strokeWidth={1.2} />}
@@ -568,7 +570,7 @@ function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; on
                 <span className="flex-1">{n.label}</span>
                 <span className="text-xs text-neutral-500">
                   {asked ? <span className="mr-1 rounded-full bg-[#eef3ff] px-1.5 py-0.5 text-[#1463ff]">{asked} asked</span> : null}
-                  {changesSoon(t, graph.today) && t.status === "trusted" ? `⏱ Changes ${t.forecast!.bestBefore!.date}` : STATUS[t.status].label}
+                  {changesSoon(t, graph.today) && t.status === "trusted" ? `Changes ${t.forecast!.bestBefore!.date}` : STATUS[t.status].label}
                 </span>
               </button>
             </li>

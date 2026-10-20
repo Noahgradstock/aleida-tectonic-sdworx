@@ -1,6 +1,7 @@
 "use client";
 
 import { STATUS, type ScoredClaim } from "@/trust-engine";
+import { Icon } from "./icons";
 import { color, Flag, pct, PdfIcon, seg, shortReason, type DocCard, type Hit } from "@/lib/demo-shared";
 import { DocsLogo, OutlookLogo, TeamsLogo } from "./logos";
 
@@ -230,7 +231,12 @@ function Card({
           <div className="flex items-center gap-1.5">
             {icon}
             <span className="truncate text-[11px] font-medium">{s.short}</span>
-            {thumbs > 0 && <span className="shrink-0 text-[10px] text-neutral-500">👍 {thumbs}</span>}
+            {thumbs > 0 && (
+              <span className="flex shrink-0 items-center gap-0.5 text-[10px] text-neutral-500">
+                <Icon name="thumb" size={11} />
+                {thumbs}
+              </span>
+            )}
             {place.mode === "scoring" && !compact && (
               <span className="ml-1 hidden truncate font-signature text-[13px] leading-none text-[#1f3a8a] sm:inline">{s.signer.name}</span>
             )}

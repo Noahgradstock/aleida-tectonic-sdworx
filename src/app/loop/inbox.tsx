@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { channelIcon, Icon } from "../icons";
 
 // Your corner of the brain: what waits for your yes, and a log of everything that came from you.
 // Only ever your own entries; every change you make here is logged for everyone in "Why the score moved".
@@ -26,13 +27,7 @@ type Item = {
 type Question = { id: string; factLabel: string; value: string; quote: string; source: string; fromName: string; askedAt: string; caseName?: string };
 type Mine = { waiting: Item[]; questions: Question[]; log: Item[] };
 
-const CHANNEL: Record<string, { label: string; icon: string }> = {
-  meeting: { label: "Meeting", icon: "🎙" },
-  email: { label: "Email", icon: "✉︎" },
-  teams: { label: "Teams", icon: "💬" },
-  sharepoint: { label: "Document", icon: "📄" },
-  official: { label: "Official", icon: "§" },
-};
+const CHANNEL: Record<string, string> = { meeting: "Meeting", email: "Email", teams: "Teams", sharepoint: "Document", official: "Official" };
 const pct = (n: number | null) => (n == null ? "" : `${Math.round(n * 100)}%`);
 const tone = (n: number | null) => (n == null ? "#a3a3a3" : n >= 0.75 ? "#0f8a4f" : n >= 0.5 ? "#9a6400" : "#c0392b");
 const when = (d: string) => {
@@ -115,13 +110,16 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
               ) : note[it.id] ? null : (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Btn primary disabled={!!busy} onClick={() => mineAct(it, "confirm")}>
-                    ✓ That&apos;s right
+                    <Icon name="check" size={14} />
+                    That&apos;s right
                   </Btn>
                   <Btn disabled={!!busy} onClick={() => (setEditing(it.id), setDraft(it.value))}>
-                    ✎ Correct
+                    <Icon name="pencil" size={14} />
+                    Correct
                   </Btn>
                   <Btn ghost disabled={!!busy} onClick={() => mineAct(it, "remove")}>
-                    ✕ Not what I said
+                    <Icon name="cross" size={14} />
+                    Not what I said
                   </Btn>
                 </div>
               )}
@@ -130,8 +128,9 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
           ))}
           {mine.questions.map((q) => (
             <li key={q.id} className="rounded-2xl border border-[#1463ff]/20 bg-[#f5f8ff] p-4">
-              <p className="text-xs text-neutral-500">
-                <span className="mr-1">❓</span>Question · {q.fromName} asks · {when(q.askedAt)}
+              <p className="flex items-center gap-1.5 text-xs text-neutral-500">
+                <Icon name="question" size={13} />
+                Question · {q.fromName} asks · {when(q.askedAt)}
                 {q.caseName ? ` · ${q.caseName}` : ""}
               </p>
               <p className="mt-2 text-sm">
@@ -141,10 +140,12 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
               {!note[q.id] && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Btn primary disabled={!!busy} onClick={() => answer(q, "correct")}>
-                    ✓ Still right
+                    <Icon name="check" size={14} />
+                    Still right
                   </Btn>
                   <Btn disabled={!!busy} onClick={() => answer(q, "wrong")}>
-                    ✗ Wrong
+                    <Icon name="cross" size={14} />
+                    Wrong
                   </Btn>
                   <Btn ghost disabled={!!busy} onClick={() => answer(q, "not_mine")}>
                     Not my area
@@ -233,11 +234,10 @@ export default function YourInbox({ onChange }: { onChange?: () => void }) {
 }
 
 function Meta({ it, lead }: { it: Item; lead: string }) {
-  const ch = CHANNEL[it.channel] ?? { label: it.channel, icon: "•" };
   return (
-    <p className="text-xs text-neutral-500">
-      <span className="mr-1">{ch.icon}</span>
-      {ch.label} · {lead} · {when(it.date)}
+    <p className="flex items-center gap-1.5 text-xs text-neutral-500">
+      <Icon name={channelIcon(it.channel)} size={13} />
+      {CHANNEL[it.channel] ?? it.channel} · {lead} · {when(it.date)}
     </p>
   );
 }
@@ -257,7 +257,7 @@ function Btn({ children, onClick, disabled, primary, ghost }: { children: React.
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-[0.97] disabled:opacity-50 ${
+      className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-[0.97] disabled:opacity-50 ${
         primary ? "bg-[#1463ff] text-white hover:bg-[#0f52d9]" : ghost ? "text-neutral-500 hover:text-neutral-900" : "bg-white text-neutral-700 ring-1 ring-neutral-200"
       }`}
     >

@@ -95,7 +95,7 @@ function scoreClaim(
   // Layer 3 – corroboration
   const expertThumbs = (claim.reactions ?? []).filter((id) => id !== claim.author && people.get(id)?.role === "expert");
   const thumbs = Math.min(expertThumbs.length, POINTS.maxExpertReactions);
-  if (thumbs) add("corroboration", `${thumbs}× expert 👍`, `👍 from ${thumbs} expert${thumbs > 1 ? "s" : ""}`, thumbs * POINTS.expertReaction);
+  if (thumbs) add("corroboration", `${thumbs}× expert approval`, `Approved by ${thumbs} expert${thumbs > 1 ? "s" : ""}`, thumbs * POINTS.expertReaction);
   const agreeing = isOfficial ? 0 : new Set(
     siblings
       .filter(

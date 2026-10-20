@@ -8,7 +8,8 @@ import { store } from "@/lib/store";
 
 // __Host- prefix in production: the browser only accepts it over HTTPS, with Secure, Path=/ and no Domain.
 export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-session" : "session";
-export const SESSION_TTL_S = 8 * 60 * 60;
+// 8 hours by default; SESSION_HOURS can stretch it for a demo machine (bounded to 30 days).
+export const SESSION_TTL_S = Math.min(Math.max(Number(process.env.SESSION_HOURS) || 8, 1), 720) * 60 * 60;
 
 export const cookieOptions = {
   httpOnly: true,

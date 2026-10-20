@@ -2,6 +2,7 @@ import "server-only";
 import { LAYERS, evaluateFact, type Claim, type Context, type Evidence, type FactStatus, type Feedback, type KnowledgeBase, type Person } from "@/trust-engine";
 import { allFeedback, kb } from "@/lib/trust-server";
 import { store } from "@/lib/store";
+import { ensureDemoMorning } from "@/lib/demo-seed";
 
 // The living part of the brain: claims learned from everyday work, and a ledger of every score change.
 // Both live in the shared store (Upstash Redis in production, memory locally).
@@ -31,6 +32,7 @@ export async function retractions(): Promise<Retraction[]> {
 }
 
 export async function liveKb(): Promise<KnowledgeBase> {
+  await ensureDemoMorning();
   const [live, gone] = await Promise.all([liveClaims(), retractions()]);
   const ids = new Set(kb.claims.map((c) => c.id));
   const removed = new Set(gone.map((r) => r.claimId));
@@ -122,13 +124,14 @@ export async function recordChange(opts: {
   feedbackBefore?: Feedback[];
   now: Date;
   explain?: string; // overrides the generated sentence, e.g. for a removal
+  at?: Date; // when it happened, if not now (the demo morning)
   replaces?: string;
 }): Promise<LedgerEntry> {
   const fbAfter = await allFeedback();
   const fbBefore = opts.feedbackBefore ?? fbAfter;
   const b = snapshot(opts.before, opts.claim, fbBefore, opts.now);
   const a = snapshot(opts.after, opts.claim, fbAfter, opts.now);
-  const at = new Date().toISOString();
+  const at = (opts.at ?? new Date()).toISOString();
   const entry: LedgerEntry = {
     id: `${at}-${opts.claim.id}-${opts.kind}`,
     at,
@@ -159,6 +162,7 @@ export async function recordChange(opts: {
 }
 
 export async function ledger(): Promise<LedgerEntry[]> {
+  await ensureDemoMorning();
   return (await store.hvals("ledger")).map((v) => JSON.parse(v) as LedgerEntry).sort((x, y) => y.at.localeCompare(x.at));
 }
 

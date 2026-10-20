@@ -29,7 +29,7 @@ export async function allDocs(): Promise<StoredDoc[]> {
 const save = (d: StoredDoc) => store.hset("documents", d.id, JSON.stringify(d));
 const isExpert = (p: Person) => p.role === "expert";
 
-export async function addDocument(user: Person, title: string, text: string): Promise<{ ok: true; doc: StoredDoc } | { ok: false; status: number; error: string }> {
+export async function addDocument(user: Person, title: string, text: string, at?: Date): Promise<{ ok: true; doc: StoredDoc } | { ok: false; status: number; error: string }> {
   const k = await liveKb();
   const read = readDocument({ title, text }, user, k, now());
   // Only documents about a client you work on.
@@ -55,7 +55,7 @@ export async function addDocument(user: Person, title: string, text: string): Pr
     changes,
     claimIds: read.claims.map((c) => c.id),
     uploadedBy: user.id,
-    uploadedAt: new Date().toISOString(),
+    uploadedAt: (at ?? new Date()).toISOString(),
     status: "pending",
   };
   let before = k;
@@ -63,7 +63,7 @@ export async function addDocument(user: Person, title: string, text: string): Pr
     if (before.claims.some((x) => x.id === c.id)) continue;
     await saveLiveClaim(c, user.id);
     const after = { ...before, claims: [...before.claims, c] };
-    await recordChange({ kind: "learned", actor: user.id, claim: c, before, after, now: now() });
+    await recordChange({ kind: "learned", actor: user.id, claim: c, before, after, now: now(), at });
     before = after;
   }
   await save(doc);

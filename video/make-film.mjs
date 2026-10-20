@@ -1,5 +1,6 @@
 // One-minute silent demo film for the pitch (no titles, no music: we talk over it).
-// A team meeting with the mascot, then the real Company brain learning from it and answering a colleague.
+// A meeting with the mascot -> the brain learns by itself -> Ilke confirms once -> Noah's email is corrected
+// by the mascot -> the answer, why, and whether it will hold. Every value comes from the running app.
 //   PREVIEW=1 node make-film.mjs -> key frames in out/keys/
 //   node make-film.mjs           -> out/film-silent.mp4
 // Needs the app running locally (npm run dev -- -p 3200) with demo accounts jan, sofie and tom.
@@ -9,6 +10,8 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import ffmpegPath from "ffmpeg-static";
+import { createRequire } from "node:module";
+import { request } from "playwright";
 
 const BASE = process.env.BASE || "http://localhost:3200";
 const FPS = 25, W = 1440, H = 810, DSF = 4 / 3;
@@ -20,12 +23,33 @@ fs.mkdirSync("out/keys", { recursive: true });
 const PASSWORDS = Object.fromEntries((process.env.DEMO_PASSWORDS || "").split(",").filter(Boolean).map((p) => p.split(":")));
 const TRANSCRIPT =
   "Tom Claes: Students can work 600 hours a year, right?\nJan Wouters: For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law.";
-const QUESTION = "How many holiday days do employees get at Brouwerij De Kroon?";
+const MAIL = "Dear HR team,\n\nGood news for next year: at Brouwerij De Kroon, full-time employees get 20 holiday days.\n\nKind regards,\nNoah";
 
 // ---------- browser ----------
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: DSF });
 await context.addInitScript(() => {
+  // On screen, the demo personas carry the names of the people on stage (like the mascot's stage names).
+  const NAMES = [[/Jan Wouters/g, "Ilke"], [/Tom Claes/g, "Isak"], [/Sofie Maes/g, "Noah"], [/\bJan\b(?!\s*\d)(?!uary)/g, "Ilke"], [/\bTom\b/g, "Isak"], [/\bSofie\b/g, "Noah"]];
+  const INITIALS = { JW: "IS", TC: "IA", SM: "NG" };
+  const relabel = (root) => {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      if (/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode?.nodeName || "") || n.parentNode?.closest?.("svg")) continue; // charts say "Jan 2027"
+      let v = n.nodeValue;
+      if (INITIALS[v.trim()]) v = v.replace(v.trim(), INITIALS[v.trim()]);
+      for (const [re, to] of NAMES) v = v.replace(re, to);
+      if (v !== n.nodeValue) n.nodeValue = v;
+    }
+  };
+  if (location.pathname !== "/__stage") {
+    const start = () => {
+      relabel(document.body);
+      new MutationObserver(() => relabel(document.body)).observe(document.body, { subtree: true, childList: true, characterData: true });
+    };
+    if (document.body) start();
+    else document.addEventListener("DOMContentLoaded", start);
+  }
   // The mascot page normally talks to Electron. Here a stub lets the film send it the same events.
   if (location.pathname.startsWith("/__mascot/")) {
     const subs = {};
@@ -33,12 +57,13 @@ await context.addInitScript(() => {
     const noop = () => {};
     window.__emit = (ch, data) => subs[ch] && subs[ch](data);
     window.mascot = new Proxy(
-      { accounts: async () => null, ask: async () => ({}), share: async () => ({}), answerQuestion: async () => ({ ok: true }) },
+      { accounts: async () => null, ask: async () => ({}), share: async () => ({}), answerQuestion: async () => ({ ok: true }),
+        fix: (from, to) => window.parent.__onFix && window.parent.__onFix(from, to) },
       { get: (t, k) => (k in t ? t[k] : String(k).startsWith("on") ? on("mascot:" + String(k).slice(2).toLowerCase()) : noop) },
     );
     return;
   }
-  if (location.pathname === "/__stage" || location.pathname === "/__meeting") return;
+  if (location.pathname === "/__stage" || location.pathname.startsWith("/__mascot/")) return;
   const setup = () => {
     if (!document.body || document.getElementById("__cur")) return;
     const st = document.createElement("style");
@@ -76,6 +101,7 @@ await context.route(`${BASE}/**`, async (route) => {
   const url = new URL(route.request().url());
   if (url.pathname === "/__stage") return route.fulfill({ contentType: "text/html", body: fs.readFileSync("stage.html", "utf8") });
   if (url.pathname === "/__meeting") return route.fulfill({ contentType: "text/html", body: fs.readFileSync("meeting.html", "utf8") });
+  if (url.pathname === "/__email") return route.fulfill({ contentType: "text/html", body: fs.readFileSync("email.html", "utf8") });
   if (url.pathname.startsWith("/__mascot/")) {
     const file = path.join(MASCOT_DIR, path.basename(url.pathname));
     const type = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript" }[path.extname(file)] || "application/octet-stream";
@@ -246,119 +272,166 @@ async function goTo(url, label, ready) {
   await fade("black", 1, 0, now(), 0.35);
 }
 
-// ================= 1. The meeting (0–18) =================
+
+// The mascot's own brain module (mascot/brain.js), signed in as Noah's demo account: its checks and fixes are the real ones.
+process.env.BRAIN_URL = BASE;
+process.env.BRAIN_USER = "sofie";
+process.env.BRAIN_PASSWORD = PASSWORDS.sofie || "";
+const brain = createRequire(import.meta.url)("../mascot/brain.js");
+// The meeting tool's side: hands the transcript (with speaker names) to the brain's ingest route.
+const meetingTool = await request.newContext({ baseURL: BASE, extraHTTPHeaders: { origin: BASE } });
+if (!(await meetingTool.post("/api/auth/login", { data: { username: "tom", password: PASSWORDS.tom } })).ok()) throw new Error("meeting tool sign-in failed");
+
+// Click an element inside the mascot (an iframe inside the current page), with the cursor.
+async function clickMascot(sel, sec = 0.6) {
+  const frameBox = await L("#m").evaluate((el) => { const b = el.getBoundingClientRect(); return { x: b.x, y: b.y }; });
+  const inner = app.frameLocator("#m").locator(sel);
+  const r = await inner.evaluate((el) => { const b = el.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
+  const to = { x: frameBox.x + r.x, y: frameBox.y + r.y };
+  const from = cursor.x == null ? { x: to.x - 220, y: to.y + 160 } : { ...cursor };
+  const n = Math.max(1, Math.round(sec * FPS));
+  for (let i = 1; i <= n; i++) {
+    const k = ease(i / n);
+    cursor.x = from.x + (to.x - from.x) * k;
+    cursor.y = from.y + (to.y - from.y) * k;
+    await shot();
+  }
+  ring = { x: cursor.x, y: cursor.y, f0: frame };
+  await inner.evaluate((el) => el.click());
+}
+
+// ================= 1. The meeting (0–16): silent until something is wrong =================
 await mascot("mascot:online", true);
 await mascot("mascot:context", { context: "meeting", mode: "auto", talk: false });
 await cam({ px: 640, py: 378, sx: 720, sy: 430, z: 0.86, rx: 10, ry: -6, y: 40 }, 0, 0.01);
 await fade("black", 1, 0, 0.2, 1.2);
 await cam(WIDE, 0.2, 2.2);
-await until(1.6);
+await until(1.4);
 await key("1-meeting");
-await speak("tom", "Students can work 600 hours a year, right?", 2.6);
-await until(4.6);
+const heardLine = "Students can work 600 hours a year, right?";
+await speak("tom", heardLine, 2.6);
+await until(4.4);
 await mascot("mascot:thinking");
-await focus(L("#m"), 1.55, 4.8, 1.2, { sx: 900, sy: 360 });
-await until(5.6);
-await mascot("mascot:check", {
-  ok: false, where: "meeting", key: "student-hours", said: "600 hours", value: "650 hours",
-  label: "Student work: hours per year at reduced social security", score: 96, source: "Official: student work quota",
-});
-await until(6.2);
+const correction = await brain.check(heardLine);
+if (correction.ok) throw new Error("the mascot did not flag 600 hours");
+await focus(L("#m"), 1.55, 4.6, 1.2, { sx: 900, sy: 360 });
+await until(5.4);
+await mascot("mascot:check", { ...correction, where: "meeting" });
+await until(6.0);
 await mascot("mascot:speak", { text: "Quick correction", audio: null });
 await meeting().evaluate(() => window.__say(null));
-await until(8.5);
+await until(8.2);
 await key("2-correction");
-await until(10.4);
+await until(9.8);
 await mascot("mascot:check", { ok: true });
-await cam(WIDE, 10.4, 1.2);
-await until(11.0);
-await focus(L("#cap"), 1.3, 12.2, 2.0, { sx: 760, sy: 500 });
-await speak("jan", "For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law.", 4.2);
-await until(16.0);
-await key("3-jan");
+await cam(WIDE, 9.8, 1.2);
+await until(10.4);
+await focus(L("#cap"), 1.3, 11.4, 1.8, { sx: 760, sy: 500 });
+await speak("jan", "For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law.", 4.0);
+await until(14.8);
+await key("3-ilke");
 await meeting().evaluate(() => { window.__say(null); window.__toast(true); });
-await cam(WIDE, 16.0, 1.0);
-await until(17.8);
+await cam(WIDE, 14.8, 1.0);
+await until(16.2);
 await key("4-ended");
 
-// ================= 2. The brain learns (18–27), as Tom, who ran the meeting =================
-await signIn("tom");
-await goTo("/loop", "company-brain · Live loop", () => app.getByRole("button", { name: "Import" }).waitFor({ timeout: 500 }));
-await cam(WIDE, now(), 0.01);
-await until(now() + 1.2);
-// Nobody pastes anything: the meeting tool hands the transcript (with speaker names) to the brain,
-// through the same ingest route a Teams connector would call. The page picks it up on its next poll.
+// ================= 2. The brain learns by itself; Ilke confirms once (16–28) =================
+await signIn("jan");
+await goTo("/loop", "company-brain · What changed today", () => app.getByRole("heading", { name: /What changed today/ }).waitFor({ timeout: 500 }));
+await until(now() + 0.8);
 {
-  const r = await page.request.post(BASE + "/api/brain/ingest", {
-    headers: { origin: BASE },
-    data: { channel: "meeting", text: TRANSCRIPT, context: { country: "BE", pc: "200" } },
-  });
+  const r = await meetingTool.post("/api/brain/ingest", { data: { channel: "meeting", text: TRANSCRIPT, context: { country: "BE", pc: "200" } } });
   if (!r.ok()) throw new Error("ingest failed " + r.status());
 }
-const waiting = app.getByText("Waiting for Jan", { exact: true });
-while (!(await waiting.isVisible())) await shot();
-cursor.x = cursor.y = null;
-const heard = waiting.locator("xpath=ancestor::*[contains(., 'we agreed 22')][1]");
-await cam(WIDE, now(), 0.6);
-await bring(heard, 0.6);
-await focus(heard, 1.45, now(), 1.0, { sx: 720, sy: 420 });
-await heard.evaluate((el) => el.classList.add("__hl"));
+const yes = app.getByRole("button", { name: /Looks right|That's right/ }).first();
+while (!(await yes.isVisible())) await shot();
+await until(now() + 0.6);
+// Both statements arrived. Isak's guess goes nowhere (the law answers it); only Ilke's needs Ilke.
+const feed = app.getByText(/Students can work 600 hours/).last().locator("xpath=ancestor::*[contains(., 'we agreed 22')][1]");
+await bring(feed, 0.6);
+await focus(feed, 1.05, now(), 1.0, { sx: 720, sy: 420 });
 await until(now() + 3.0);
-await key("5-learned-50");
-
-// ================= 3. Jan confirms in one click =================
-await signIn("jan");
-await goTo("/loop", "company-brain · Live loop", () => app.getByRole("button", { name: /That's right/ }).waitFor({ timeout: 500 }));
-const yes = app.getByRole("button", { name: /That's right/ });
-await bring(yes, 0);
-await focus(yes, 1.45, now(), 1.1, { sx: 760, sy: 600 });
+await key("5-heard");
+await cam(WIDE, now(), 0.6);
+await bring(yes, 0.5);
+await focus(yes, 1.45, now(), 1.0, { sx: 760, sy: 600 });
 await yes.evaluate((el) => el.parentElement?.parentElement?.classList.add("__hl"));
-await until(now() + 1.6);
-await key("6-jan-question");
-await click(yes, 0.7);
-const confirmed = app.getByText("Jan Wouters confirmed it");
+await until(now() + 1.8);
+await key("6-ilke-confirm");
+await click(yes, 0.6);
+const confirmed = app.getByText(/confirmed it/).first();
 while (!(await confirmed.isVisible())) await shot();
 cursor.x = cursor.y = null;
-const change = confirmed.locator("xpath=ancestor::*[contains(., '+47') or contains(., 'pts')][1]");
+const change = confirmed.locator("xpath=ancestor::*[contains(., '22 days')][1]");
 await cam(WIDE, now(), 0.5);
 await bring(change, 0.5);
-await focus(confirmed.locator("xpath=ancestor::*[contains(., '22 days')][1]"), 1.3, now(), 1.0, { sx: 720, sy: 430 });
+await focus(change, 1.3, now(), 1.0, { sx: 720, sy: 430 });
 await change.evaluate((el) => el.classList.add("__hl"));
-await until(now() + 3.0);
-await key("7-jan-97");
+await until(now() + 2.4);
+await key("7-trusted");
 
-// ================= 4. A week later: Sofie asks (35–60) =================
+// ================= 3. A week later: Noah writes to the client, the mascot steps in (28–42) =================
+await goTo("/__email", "Mail · New message", () => app.locator("#m").waitFor({ timeout: 500 }));
+await page.waitForTimeout(800);
+await mascot("mascot:online", true);
+await mascot("mascot:context", { context: "email", mode: "auto", talk: false });
+await focus(L(".mail"), 1.12, now(), 0.8, { sx: 700, sy: 420 });
+{
+  const n = Math.round(3.4 * FPS);
+  for (let i = 1; i <= n; i++) {
+    await app.evaluate((t) => window.__type(t), MAIL.slice(0, Math.round((MAIL.length * i) / n)));
+    await shot();
+  }
+}
+await until(now() + 0.5);
+await mascot("mascot:thinking");
+brain.useAccount("sofie", PASSWORDS.sofie); // fresh caches: the answer changed since the meeting
+const issue = await brain.check(MAIL);
+if (issue.ok || issue.value !== "22 days") throw new Error("the mascot did not flag the email: " + JSON.stringify(issue));
+await until(now() + 0.6);
+await mascot("mascot:check", { ...issue, where: "email" });
+await app.evaluate((w) => window.__mark(w, false), issue.said);
+await cam({ px: 900, py: 400, z: 1.25, sx: 760, sy: 420, ...FLAT }, now(), 1.0);
+await until(now() + 3.4);
+await key("8-email-warning");
+await clickMascot("#fix", 0.7);
+const fixed = await brain.corrected(MAIL);
+if (!fixed.text.includes("22 holiday days")) throw new Error("fix did not produce 22 days");
+await until(now() + 0.3);
+await mascot("mascot:fixed", { count: 1 });
+cursor.x = cursor.y = null;
+await cam({ px: 860, py: 420, z: 1.12, sx: 720, sy: 420, ...FLAT }, now(), 0.9);
+await until(now() + 2.0);
+await key("9-email-fixed");
+
+// ================= 4. Why 22? The answer, who knows, and whether it will hold (42–60) =================
 await signIn("sofie");
-await goTo("/", "company-brain · Ask", () => app.locator("textarea, input[type=text]").first().waitFor({ timeout: 500 }));
-const input = L("textarea, input[type=text]").first();
-await focus(input, 1.3, now(), 1.0, { sx: 720, sy: 420 });
-await click(input, 0.6);
-await type(input, QUESTION, 2.4);
-await click(app.getByRole("button", { name: "Ask", exact: true }), 0.5);
-await cam(WIDE, now(), 0.8);
-await until(now() + 3.0);
-await key("8-reading");
-const skip = app.getByText("Skip to the answer");
-if (await skip.isVisible()) await skip.evaluate((el) => el.click());
+const link = new URL(brain.webLink(`${issue.label} for ${issue.client}`, issue.client)).search;
+await goTo("/" + link, "company-brain · Ask", () => app.getByText("Skip to the answer").waitFor({ timeout: 500 }));
+await until(now() + 1.6);
+await app.getByText("Skip to the answer").evaluate((el) => el.click()).catch(() => {});
 const answer = app.getByText("22 days", { exact: true }).first();
 while (!(await answer.isVisible())) await shot();
 await app.evaluate(() => window.scrollTo(0, 0));
-cursor.x = cursor.y = null;
-const card = answer.locator("xpath=ancestor::div[.//*[contains(text(),'Ask Jan to confirm')]][1]");
-await focus(card, 1.25, now(), 1.2, { sx: 720, sy: 430 });
+const card = answer.locator("xpath=ancestor::div[.//*[contains(text(),'to confirm')]][1]");
+await focus(card, 1.25, now(), 1.0, { sx: 720, sy: 430 });
 await until(now() + 3.6);
-await key("9-answer");
-await focus(app.getByText(/we agreed 22 holiday days/).first(), 1.6, now(), 1.2, { sx: 720, sy: 420 });
+await key("10-answer");
+const hold = app.getByText("Will it hold?").first();
+await cam(WIDE, now(), 0.5);
+await bring(hold, 0.7);
+await focus(hold.locator("xpath=.."), 1.25, now(), 1.0, { sx: 720, sy: 420 });
+await until(now() + 3.0);
+await key("11-hold");
+const contact = app.getByText(/Contact/).filter({ hasText: "Ilke" }).first();
+await cam(WIDE, now(), 0.5);
+await bring(contact, 0.7);
+await focus(contact.locator("xpath=ancestor::*[contains(., 'has left')][1]"), 1.2, now(), 1.0, { sx: 720, sy: 430 });
 await until(now() + 3.2);
-await key("10-quote");
-const contact = app.getByText(/Contact/).filter({ hasText: "Jan Wouters" }).first();
-await cam(WIDE, now(), 0.6);
-await bring(contact, 0.8);
-await focus(contact, 1.5, now(), 1.4, { sx: 720, sy: 420 });
-await until(now() + 3.4);
-await key("11-contact");
-await fade("black", 0, 1, END - 1.0, 1.0);
-await until(END);
+await key("12-who");
+const endAt = Math.max(END, now() + 1.2);
+await fade("black", 0, 1, endAt - 1.0, 1.0);
+await until(endAt);
 
 await browser.close();
 if (PREVIEW) process.exit(0);

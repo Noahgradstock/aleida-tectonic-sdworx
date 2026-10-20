@@ -32,8 +32,8 @@
 <body>
   <div class="top"><b>Payroll BE · weekly</b><span class="t" id="clock">10:02</span><span class="rec"><i></i>Transcript on</span></div>
   <div class="grid">
-    <div class="tile" id="tom"><div class="av" style="background:#c79a5b">TC</div><div class="name">Tom Claes<small>new hire</small></div></div>
-    <div class="tile" id="jan"><div class="av" style="background:#4f7bd9">JW</div><div class="name">Jan Wouters<small>payroll expert</small></div></div>
+    <div class="tile" id="tom"><div class="av" style="background:#c79a5b">IA</div><div class="name">Isak<small>new hire</small></div></div>
+    <div class="tile" id="jan"><div class="av" style="background:#4f7bd9">IS</div><div class="name">Ilke<small>payroll expert</small></div></div>
   </div>
   <div class="cap" id="cap"><span id="who"></span><div id="said"></div></div>
   <div class="bar"><div></div><div></div><div></div><div class="end"></div></div>
@@ -45,7 +45,7 @@
   window.__say = (who, text) => {
     for (const id of ["tom", "jan"]) $(id).classList.toggle("on", id === who);
     $("cap").classList.toggle("on", !!who);
-    if (who) { $("who").textContent = who === "tom" ? "Tom Claes" : "Jan Wouters"; $("said").textContent = text; }
+    if (who) { $("who").textContent = who === "tom" ? "Isak" : "Ilke"; $("said").textContent = text; }
   };
   window.__toast = (on) => $("toast").classList.toggle("on", on);
   window.__mascot = (ch, data) => $("m").contentWindow.__emit(ch, data);

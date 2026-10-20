@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; background: #eef0f4; font-family: -apple-system, system-ui, sans-serif; color: #1f2a3a; }
+  .side { position: absolute; left: 0; top: 0; bottom: 0; width: 220px; background: #e4e7ee; padding: 22px 16px; font-size: 14px; color: #5f6b7a; }
+  .side b { display: block; color: #1f2a3a; margin-bottom: 18px; font-size: 15px; }
+  .side div { padding: 8px 10px; border-radius: 8px; margin-bottom: 4px; }
+  .side .on { background: #fff; color: #1f2a3a; font-weight: 600; }
+  .mail { position: absolute; left: 250px; top: 28px; width: 700px; height: 600px; background: #fff; border-radius: 14px; box-shadow: 0 20px 50px rgba(20,32,58,.16); overflow: hidden; }
+  .bar { height: 44px; border-bottom: 1px solid #eceef2; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #5f6b7a; }
+  .row { display: flex; gap: 12px; padding: 12px 24px; border-bottom: 1px solid #f0f2f5; font-size: 15px; }
+  .row span { color: #8a94a3; width: 64px; }
+  #body { padding: 22px 24px; font-size: 18px; line-height: 1.6; white-space: pre-wrap; min-height: 300px; }
+  #body mark { background: #FFF1D6; color: inherit; border-radius: 4px; padding: 0 2px; }
+  #body mark.ok { background: #E1F5EE; }
+  .caret { display: inline-block; width: 2px; height: 22px; background: #185FA5; vertical-align: -4px; margin-left: 1px; }
+  .foot { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 24px; border-top: 1px solid #eceef2; display: flex; justify-content: flex-end; }
+  .send { background: #185FA5; color: #fff; border: 0; border-radius: 8px; padding: 9px 20px; font-size: 14px; }
+  #m { position: absolute; right: 6px; bottom: 6px; width: 360px; height: 480px; border: 0; background: transparent; }
+</style>
+</head>
+<body>
+  <div class="side"><b>Mail</b><div>Inbox</div><div class="on">Drafts</div><div>Sent</div></div>
+  <div class="mail">
+    <div class="bar">New message</div>
+    <div class="row"><span>From</span>Noah · SD Worx payroll</div>
+    <div class="row"><span>To</span>HR · Brouwerij De Kroon NV</div>
+    <div class="row"><span>Subject</span>Holidays next year</div>
+    <div id="body"></div>
+    <div class="foot"><button class="send" type="button">Send</button></div>
+  </div>
+  <iframe id="m" src="/__mascot/index.html" allowtransparency="true"></iframe>
+<script>
+  let text = "", mark = null, caret = true;
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  function draw() {
+    let h = esc(text);
+    if (mark) h = h.replace(esc(mark.word), `<mark class="${mark.ok ? "ok" : ""}">${esc(mark.word)}</mark>`);
+    document.getElementById("body").innerHTML = h + (caret ? '<span class="caret"></span>' : "");
+  }
+  window.__type = (t) => { text = t; draw(); };
+  window.__mark = (word, ok) => { mark = word ? { word, ok } : null; draw(); };
+  window.__caret = (on) => { caret = on; draw(); };
+  window.__mascot = (ch, data) => document.getElementById("m").contentWindow.__emit(ch, data);
+  window.__text = () => text;
+  // The mascot's "Fix it" replaces the wrong value in this draft, as the real compose window does.
+  window.__onFix = (from, to) => { text = text.replace(from, to); mark = { word: to, ok: true }; draw(); };
+  draw();
+</script>
+</body>
+</html>

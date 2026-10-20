@@ -2,27 +2,79 @@
 
 # Company brain
 
-**One answer from policies, Teams, email and the law, and the reason you can trust it.**
+**A calm assistant on your desktop that knows what your company knows,<br>stays silent while you are right, and speaks up the moment you are not.**
 
-[Live demo](https://tavling-eight.vercel.app) · [Trust engine](src/trust-engine/README.md) · Tectonic Hackathon 2026 · SD Worx challenge
+[Live demo](https://tavling-eight.vercel.app) · [Desktop mascot](mascot/README.md) · [Trust engine](src/trust-engine/README.md) · [Pitch script](docs/pitch-script.md) · Tectonic Hackathon 2026 · SD Worx challenge
 
 Built by team Aleida.ai: Ilke Seynaeve, Isak Andersson, Noa Gradstock
 
-<img src="docs/3-answer.png" alt="The answer card: 8 weeks, trust score 96, and how the brain decided" width="760">
+<img src="docs/mascot-warning.png" alt="The desktop mascot in its SD Worx cap, warning that 20 holiday days is wrong for Brouwerij De Kroon: the trusted value is 22 days" width="360">
 
 </div>
 
-## The problem
+## The challenge
 
-A client asks an urgent payroll question. The answer is spread across a policy, an old manual, a Dutch guide, a Teams thread and a draft email, and they disagree. Search finds all of them, but it can't tell you which one to trust.
+> **Can your solution stay trusted without becoming another task?**
+> Find it. Understand it. Trust it. Keep it trusted. Make it transparent. Make it effortless.
 
-Company brain takes the consultant from *"I found something"* to *"I understand why I can rely on it"*.
+SD Worx doesn't have one mentor. It has ten thousand. Their knowledge lives in meetings, emails and people's heads, it goes out of date when the law changes, and it walks out the door when people leave. A wiki doesn't fix that: nobody maintains it.
+
+Our answer has two halves:
+
+1. **A desktop mascot** that lives in the corner of your screen. It reads trusted answers *down* while you work and only interrupts when what you write or say disagrees with them. "Think electricity, think wifi": invisible when things are right, clear when you need to act.
+2. **Company brain**, the trust engine behind it. Every answer has a score, a source, a verbatim quote and the people behind it, and it keeps itself up to date from everyday work, asking a human only when their answer would change the outcome.
+
+## The circle: knowledge goes up, comes down, stays trusted
+
+```mermaid
+flowchart LR
+    A["Ilke (expert) writes to a client:<br/>'22 holiday days for De Kroon'"] -->|"mascot: the brain says 20.<br/>Ilke clicks 'I know better'"| B["One sentence shared<br/>for review (50%)"]
+    B -->|"Anna approves<br/>with one click"| C["Company brain<br/>22 days · 98%"]
+    C -->|"read down"| D["Isak (first week) writes<br/>'20 holiday days'"]
+    D -->|"mascot turns amber<br/>'Hey SD Worx, fix it'"| E["Email says 22 days"]
+```
+
+| Step | What happens | Who does anything |
+|---|---|---|
+| **Up** | Ilke writes "22 holiday days" in an email to Brouwerij De Kroon. Her mascot sees the brain says 20 (the law) and asks. She clicks **I know better**: that one sentence, and nothing else from her email, is shared for review. | Ilke: one click |
+| **Approve** | The brain asks the best available colleague (never the author) to confirm. Until then the claim is capped at 50% and changes nobody's answer. Anna approves: 22 days for De Kroon, 98%. | Anna: one click |
+| **Down** | A week later Isak, new on the job, writes "20 holiday days" to De Kroon. His mascot turns amber: *"For Brouwerij De Kroon it's 22 days."* He says **"Hey SD Worx, fix it"** and the draft is corrected. Other clients keep 20. | Nobody |
+| **Tomorrow** | When the law changes, older answers lose trust on their own; when a meeting says something wrong, the mascot corrects it out loud; when something is unclear, one person gets one question. | Only when it changes the outcome |
+
+## Meet the mascot
+
+A blob in an SD Worx cap, always on top, in the corner of the screen. Built with Electron for macOS ([mascot/](mascot/README.md)).
+
+| It knows where you are | What it does | Does it speak? |
+|---|---|---|
+| ✉️ **Email** (Mail in front) | Reads the draft you are writing and checks every sentence that states a value (€, %, days, weeks, hours) against the brain, including client-specific agreements when the email names the client. Amber card with **Fix it**, **I know better** and **See in Company brain**. | Only when you talk to it |
+| 🎥 **Meeting** (Teams, Meet, Zoom in front) | Listens for wrong values and speaks up: *"Quick correction: 600 hours is outdated. It's 650 hours."* | Corrections and answers |
+| 🎙️ **"Hey SD Worx"** (anywhere) | Opens a 30-second conversation: *"what's the right answer?"*, *"where does that come from?"*, *"how did you get this?"*, *"who should I ask?"*, *"fix my email"*. Answers on screen and out loud (ElevenLabs). | Yes |
+
+**Speed:** all trusted facts are loaded when the mascot starts and refreshed every 5 minutes, so a check runs locally in milliseconds; speech is cut as soon as you pause.
+**Calm by design:** offline it sleeps (grey, eyes closed, mic off). Online it is silent until something is wrong. A warning stays exactly as long as the mistake is in your text.
+
+## Privacy: it reads down, it never leaks up
+
+The mascot sits next to your email, so it has to be trustworthy itself.
+
+| Principle | How it is built |
+|---|---|
+| **Off by default** | It starts offline: no reading, no listening. You switch it online. |
+| **Reads down, never shares on its own** | Checking your email only *downloads* trusted answers; nothing you write is sent to the brain. The check runs on your device. |
+| **Shares one sentence, only when you click** | **I know better** / **Share for review** sends exactly that sentence, never the email, the recipients or the thread. |
+| **Nothing counts until a colleague approves it** | Shared knowledge is capped at 50% and changes nobody's answer until an expert other than you approves it (`review` rule in the trust engine). |
+| **New topics stay on your device** | A value about a topic the brain does not know yet is kept as a local suggestion for the knowledge team, not uploaded. |
+| **Only your own writing** | In Mail it reads the message body you are writing, not your inbox, To or Subject. It does not read other apps' messages. |
+| **No surveillance** | Outside meetings the microphone only reacts to "Hey SD Worx". Meeting audio is never stored and never put in anyone's name: speakers come from the meeting tool, not from guessing. |
+| **Stores claims, not text** | The brain keeps the verbatim sentence as evidence for a claim, never whole emails. Personal data is masked before any model call. |
+| **AI reads, code decides** | Claude Haiku only classifies what you meant from a fixed list; every answer, score and correction is built by deterministic code from sources. |
 
 ## Live loop (final)
 
 The final case asks: *"Can your solution stay trusted without becoming another task?"* and *"Could your solution learn from signals already created through everyday work?"* In the qualifier, claims were entered by hand and votes were the only feedback. Now the brain learns from work that already happens:
 
-1. **Everyday work goes in.** A meeting transcript, a Teams message or an email (`POST /api/brain/ingest`; on `/loop` you paste it, and the desktop mascot in `mascot/` is being connected to send it in the background).
+1. **Everyday work goes in.** A meeting transcript, a Teams message or an email (`POST /api/brain/ingest`). On `/loop` you paste it; the desktop mascot sends a single sentence only when the user clicks **Share for review** (`review: true`: capped at 50% until an expert other than the author approves it).
 2. **Code extracts claims, no AI.** A sentence becomes a claim only if it states a value, matches a known topic and uses the right unit. The quote is the sentence verbatim; the speaker, the scope (client, sector, country) and hedges ("I think…") are recorded.
 3. **The same six layers score it**, with new rules: something said in a meeting gets −0.3 and stays **capped at 50% until the speaker or an expert confirms it** with one click; hedged speech gets −1.
 4. **Every score change is logged** with the score before and after, for the claim and for the answer, and the exact points that moved it (`GET /api/brain/ledger`).
@@ -112,6 +164,8 @@ It prints a password per user and two lines, `SESSION_SECRET` and `AUTH_USERS`. 
 
 Optional: put `GEMINI_API_KEY=...` in `.env.local` for free-text questions. Without a key the app falls back to keyword matching and still works end to end.
 
+**Desktop mascot:** `cd mascot && npm install && npm start` (macOS). Put `BRAIN_URL=http://localhost:3000`, `BRAIN_USER` and `BRAIN_PASSWORD` in the repo's `.env` to use a local server with your own account (without them it is a read-only guest on the live demo). `ELEVENLABS_API_KEY` enables listening and the voice. Details and shortcuts: [mascot/README.md](mascot/README.md).
+
 **Live loop:** open http://localhost:3000/loop signed in as a real account (guests can read but not teach). Pick "Brouwerij De Kroon", keep the meeting transcript and click "Feed to the brain". Then sign in as `jan` and click "Still right" under his statement. Create the accounts with `node scripts/create-users.mjs sofie jan`. The full demo script is in [docs/context/12-live-loop.md](docs/context/12-live-loop.md).
 
 The live demo runs on Vercel (project `tavling`). Pushing to GitHub does not deploy automatically yet; run `vercel deploy --prod` from the repo folder. Environment variables (encrypted in the Vercel project): `SESSION_SECRET` and `AUTH_USERS` are required, otherwise every page redirects to a login that cannot succeed. Recommended: add Upstash Redis from the Vercel Marketplace, which sets `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Optional: `GEMINI_API_KEY`, and `GUEST_ACCESS=off` to disable guest access.
@@ -130,6 +184,7 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 - **Guest:** "Continue as guest" gives a read-only demo session. Guests can ask but not vote, and it can be switched off with `GUEST_ACCESS=off`.
 - **Shared state:** revoked sessions, rate limits, votes, learned claims and the score history live in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set (Vercel Marketplace, free tier), so every server instance sees the same state (`src/lib/store.ts`). Locally they are kept in memory. In production without Upstash the store fails closed (sessions and rate-limited routes are refused) unless `ALLOW_MEMORY_STORE=true` is set on purpose. Rate limits and the logout check also fail closed when the store is down.
 - **CSRF:** POST routes refuse requests whose `Origin` does not match the `Host` header, and browser requests marked cross-site.
+- **Desktop mascot:** Electron renderer pages run sandboxed with `contextIsolation`, no `nodeIntegration`, a strict CSP and no navigation or new windows; every IPC message checks its sender and validates input; only the main process talks to the network, and only to `BRAIN_URL` and ElevenLabs. It never sends what you write on its own: one sentence is shared only on "Share for review", as the signed-in user, and capped until an expert other than the author approves it. Keys stay in `.env`.
 - **AI privacy:** names, clients, ages and identifiers are masked before a question is sent to Gemini (`src/lib/privacy.ts`), and Gemini never sees the sources or scores anything.
 - **Headers:** `X-Frame-Options`, `Content-Security-Policy: frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS, no `X-Powered-By`, and `Cache-Control: private, no-store` on every API answer (`next.config.ts`). Logs record only the event, never error objects, bodies or prompts.
 - **Secrets:** no keys or passwords in the repo; all in environment variables, read only in modules marked `import "server-only"`.
@@ -146,12 +201,15 @@ Built for the checks of the Aikido AI Code Audit: authentication, authorization,
 | `src/lib/auth.ts`, `src/proxy.ts` | Sessions, passwords and the login gate (tests in `src/lib/auth.test.ts`) |
 | `scripts/create-users.mjs` | Creates demo accounts |
 | `src/lib/gemini-match.ts` | Gemini question routing |
+| `mascot/` | Desktop mascot (Electron): email and meeting checks, "Hey SD Worx" conversation, fix my email, share for review ([README](mascot/README.md), [demo lines](mascot/DEMO.md)) |
+| `docs/` | Final case, pitch script, trust loop algorithm design, context library (`docs/context/`) |
 | `data/salary/` | Fictional source files (policies, Teams exports, emails). The engine reads claims from `sources.json` and quotes from the files. The test questions in `sources.json` run as part of `npm test` |
 
 ## Unfinished
 
 - The base knowledge is listed by hand in `data/salary/sources.json` (the quotes are read from the files). New claims are learned from meetings, Teams and email with fixed rules (value, known topic, unit, speaker, scope, hedges). The AI gates from [docs/trusted-tomorrow-algorithm.md](docs/trusted-tomorrow-algorithm.md) that would also catch corrections, questions and new topics are not built.
-- There is no real Teams, Outlook or meeting-tool integration (Microsoft Graph). Text comes from the `/loop` page (connecting the desktop mascot is in progress); meeting speakers come from `Name:` labels in the transcript.
+- There is no real Teams, Outlook or meeting-tool integration (Microsoft Graph). The mascot reads Apple Mail drafts through macOS Accessibility and detects Teams, Meet and Zoom by the app in front; meeting speakers come from `Name:` labels in the transcript (`/loop`). The mascot's microphone hears only your side of a call.
+- The mascot is macOS only, and its check uses a fixed case (Belgium, PC 200) unless the text names a known client.
 - A learned claim waits for its speaker or an expert. Choosing who to ask, asking only when the answer would change the outcome, and a weekly question budget per person (lanes D4/D5 in the algorithm doc) are designed but not built. Best-before dates are not built either.
 - A wrongly extracted claim can only be voted down, not deleted.
 - Overtime and flexi-jobs have no data files yet and use mock claims from `src/trust-engine/mock/`. Sick leave has source files in `data/salary/sick-leave/` but its claims are not in `data/salary/sources.json` yet, so it still uses the mock claims.

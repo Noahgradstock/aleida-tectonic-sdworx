@@ -71,11 +71,9 @@ const MEETING_TAB = /\b(microsoft teams|teams|google meet|meet\.google|zoom)\b/i
 const BROWSERS = /safari|chrome|firefox|edge|arc|brave|opera/i;
 let frontWindow = "";
 const isMeeting = (app, win) => MEETING_APP.test(app) || (BROWSERS.test(app) && MEETING_TAB.test(win));
-const MEETING_LINGER_MS = 2 * 60 * 1000;
 let contextMode = "auto"; // auto | email | meeting
 let activeContext = "email";
 let frontApp = "";
-let lastMeetingSeen = 0;
 let talkMode = false; // conversation mode: no wake word needed (manual toggle, or 30 s after "Hey SD Worx")
 let convoUntil = 0;
 const CONVO_MS = 30000;
@@ -87,9 +85,8 @@ function openConversation() {
 }
 
 function updateContext() {
-  if (isMeeting(frontApp, frontWindow)) lastMeetingSeen = Date.now();
-  const next =
-    contextMode !== "auto" ? contextMode : Date.now() - lastMeetingSeen < MEETING_LINGER_MS ? "meeting" : "email";
+  // Follows the app in front right away: a meeting app or tab means meeting, anything else means email.
+  const next = contextMode !== "auto" ? contextMode : isMeeting(frontApp, frontWindow) ? "meeting" : "email";
   if (next !== activeContext) {
     activeContext = next;
     log("context:", next, `(${frontApp}${frontWindow ? ` · ${frontWindow.slice(0, 40)}` : ""})`);
@@ -309,7 +306,6 @@ ipcMain.on("mascot:toggle-talk", (event) => fromMascot(event) && toggleTalk());
 ipcMain.on("mascot:set-context", (event, mode) => {
   if (!fromMascot(event) || !["auto", "email", "meeting"].includes(mode)) return;
   contextMode = mode;
-  if (mode === "meeting") lastMeetingSeen = 0;
   updateContext();
 });
 
@@ -374,10 +370,8 @@ app.whenReady().then(() => {
   // Demo only (no Teams on this machine): force the meeting setting on and off. Normally it is always automatic.
   globalShortcut.register("CommandOrControl+Shift+T", () => {
     contextMode = contextMode === "meeting" ? "auto" : "meeting";
-    if (contextMode === "meeting") lastMeetingSeen = 0;
     updateContext();
   });
-  setInterval(() => online && updateContext(), 5000); // let the meeting setting expire
   // Close the conversation window after 30 s of quiet.
   let wasTalking = false;
   setInterval(() => {

@@ -90,3 +90,23 @@ button { font: inherit; cursor: pointer; }
 .speaking .bob { animation-duration: 2s; }
 @keyframes hop { 0% { transform: translateY(0); } 40% { transform: translateY(-14px) scale(.97, 1.04); } 100% { transform: translateY(0); } }
 @keyframes talk { from { transform: scaleY(1); } to { transform: scaleY(2.2) translateY(1px); } }
+
+/* Online / offline */
+.head-right { display: flex; align-items: center; gap: 6px; }
+.power { display: flex; cursor: pointer; }
+.power input { display: none; }
+.power input:checked + .sw { background: #1D9E75; }
+.power input:checked + .sw::after { transform: translateX(11px); }
+.offline .dot { background: #b4b2a9; }
+.offline .body { fill: #b9c2cc; }
+.offline .bob { animation-duration: 7s; }
+.offline .eye { animation: none; transform: scaleY(.12); }
+.offline .face circle[fill="#fff"] { opacity: 0; }
+.zzz { position: absolute; top: 18px; right: 4px; font-size: 15px; font-weight: 700; color: #8a94a3; opacity: 0; transition: opacity .3s; }
+.zzz span { font-size: 11px; vertical-align: super; }
+.offline .zzz { opacity: 1; animation: float 2.6s ease-in-out infinite; }
+.status-dot { position: absolute; bottom: 14px; right: 26px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #fff; background: #b4b2a9; transition: background .3s; }
+.stage:not(.offline) .status-dot { background: #1D9E75; }
+.warning .status-dot { background: #E24B4A; }
+.pill { margin-right: 22px; }
+@keyframes float { 0%, 100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-5px); opacity: .5; } }

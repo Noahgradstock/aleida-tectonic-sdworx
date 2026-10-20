@@ -34,7 +34,7 @@ async function speak(text) {
   const clean = text.slice(0, 600);
   if (hasKey()) {
     try {
-      const res = await fetch(`${API}/text-to-speech/${encodeURIComponent(VOICE)}?output_format=mp3_44100_128`, {
+      const res = await fetch(`${API}/text-to-speech/${encodeURIComponent(VOICE)}?output_format=mp3_22050_32&optimize_streaming_latency=3`, {
         method: "POST",
         headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json" },
         body: JSON.stringify({ text: clean, model_id: "eleven_flash_v2_5" }),

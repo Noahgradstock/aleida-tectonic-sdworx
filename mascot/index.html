@@ -10,17 +10,17 @@
   <div class="stage calm" id="stage">
     <div class="card hit" id="card" hidden>
       <div class="card-head">
-        <span class="brand"><span class="dot"></span>Company brain</span>
-        <button class="close" id="close" aria-label="Close">×</button>
-      </div>
-
-      <div class="modes">
-        <label class="mode"><input type="checkbox" id="mode-watch" /><span class="sw"></span><span><b>Email</b><small>Checks your writing</small></span></label>
-        <label class="mode"><input type="checkbox" id="mode-meeting" /><span class="sw"></span><span><b>Meeting</b><small>“Hey SD Worx”</small></span></label>
+        <span class="brand"><span class="dot"></span><span id="status-text">Offline</span></span>
+        <span class="head-right">
+          <label class="power" title="Online: checks what you write and listens for “Hey SD Worx”. Offline: sees and hears nothing.">
+            <input type="checkbox" id="online" /><span class="sw"></span>
+          </label>
+          <button class="close" id="close" aria-label="Close">×</button>
+        </span>
       </div>
 
       <form id="ask-form" class="ask">
-        <input id="question" type="text" maxlength="500" placeholder="Ask anything about payroll…" autocomplete="off" />
+        <input id="question" type="text" maxlength="500" placeholder="Ask me anything…" autocomplete="off" />
         <button type="submit" aria-label="Ask">↵</button>
       </form>
 
@@ -42,13 +42,14 @@
       </div>
 
       <div id="note" class="note" hidden></div>
-      <div id="live" class="live" hidden><span class="rec"></span><span id="live-text">Listening…</span></div>
       <button class="link" id="open-compose">Open demo email</button>
     </div>
 
-    <div class="pill hit" id="pill" hidden><span class="rec"></span><span id="pill-text">Listening</span></div>
+    <div class="pill" id="pill" hidden><span id="pill-text"></span></div>
     <div class="mascot hit" id="mascot" title="Click to ask · drag to move">
       <div class="thinking-dots"><span></span><span></span><span></span></div>
+      <div class="zzz">z<span>z</span></div>
+      <span class="status-dot"></span>
       <svg viewBox="0 0 160 160" aria-label="Company brain mascot">
         <defs>
           <linearGradient id="crown" x1="0" y1="0" x2="1" y2="1">

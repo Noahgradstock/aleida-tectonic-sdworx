@@ -1,17 +1,26 @@
-// Mascot page. Calm by default; it only asks for attention when something is wrong or you talk to it.
+// Mascot page. Offline: asleep, sees and hears nothing. Online: silent until something is wrong or you talk to it.
 const $ = (id) => document.getElementById(id);
 const stage = $("stage");
 const card = $("card");
 const audio = $("audio");
 let pendingFix = null;
-let meetingOn = false;
+let online = false;
+let mood = "calm";
 
 const STATUS_TEXT = { trusted: "Trusted", conflict: "Sources disagree", stale: "Needs a check", orphan: "No expert backing" };
-const WHERE = { email: "in your email", meeting: "in the meeting" };
+const WHERE = { email: "in your email", meeting: "just now" };
 
-function setMood(mood) {
-  const base = meetingOn && mood === "calm" ? "listening" : mood;
-  stage.className = `stage ${base}${mood === "warning" ? " warning-mode" : ""}`;
+function setMood(next) {
+  mood = next;
+  const base = !online && next === "calm" ? "offline" : next;
+  stage.className = `stage ${base}${next === "warning" ? " warning-mode" : ""}`;
+}
+
+function pill(text, ms = 2500) {
+  $("pill").hidden = !text;
+  $("pill-text").textContent = text || "";
+  clearTimeout(pill.t);
+  if (text && ms) pill.t = setTimeout(() => ($("pill").hidden = true), ms);
 }
 
 function show(section) {
@@ -26,7 +35,7 @@ function closeCard() {
   window.mascot.interactive(false);
 }
 
-// Clicks pass through the transparent window except over the blob, the pill and the card.
+// Clicks pass through the transparent window except over the blob and the card.
 for (const el of document.querySelectorAll(".hit")) {
   el.addEventListener("mouseenter", () => window.mascot.interactive(true));
   el.addEventListener("mouseleave", () => window.mascot.interactive(false));
@@ -46,11 +55,11 @@ window.addEventListener("mousemove", (e) => {
   window.mascot.move(dx, dy);
 });
 window.addEventListener("mouseup", () => {
-  if (drag && drag.moved < 4) toggleAsk();
+  if (drag && drag.moved < 4) toggleCard();
   drag = null;
 });
 
-function toggleAsk() {
+function toggleCard() {
   if (!card.hidden && $("warning").hidden) return closeCard();
   show(null);
   setMood("calm");
@@ -60,10 +69,21 @@ function toggleAsk() {
 
 $("close").addEventListener("click", closeCard);
 $("open-compose").addEventListener("click", () => window.mascot.openCompose());
-$("mode-watch").addEventListener("change", (e) => window.mascot.setMode("watch", e.target.checked));
-$("mode-meeting").addEventListener("change", (e) => window.mascot.setMode("meeting", e.target.checked));
+$("online").addEventListener("change", (e) => window.mascot.setOnline(e.target.checked));
+
+window.mascot.onOnline((on) => {
+  online = on;
+  $("online").checked = on;
+  $("status-text").textContent = on ? "Online" : "Offline";
+  pill(on ? "Online · say “Hey SD Worx”" : "Offline");
+  setMood("calm");
+});
 
 function renderAnswer(r) {
+  if (r.chat) {
+    $("note").textContent = r.chat;
+    return show("note");
+  }
   if (r.error || !r.matched) {
     $("note").textContent = typeof r.error === "string" ? r.error : r.message || "I don't know that one yet.";
     return show("note");
@@ -87,7 +107,7 @@ $("ask-form").addEventListener("submit", async (e) => {
   renderAnswer(r);
 });
 
-window.mascot.onToggleAsk(toggleAsk);
+window.mascot.onToggleAsk(toggleCard);
 window.mascot.onThinking(() => {
   if (card.hidden || !$("warning").hidden) setMood("thinking");
 });
@@ -96,7 +116,7 @@ window.mascot.onThinking(() => {
 window.mascot.onCheck((r) => {
   if (r.ok) {
     if (!$("warning").hidden) closeCard();
-    else setMood("calm");
+    else if (mood === "thinking") setMood("calm");
     return;
   }
   const spoken = r.where === "meeting";
@@ -109,24 +129,13 @@ window.mascot.onCheck((r) => {
   show("warning");
 });
 
-// Meeting mode
-window.mascot.onMeeting(({ on, voice }) => {
-  meetingOn = on;
-  $("mode-meeting").checked = on;
-  $("pill").hidden = !on;
-  $("live").hidden = !on;
-  $("pill-text").textContent = voice === false ? "Listening (no voice key)" : "Listening";
-  $("live-text").textContent = "Listening… say “Hey SD Worx” to ask.";
-  setMood("calm");
-});
-
-window.mascot.onHeard(({ text, error }) => {
-  $("live-text").textContent = error ? error : `“${text}”`;
+window.mascot.onHeard(({ error }) => {
+  if (error) pill(error, 4000);
 });
 
 window.mascot.onWake(() => {
   setMood("wake");
-  $("pill-text").textContent = "Yes? Ask me…";
+  pill("Yes? I'm listening…", 6000);
 });
 
 window.mascot.onAnswer((r) => {
@@ -135,10 +144,10 @@ window.mascot.onAnswer((r) => {
 });
 
 window.mascot.onSpeak(({ audio: b64 }) => {
-  $("pill-text").textContent = meetingOn ? "Listening" : "";
+  pill("");
   setMood("speaking");
   const done = () => setMood("calm");
-  if (!b64) return setTimeout(done, 4000);
+  if (!b64) return setTimeout(done, 3500);
   audio.src = `data:audio/mpeg;base64,${b64}`;
   audio.onended = done;
   audio.play().catch(done);

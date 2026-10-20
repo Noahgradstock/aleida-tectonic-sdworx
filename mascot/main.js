@@ -4,16 +4,20 @@ const path = require("node:path");
 const brain = require("./brain");
 const voice = require("./voice");
 const { createWatcher } = require("./watcher");
+const { smallTalk } = require("./smalltalk");
+
+const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 const SIZE = { width: 360, height: 480 };
 const SECURE = { contextIsolation: true, nodeIntegration: false, sandbox: true };
-const WAKE = /\b(?:hey|hi|hello|okay|ok)\b[\s,.!]*(?:s\.?\s*d\.?|es\s*de|esdee|sd)\s*(?:works?|worx|work)\b[\s,.!?:-]*(.*)$/i;
+const WAKE = /\b(?:hey|hi|hello|okay|ok)\b[\s,.!]*(?:(?:[a-z]{1,4}[\s.\-]*){1,2}(?:works?|worx|work|words?)|brainy|brain)\b[\s,.!?:\-]*(.*)$/i;
 const MAX_SEGMENT = 2 * 1024 * 1024;
 
 let mascot;
 let compose;
 let listener;
 let waitingForQuestion = false;
+let deafUntil = 0; // do not listen to our own voice
 
 function lockDown(win) {
   win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
@@ -82,17 +86,30 @@ async function startMeeting() {
   });
   listener.loadFile(path.join(__dirname, "listener.html"));
   lockDown(listener);
-  send("mascot:meeting", { on: true, voice: voice.hasKey() });
+  log("meeting listener started, voice key:", voice.hasKey());
 }
 
 function stopMeeting() {
   if (listener && !listener.isDestroyed()) listener.destroy();
   listener = null;
   waitingForQuestion = false;
-  send("mascot:meeting", { on: false });
+
+}
+
+async function say(text) {
+  const audio = await voice.speak(text);
+  const seconds = audio ? (audio.length * 0.75 * 8) / 32000 : text.length * 0.07;
+  deafUntil = Date.now() + seconds * 1000 + 700;
+  send("mascot:speak", { text, audio });
 }
 
 async function answerAloud(question) {
+  log("question:", question);
+  const chat = smallTalk(question);
+  if (chat) {
+    send("mascot:answer", { question, chat });
+    return say(chat);
+  }
   send("mascot:thinking");
   let r;
   try {
@@ -106,15 +123,17 @@ async function answerAloud(question) {
       ? "I don't have a trusted answer for that yet. I'll flag it for an expert."
       : `${r.label}: ${r.value.replace(/€\s?([\d.,]+)/, "$1 euros")}. ${r.score} percent trusted, from ${r.source}.${r.expert ? ` ${r.expert} is the expert.` : ""}`;
   send("mascot:answer", { question, ...r });
-  const audio = await voice.speak(spoken);
-  send("mascot:speak", { text: spoken, audio });
+  await say(spoken);
 }
 
 async function onSegment(buffer, mime) {
+  if (Date.now() < deafUntil) return;
   let text;
   try {
     text = await voice.transcribe(Buffer.from(buffer), mime);
+    log("heard:", JSON.stringify(text));
   } catch (e) {
+    log("speech-to-text error:", e.message);
     return send("mascot:heard", { error: voice.hasKey() ? "Speech-to-text failed" : "Add ELEVENLABS_API_KEY to .env to listen" });
   }
   if (!text) return;
@@ -153,14 +172,28 @@ ipcMain.on("mascot:move", (event, dx, dy) => {
 
 ipcMain.on("mascot:open-compose", (event) => fromMascot(event) && openCompose());
 
-ipcMain.on("mascot:set-mode", (event, mode, on) => {
-  if (!fromMascot(event) || typeof on !== "boolean") return;
-  if (mode === "meeting") on ? startMeeting() : stopMeeting();
-  if (mode === "watch") on ? watcher.start() : watcher.stop();
+// One switch: online = listens in meetings and checks what you write; offline = sees and hears nothing.
+let online = false;
+function setOnline(on) {
+  online = on;
+  log("online:", on);
+  if (on) {
+    startMeeting();
+    watcher.start();
+  } else {
+    stopMeeting();
+    watcher.stop();
+  }
+  send("mascot:online", on);
+}
+ipcMain.on("mascot:set-online", (event, on) => {
+  if (fromMascot(event) && typeof on === "boolean") setOnline(on);
 });
 
 ipcMain.handle("brain:ask", async (event, question) => {
   if (!fromMascot(event) || !isText(question, 500)) return { error: "Ask a short question." };
+  const chat = smallTalk(question);
+  if (chat) return { chat };
   try {
     return await brain.ask(question);
   } catch {
@@ -184,7 +217,9 @@ ipcMain.on("listener:segment", (event, buffer, mime) => {
 });
 
 ipcMain.on("listener:error", (event, message) => {
-  if (fromListener(event)) send("mascot:heard", { error: String(message).slice(0, 120) });
+  if (!fromListener(event)) return;
+  log("listener error:", message);
+  send("mascot:heard", { error: String(message).slice(0, 120) });
 });
 
 app.whenReady().then(() => {
@@ -195,9 +230,10 @@ app.whenReady().then(() => {
   );
   session.defaultSession.setPermissionCheckHandler((wc, permission) => permission === "media" && Boolean(listener) && wc === listener.webContents);
   createMascot();
+  brain.warmUp();
   globalShortcut.register("CommandOrControl+Shift+M", () => send("mascot:toggle-ask"));
   globalShortcut.register("CommandOrControl+Shift+E", openCompose);
-  globalShortcut.register("CommandOrControl+Shift+L", () => (listener ? stopMeeting() : startMeeting()));
+  globalShortcut.register("CommandOrControl+Shift+L", () => setOnline(!online));
 });
 
 app.on("will-quit", () => {

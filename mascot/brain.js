@@ -41,8 +41,14 @@ function summarise(r) {
   };
 }
 
+const cache = new Map();
 async function ask(question) {
-  return summarise(await post("/api/trust/ask", { question: question.slice(0, 500), context: CONTEXT }));
+  const key = question.toLowerCase().replace(/[^a-z0-9€%.,\s]/g, "").replace(/\s+/g, " ").trim();
+  if (cache.has(key)) return cache.get(key);
+  const r = summarise(await post("/api/trust/ask", { question: question.slice(0, 500), context: CONTEXT }));
+  if (cache.size > 200) cache.clear();
+  cache.set(key, r);
+  return r;
 }
 
 const norm = (s) => s.toLowerCase().replace(/€|euros?|eur\b/g, "").replace(/\s+/g, "").replace(",", ".");
@@ -61,4 +67,13 @@ async function check(text) {
   return { ok: true };
 }
 
-module.exports = { ask, check };
+// Signs in and wakes the deployment up front, so the first real question is fast.
+async function warmUp() {
+  try {
+    await ask("meal voucher");
+  } catch {
+    // Offline: the first question will retry.
+  }
+}
+
+module.exports = { ask, check, warmUp };

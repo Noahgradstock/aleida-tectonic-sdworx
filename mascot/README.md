@@ -16,8 +16,7 @@ npm start
 |---|---|
 | Click the blob (or `Cmd+Shift+M`) | Opens the card: ask a payroll question, get the trusted answer, score, source and expert |
 | Drag the blob | Moves it anywhere on screen |
-| Toggle **Email** in the card | Opt-in: reads the text field you are typing in, in the app in front (Mail, Outlook, Teams chat) every 2 s through macOS Accessibility, and warns on wrong values. macOS asks once for Accessibility permission. Nothing is stored |
-| Toggle **Meeting** (or `Cmd+Shift+L`) | Listens to your microphone in 4.5 s segments, transcribes them with ElevenLabs. Wrong values you *say* make the mascot warn. Say **"Hey SD Worx, …"** to ask a question: it answers on screen and out loud |
+| **Online switch** in the card (or `Cmd+Shift+L`) | **Offline** (default): the blob sleeps, sees and hears nothing. **Online**: it reads the text field you are typing in (Mail, Outlook, Teams chat, via macOS Accessibility) and listens to your microphone. Wrong values you write or say make it warn. Say **"Hey SD Worx, …"** to ask; it answers on screen and out loud. Small talk ("how are you", "what's your name") gets fixed, friendly replies |
 | `Cmd+Shift+E` or "Open demo email" | Opens a demo email window. Write e.g. "the employer part of the meal voucher is €6.91". After a short pause the mascot turns amber and warns; "Fix it" replaces the value |
 
 Clicks pass through the transparent area around the blob, so it never blocks the apps underneath.
@@ -27,6 +26,9 @@ Clicks pass through the transparent area around the blob, so it never blocks the
 Deterministic, no AI in the decision: each sentence that states a value (€, %, days, weeks, months) is sent to the trust engine, which matches the topic and returns the trusted answer. If the answer is trusted and the sentence's value differs, the mascot warns.
 
 ## Voice
+
+Listening uses voice-activity detection: an utterance is sent as soon as you pause (0.65 s of silence), silence is never sent, and the mascot stops listening while it is talking. Answers are cached for the session and the brain connection is warmed up at start.
+
 
 Put `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_VOICE_ID`) in the repo's `.env`. Speech-to-text uses ElevenLabs Scribe, replies use ElevenLabs text-to-speech. Without a key the mascot cannot listen, and replies fall back to the macOS voice.
 

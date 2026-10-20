@@ -27,8 +27,12 @@ export const sameValue = (a: string, b: string) => normValue(a) === normValue(b)
 
 // A meeting claim is hearsay until the speaker or an expert confirms it in writing:
 // until then it must not lend weight to anything else (agreement, expert backing).
+// Shared knowledge (review) is the same until an expert other than the author approves it.
+const approvedByColleague = (c: Claim, feedback: Feedback[], people: Map<string, Person>) =>
+  (c.reactions ?? []).some((id) => id !== c.author && people.get(id)?.role === "expert") ||
+  feedback.some((f) => f.claimId === c.id && f.kind === "correct" && f.userId !== c.author && people.get(f.userId)?.role === "expert");
 const vouched = (c: Claim, feedback: Feedback[], people: Map<string, Person>) =>
-  c.source.type !== "meeting" ||
+  (c.review ? approvedByColleague(c, feedback, people) : c.source.type !== "meeting") ||
   (c.reactions ?? []).some((id) => people.get(id)?.role === "expert") ||
   feedback.some((f) => f.claimId === c.id && f.kind === "correct" && (f.userId === c.author || people.get(f.userId)?.role === "expert"));
 
@@ -124,6 +128,9 @@ function scoreClaim(
     feedback.some((f) => f.claimId === claim.id && f.kind === "correct" && (f.userId === claim.author || people.get(f.userId)?.role === "expert"));
   if (claim.source.type === "meeting" && !confirmed && !matchesRef) {
     caps.push({ label: "said in a meeting, not confirmed yet", max: CAPS.unconfirmedMeeting });
+  }
+  if (claim.review && !matchesRef && !approvedByColleague(claim, feedback, people)) {
+    caps.push({ label: "shared for review, waiting for a colleague to approve it", max: CAPS.awaitingReview });
   }
   // A curated client agreement may deviate from the law on its own; something a consultant just wrote or said may not.
   const curatedException = isException && !claim.id.startsWith("live-");

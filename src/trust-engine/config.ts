@@ -35,6 +35,7 @@ export const CAPS = {
   predatesRuleChange: 0.3,
   noExpertBacking: 0.6,
   unconfirmedMeeting: 0.5, // spoken in a meeting, until the speaker or an expert confirms it in writing
+  awaitingReview: 0.5, // shared from the desktop assistant, until an expert other than the author approves it
 } as const;
 
 // How fast knowledge on a topic goes stale.

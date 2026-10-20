@@ -24,9 +24,9 @@ export async function POST(request: Request) {
   if (!canVote(user)) return bad("Sign in with your own account to teach the brain", 403);
   if (!(await rateLimit(`ingest:${user.id}`, 20, 60_000))) return tooManyRequests();
 
-  const body = await readJson(request, ["channel", "text", "context"]);
+  const body = await readJson(request, ["channel", "text", "context", "review"]);
   if (!body || typeof body !== "object") return bad("Send a JSON object of at most 10 KB");
-  const { channel: rawChannel, text, context } = body as Record<string, unknown>;
+  const { channel: rawChannel, text, context, review } = body as Record<string, unknown>;
   const channel = CHANNELS.find((c) => c === rawChannel);
   if (!channel) return bad("channel must be meeting, teams or email");
   if (typeof text !== "string" || !text.trim()) return bad("text is required");
@@ -40,6 +40,11 @@ export async function POST(request: Request) {
     if (!canUseContext(user, ctx, before)) return notYourClient();
 
     const { extracted, skipped } = extractClaims(text, channel, ctx, before, user, now());
+    // Shared on purpose from the desktop assistant: it only counts once a colleague approves it.
+    if (review === true) for (const e of extracted) {
+      e.claim.review = true;
+      e.claim.source = { ...e.claim.source, title: "Shared by a colleague (review)" };
+    }
     const learned: LedgerEntry[] = [];
     let k = before;
     for (const { claim, quote, speaker } of extracted) {

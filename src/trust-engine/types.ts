@@ -34,6 +34,7 @@ export type Claim = {
   corrects?: string; // id of the claim this one replies to and corrects
   file?: string; // source file under data/, when the claim comes from real data
   reportedBy?: string; // learned claims: who fed it in (can differ from the speaker in a meeting)
+  review?: boolean; // shared on purpose from the desktop assistant: capped until a colleague approves it
   hedged?: boolean; // the speaker sounded unsure ("I think", "not sure")
 };
 

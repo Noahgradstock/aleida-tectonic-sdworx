@@ -108,6 +108,12 @@ function updateContext() {
 let issue = null;
 let lastMailText = "";
 let offerUntil = 0; // after "Want me to fix that?", a "yes" fixes the email
+let lastSpoken = { key: "", at: 0 }; // speak about the same topic at most once per 30 s (typing "€6.9" then "€6.91" is one mistake)
+function speakOnce(key) {
+  if (lastSpoken.key === key && Date.now() - lastSpoken.at < 30000) return false;
+  lastSpoken = { key, at: Date.now() };
+  return true;
+}
 
 const FIX_COMMAND = /\b(fix|correct|update|repair)\b.*\b(e-?mail|mail)\b|\bfix (it|that|this|everything|them)\b/i;
 const YES = /^\s*(yes|yeah|yep|yup|sure|please|do it|go ahead|ja|japp|gör det|fix it)\b/i;
@@ -154,6 +160,8 @@ async function checkWriting(text, where) {
       conversation.rememberWarning(issue);
       if (result.kind !== "wrong") {
         // Unknown knowledge: a quiet card, never spoken.
+      } else if (where === "meeting" && !speakOnce(`meeting|${result.key}|${result.client || ""}`)) {
+        // Already said it.
       } else if (where === "meeting" && result.client) {
         const g = gen;
         conversation.rememberWarning(issue).then((a) => {
@@ -171,7 +179,7 @@ async function checkWriting(text, where) {
             ? `Quick note: for ${result.client.replace(/\s+(NV|BV)$/, "")} it's ${conversation.speakable(result.value)}, not ${conversation.speakable(result.said)}.`
             : `Quick correction: ${conversation.speakable(result.said)} is outdated. The ${result.label.toLowerCase()} is ${conversation.speakable(result.value)}.`,
         );
-      } else if (where === "Mail" || where === "email") {
+      } else if ((where === "Mail" || where === "email") && speakOnce(`${where}|${result.key}`)) {
         offerUntil = Date.now() + 60000;
         say(
           result.client

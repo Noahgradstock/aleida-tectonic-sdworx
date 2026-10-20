@@ -1,11 +1,12 @@
 # Live demo script: "The meeting that taught the brain" (3 minutes + 5 minutes Q&A)
 
-Live on stage, no video. Two scenes, one fact travelling through the company:
+Live on stage, no video. **It opens like a film: no intro, no team names.** Two scenes play first, then Noah steps out of the scene and explains what the jury just saw.
 
-1. **Knowledge goes in.** Ilke and Isak hold a fake team meeting. The blob sits in it, corrects a wrong value out loud and, when a new fact is said, asks one question: "Shall I remember that?"
-2. **Knowledge comes out.** Later, Noah, who was not in the meeting, asks Company brain. He gets the answer from that meeting, with Ilke's exact words, the score, and the reason he can trust it.
+1. **Scene 1, knowledge goes in.** Ilke and Isak are in a team meeting. The blob sits in it, corrects a wrong value out loud and, when a new fact is said, asks one question: "Shall I remember that?"
+2. **Scene 2, knowledge comes out.** A week later Noah, who was not in the meeting, asks Company brain and gets the answer from that meeting, with Ilke's exact words and the reason to trust it.
+3. **Then the explanation:** the mentor story, the one-liner, how it works, the close.
 
-**One-liner (say it at ~0:40 and as the last line):**
+**One-liner (first line of the explanation, ~1:35, and the very last line):**
 > "Company brain learns from the work you already do, and only asks you when it matters."
 
 **The case sentence it answers:** "Can your solution stay trusted without becoming another task?"
@@ -16,7 +17,7 @@ Live on stage, no video. Two scenes, one fact travelling through the company:
 
 | Who | Role on stage | Device |
 |---|---|---|
-| **Noah** | Narrator, then the colleague who asks the brain (scene 2) | Laptop B: Company brain web app on the projector |
+| **Noah** | The colleague who asks the brain (scene 2), then the narrator | Laptop B: Company brain web app on the projector |
 | **Ilke** | Payroll expert in the meeting. Owns the client Brouwerij De Kroon | Laptop A: the mascot, signed in as Ilke's demo account, microphone on |
 | **Isak** | New hire, first week, in the meeting | none, only talks |
 
@@ -26,67 +27,61 @@ Projector: laptop A (blob in front of a "Team meeting" screen) during scene 1, l
 
 ---
 
-## Script (~350 spoken words)
+## Script (~340 spoken words)
 
-### 0:00 – 0:20 · Hook (Noah)
+**Before the first word:** the projector shows laptop A: a "Team meeting · Payroll BE" screen with the blob calm in the corner. Ilke and Isak sit facing each other at a table on stage. Noah stands aside with laptop B. Nobody introduces anything. The first sentence is Isak's.
 
-> **NOAH:** When you start a new job you get a handbook. And if you are lucky, a mentor, who tells you what is not in the handbook. SD Worx has ten thousand of those mentors. What they know is said in meetings, every day, and it is never written down.
+### 0:00 – 1:00 · Scene 1: the meeting (Ilke, Isak, blob)
 
-### 0:20 – 0:40 · One-liner (Noah)
+> **ISAK:** Ilke, first week, quick question. I'm onboarding the new students at Brouwerij De Kroon. Students can work 600 hours a year, right?
 
-> **NOAH:** So we built a colleague that sits in the meeting. Company brain learns from the work you already do, and only asks you when it matters. This is Ilke, payroll expert. This is Isak, first week on the job.
-
-*[Switch projector to laptop A. Ilke and Isak turn to each other. The blob is calm.]*
-
-### 0:40 – 1:30 · Scene 1: the meeting (Ilke, Isak, blob)
-
-> **ISAK:** I'm onboarding the new students at Brouwerij De Kroon. Students can work 600 hours a year, right?
-
-*[Blob turns amber, speaks out loud.]*
+*[Blob turns amber, speaks out loud. This must land by ~0:10: it tells the jury what they are watching.]*
 
 > **BLOB:** Quick correction: 600 hours is outdated. The student work limit is 650 hours.
 
-> **ISAK:** Hey SD Worx, where does that come from?
+> **ISAK:** *(surprised)* Hey SD Worx, where does that come from?
 > **BLOB:** *(names the official source)*
 
-*[Beat. Ilke takes over.]*
-
-> **ILKE:** Good. And one more thing for De Kroon: we agreed 22 holiday days with them. Two on top of the law.
+> **ILKE:** It's right. And one more thing for De Kroon, it's not written anywhere: we agreed 22 holiday days with them. Two on top of the law.
 
 *[Blob turns blue and asks once.]*
 
 > **BLOB:** New for Brouwerij De Kroon: 22 holiday days. Ilke, shall I remember that?
 > **ILKE:** Yes.
 
-*[Quiet pill on the blob: "Learned: 22 days · Brouwerij De Kroon · confirmed by Ilke".]*
+*[Quiet pill on the blob: "Learned: 22 days · Brouwerij De Kroon · confirmed by Ilke". Ilke and Isak freeze. 1 second of silence.]*
 
-> **NOAH:** That was the only effort anyone made: one word. Nobody opened a wiki. And notice what it did not do: it did not record the meeting. It kept one fact, with the words Ilke used, and asked the person who said it.
+### 1:00 – 1:35 · Scene 2: a week later (Noah at the brain)
 
-### 1:30 – 2:25 · Scene 2: a week later (Noah at the brain)
+*[Switch projector to laptop B: Company brain, Ask. Noah walks to it.]*
 
-*[Switch projector to laptop B: Company brain, Ask.]*
-
-> **NOAH:** A week later. I wasn't in that meeting. A client asks me about holidays.
+> **NOAH:** *(thinking aloud, still in the scene)* A week later. De Kroon is asking me about holidays. I wasn't in that meeting.
 
 *[Noah types: "How many holiday days at Brouwerij De Kroon?"]*
 
-> **NOAH:** Twenty-two days. *(pause, 2 seconds)* Not the twenty in the law, because this client has its own agreement. Here are Ilke's exact words, from the meeting, with the date. Confirmed by Ilke. And if I still doubt it, it tells me who to ask: Ilke.
+> **NOAH:** Twenty-two. *(pause, 2 seconds)* Ilke's words, from that meeting, confirmed by her.
 
 *[Noah types: "How many holiday days at TechStart Gent?"]*
 
-> **NOAH:** Another client, no agreement: twenty days, the law. Same brain, the right answer per client.
+> **NOAH:** And another client: twenty, the law.
 
-*[Optional if time: open the Brain web and point at the new green node.]*
+### 1:35 – 2:30 · Explanation (Noah steps out of the scene, faces the jury)
 
-> **NOAH:** The AI only reads. The code decides, with rules you can read, so the same question gives the same answer and every point of the score is explained.
+> **NOAH:** What you just saw: Company brain learns from the work you already do, and only asks you when it matters.
+> When you start at university, you get a handbook and a mentor, who tells you what isn't in the handbook. SD Worx has ten thousand mentors. What they know is said in meetings, and never written down.
+> In that meeting, the only effort was one word: Ilke's "yes". Nobody opened a wiki. It didn't record the meeting: it kept one fact, with her exact words, and asked the person who said it.
+> And trust stays visible. *(point at the answer on screen)* Twenty-two, not twenty, because this client has its own agreement, and it beats the law only for this client. If I still doubt it, it tells me who to ask: Ilke.
+> The AI only reads. The code decides, with rules you can read: same question, same answer, every point of the score explained.
 
-### 2:25 – 3:00 · Close (Noah)
+### 2:30 – 3:00 · Close (Noah)
 
-> **NOAH:** When the law changes, old answers lose trust on their own. When something is unclear, the brain asks one person, the one with the best track record, one question. Not zero humans: zero unnecessary effort. Think electricity. Think wifi.
+> **NOAH:** When the law changes, old answers lose trust on their own. When something is unclear, it asks one person, one question. Not zero humans: zero unnecessary effort. Think electricity. Think wifi.
 > Give us one Belgian payroll team for four weeks. We'll measure how often people have to ask a colleague, and how many payslips need a correction.
 > **Company brain learns from the work you already do, and only asks you when it matters.**
 
-*(Stop. Closing slide stays up for Q&A: name, one-liner, team.)*
+*(Stop. Closing slide: name, one-liner, Noah · Isak · Ilke. It stays up for Q&A.)*
+
+**Why this order works:** the jury feels the moment before they hear the theory, so the explanation is relief, not a lecture. **The risk:** the playbook wants the jury to know what they are watching within 10 seconds. The blob's correction at ~0:10 does that, so Isak's first line must be fast and the blob must answer on the first try. If the wake word or microphone is unreliable in rehearsal, add one title on the first screen: "Company brain sits in your meetings."
 
 ---
 
@@ -94,11 +89,12 @@ Projector: laptop A (blob in front of a "Team meeting" screen) during scene 1, l
 
 | Spoken cue | Action |
 |---|---|
-| "…this is Isak, first week on the job." | Projector to laptop A. Mascot already **Online**, Meeting mode (`Cmd+Shift+T`). |
-| Ilke: "Yes." | Nothing. Wait for the pill. |
-| "A week later." | Projector to laptop B. Ask screen open, field empty, signed in as Noah's demo user. |
-| "A client asks me about holidays." | Noah types question 1 (paste from a note if nervous). |
-| "Another client, no agreement" | Question 2. |
+| Before the start | Laptop A on the projector. Mascot already **Online**, Meeting mode (`Cmd+Shift+T`). Laptop B: Ask screen open, field empty. |
+| Ilke: "Yes." | Nothing. Wait for the pill, then 1 second of silence. |
+| Noah walks to laptop B | Projector to laptop B. |
+| "…I wasn't in that meeting." | Noah types question 1 (paste from a note if nervous). |
+| "Ilke's words, from that meeting…" | Question 2. |
+| "What you just saw" | Leave the De Kroon answer on screen (go back to it if needed). |
 
 ---
 

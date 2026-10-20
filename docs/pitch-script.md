@@ -85,8 +85,17 @@ Record with the mascot online, sound on, the menu bar hidden. Keep each clip sho
 | Real Outlook and Teams? | Today: Apple Mail via macOS Accessibility, Teams detection by app. Production: Microsoft Graph for mail and meeting transcripts with speaker metadata. |
 | Security? | Aikido scan, per-client access on every route, 58 negative security tests, sandboxed desktop app. |
 
-## Open items to make the demo match the script
+## How to run the demo (tested 20 Oct, local server)
 
-1. **Mascot: client-aware check.** The draft names Brouwerij De Kroon, so the check must use that client's answer (22 days) instead of the country answer (20). *(Isak)*
-2. **Names on screen.** The demo data uses Jan, Anna, Tom and Sofie. Either rename the personas in the demo data to Ilke and Isak, or have the actors say "Ilke, playing our expert Jan" once. Renaming is cleaner.
-3. **Clip A source:** the meeting transcript is fed through `/loop` (speakers from the meeting tool); the confirm is the existing "Still right" button.
+The circle is verified end to end on a local server (`npm run dev`, accounts in `.env.local`, mascot `BRAIN_URL=http://localhost:3000`, signed in as Tom):
+
+1. **Up:** the meeting line `Jan Wouters: For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law.` is fed through `/loop` by **Sofie** (channel meeting, client Brouwerij De Kroon). Claim learned at **50%**, waiting for Jan.
+2. **Confirm:** **Jan** clicks "Still right" (you cannot confirm what you fed in yourself). Claim **97%**; De Kroon's answer becomes **22 days**.
+3. **Down:** in Apple Mail, "Dear Brouwerij De Kroon, your employees get 20 holiday days this year." → mascot warns *20 holiday days → 22 days (Brouwerij De Kroon)*; "Hey SD Worx, fix it" → *22 holiday days*. Another client (TechStart Gent) stays at 20: the agreement is De Kroon's only.
+
+The local server keeps learned claims in memory: restarting it resets the demo, which is handy between takes.
+
+## Open items
+
+1. **Names on screen.** The demo data uses Jan (expert) and Tom (new hire). Either rename these personas in the demo data to Ilke and Isak, or say once on stage "Ilke plays our expert Jan". Renaming is cleaner.
+2. **Record clips A–C** with the steps above.

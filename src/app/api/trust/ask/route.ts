@@ -2,6 +2,7 @@ import { ask, lastUpdated, matchFact, parseContext, rankContacts, recentTrail } 
 import { matchFactWithGemini } from "@/lib/gemini-match";
 import { allFeedback, currentUser, forbidden, notYourClient, now, readJson, tooManyRequests, unauthorized } from "@/lib/trust-server";
 import { liveKb, unconfirmedReport } from "@/lib/live";
+import { allQuestions, declinedFor, previewRecipient } from "@/lib/questions";
 import { maskPersonalData } from "@/lib/privacy";
 import { rateLimit, sameOrigin } from "@/lib/auth";
 import { canReadClaim, canUseContext } from "@/lib/access";
@@ -43,8 +44,13 @@ export async function POST(request: Request) {
   // name only counts once that colleague (or an expert) confirmed it, so nobody can raise or ruin a
   // colleague's track record by putting words in their mouth.
   const vouched = { ...kb, claims: kb.claims.filter((c) => !unconfirmedReport(c, feedback, kb.people)) };
-  const contacts = rankContacts(result, ctx, vouched, feedback, now());
+  const declined = declinedFor(await allQuestions(), result.fact.key);
+  const contacts = rankContacts(result, ctx, vouched, feedback, now(), { declined });
   // Who else dealt with this lately, in any country or client this user may see.
   const trail = recentTrail(result, kb, now(), { canSee: (c) => canReadClaim(user, c, kb), isHearsay: (c) => unconfirmedReport(c, feedback, kb.people) });
-  return Response.json({ ...result, contacts, trail, lastUpdated: lastUpdated(result), matchedBy, privacy });
+  // Who "Ask to confirm" would reach: never the author of the answer, never someone over their weekly budget.
+  const to = result.best ? await previewRecipient(user, result.best.claim.id, ctx) : null;
+  const author = result.best?.claim.author ? kb.people.find((p) => p.id === result.best!.claim.author) : undefined;
+  const confirmer = to ? { id: to.id, name: to.name, note: author && author.id !== to.id ? `${author.name.split(" ")[0]} wrote this, so a colleague confirms it` : null } : null;
+  return Response.json({ ...result, contacts, trail, confirmer, lastUpdated: lastUpdated(result), matchedBy, privacy });
 }

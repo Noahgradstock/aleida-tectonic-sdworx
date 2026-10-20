@@ -52,7 +52,14 @@ function otherScope(c: Claim, ctx: Context): string {
   return "another client";
 }
 
-export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase, feedback: Feedback[], now: Date): ContactRanking {
+export function rankContacts(
+  result: FactResult,
+  ctx: Context,
+  kb: KnowledgeBase,
+  feedback: Feedback[],
+  now: Date,
+  opts: { declined?: Set<string> } = {}, // people who answered "not my area" for this topic
+): ContactRanking {
   const people = new Map(kb.people.map((p) => [p.id, p]));
   const trustedValue = result.status === "trusted" || result.status === "conflict" ? result.best?.claim.value : undefined;
   const all: Claim[] = kb.claims.filter((c) => c.factKey === result.fact.key);
@@ -104,6 +111,10 @@ export function rankContacts(result: FactResult, ctx: Context, kb: KnowledgeBase
     if (!person) continue;
     if (person.left) {
       setAside.push({ person, reason: "Has left the company" });
+      continue;
+    }
+    if (opts.declined?.has(id)) {
+      setAside.push({ person, reason: "Said this is not their area" });
       continue;
     }
     const mine = trace.claims.filter(inScope);

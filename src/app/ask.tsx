@@ -267,6 +267,7 @@ export default function Ask() {
             hit={hit}
             question={asked}
             clientName={ctxName}
+            context={ctx}
             onVote={vote}
             onNew={reset}
             sorting={<Funnel hit={hit} cards={cards} q={1} onSelect={() => {}} minimal />}

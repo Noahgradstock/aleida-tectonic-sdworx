@@ -31,6 +31,7 @@ export function Result({
   hit,
   question,
   clientName,
+  context,
   onVote,
   onNew,
   sorting,
@@ -38,6 +39,7 @@ export function Result({
   hit: Hit;
   question: string;
   clientName: string;
+  context: { client?: string; country?: string; pc?: string };
   onVote: (claimId: string, kind: FeedbackKind) => void;
   onNew: () => void;
   sorting: React.ReactNode;
@@ -45,9 +47,9 @@ export function Result({
   const [open, setOpen] = useState<string | null>(null);
   const [showSorting, setShowSorting] = useState(false);
   const [showExcluded, setShowExcluded] = useState(false);
-  const [asked, setAsked] = useState(false);
   const { name, label } = useNames(hit);
-  const { best, fact, status, expert } = hit;
+  const { best, fact, status } = hit;
+  const confirmer = (hit as Hit & { confirmer?: { name: string; note: string | null } | null }).confirmer ?? null;
 
   const others = best ? hit.claims.filter((c) => c.claim.id !== best.claim.id) : [];
   const backing = best ? [best, ...others.filter((c) => sameValue(c.claim.value, best.claim.value))] : [];
@@ -120,22 +122,7 @@ export function Result({
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <Votes onVote={(k) => onVote(best.claim.id, k)} />
-            {expert && (
-              <button
-                onClick={() => setAsked(true)}
-                disabled={asked}
-                className={`flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 text-sm font-medium transition-all duration-300 active:scale-[0.97] ${
-                  asked ? "bg-[#eef3ff] text-[#1463ff]" : "bg-[#1463ff] text-white shadow-[0_1px_2px_rgba(20,99,255,0.3)] hover:bg-[#0f52d9]"
-                }`}
-              >
-                <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${asked ? "bg-[#1463ff] text-white" : "bg-white/20"}`}
-                >
-                  {asked ? "✓" : initials(expert.name)}
-                </span>
-                {asked ? `Sent to ${expert.name.split(" ")[0]}` : `Ask ${expert.name.split(" ")[0]} to confirm`}
-              </button>
-            )}
+            {confirmer && <AskToConfirm claimId={best.claim.id} context={context} expertName={confirmer.name} note={confirmer.note ?? undefined} />}
           </div>
         </div>
       )}
@@ -601,6 +588,88 @@ function WhoToTalkTo({ hit }: { hit: Hit & { contacts?: ContactRanking; trail?: 
           </ol>
         </>
       )}
+    </div>
+  );
+}
+
+type QuestionView = { claimId: string; status: "open" | "confirmed" | "wrong" | "not_mine" | "forwarded"; toName: string; forwardedToName: string | null; answeredAt?: string };
+
+const agoShort = (iso?: string) => {
+  if (!iso) return "";
+  const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
+  return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+};
+
+// Ask the best available colleague to confirm. The server picks who (never the browser), and the
+// answer comes back here: a confirmation moves the score, "not my area" passes it to the next person.
+function AskToConfirm({ claimId, context, expertName, note }: { claimId: string; context: { client?: string; country?: string; pc?: string }; expertName: string; note?: string }) {
+  const [q, setQ] = useState<QuestionView | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let stop = false;
+    const load = async () => {
+      const res = await fetch("/api/brain/questions").catch(() => null);
+      if (!res?.ok || stop) return;
+      const { mine } = (await res.json()) as { mine: QuestionView[] };
+      setQ(mine.find((x) => x.claimId === claimId) ?? null);
+    };
+    void load();
+    const t = setInterval(load, 5_000);
+    return () => {
+      stop = true;
+      clearInterval(t);
+    };
+  }, [claimId]);
+
+  async function ask() {
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/brain/questions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ claimId, context }) });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok) setQ(json.question);
+    else setError(json.error ?? "Could not send the question");
+    setBusy(false);
+  }
+
+  const first = (n: string) => n.split(" ")[0];
+  const pending = q && (q.status === "open" || q.status === "forwarded" || q.status === "not_mine");
+  const who = q ? (q.status === "open" ? q.toName : (q.forwardedToName ?? q.toName)) : expertName;
+  const label = !q
+    ? `Ask ${first(expertName)} to confirm`
+    : q.status === "confirmed"
+      ? `${first(q.toName)} confirmed · ${agoShort(q.answeredAt)}`
+      : q.status === "wrong"
+        ? `${first(q.toName)} says it's wrong`
+        : q.status === "open"
+          ? `Sent to ${first(q.toName)} · waiting`
+          : q.forwardedToName
+            ? `Passed on to ${first(q.forwardedToName)} · waiting`
+            : "Nobody else to ask";
+  const tone = !q
+    ? "bg-[#1463ff] text-white shadow-[0_1px_2px_rgba(20,99,255,0.3)] hover:bg-[#0f52d9]"
+    : q.status === "confirmed"
+      ? "bg-[#eef7f1] text-[#0f8a4f]"
+      : q.status === "wrong"
+        ? "bg-[#fdecea] text-[#c0392b]"
+        : "bg-[#eef3ff] text-[#1463ff]";
+  const dot = !q ? "bg-white/20" : q.status === "confirmed" ? "bg-[#0f8a4f] text-white" : q.status === "wrong" ? "bg-[#c0392b] text-white" : "bg-[#1463ff] text-white";
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        onClick={ask}
+        disabled={!!q || busy}
+        className={`flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 text-sm font-medium transition-all duration-300 active:scale-[0.97] ${tone}`}
+      >
+        <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${dot} ${pending ? "animate-pulse" : ""}`}>
+          {!q ? initials(expertName) : q.status === "confirmed" ? "✓" : q.status === "wrong" ? "✗" : initials(who)}
+        </span>
+        {busy ? "Sending…" : label}
+      </button>
+      {!q && note && <span className="text-[11px] text-neutral-400">{note}</span>}
+      {error && <span className="text-xs text-[#c0392b]">{error}</span>}
     </div>
   );
 }

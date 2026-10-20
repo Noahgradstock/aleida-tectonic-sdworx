@@ -16,7 +16,7 @@ type E = Omit<GraphEdge, "source" | "target"> & SimulationLinkDatum<N> & { sourc
 type Sel = { kind: GraphNode["kind"]; id: string } | null;
 type Lens = "people" | "sources";
 type TopicStatus = { status: "trusted" | "conflict" | "stale" | "orphan" | "empty"; answer: string | null; score: number | null };
-type BrainGraph = KnowledgeGraph & { topics: Record<string, TopicStatus>; reference: string };
+type BrainGraph = KnowledgeGraph & { topics: Record<string, TopicStatus>; reference: string; asked?: Record<string, number> };
 
 const W = 1100;
 const H = 720;
@@ -532,7 +532,9 @@ function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; on
   const attention = graph.nodes
     .filter((n) => n.kind === "concept")
     .map((n) => ({ n, t: graph.topics[keyOf(n.id)] }))
-    .filter((x) => x.t && (x.t.status === "conflict" || x.t.status === "orphan" || x.t.status === "stale"));
+    .map((x) => ({ ...x, asked: graph.asked?.[keyOf(x.n.id)] ?? 0 }))
+    .filter((x) => x.t && (x.t.status === "conflict" || x.t.status === "orphan" || x.t.status === "stale" || x.asked > 0))
+    .sort((a, b) => b.asked - a.asked);
   const total = graph.nodes.filter((n) => n.kind === "concept").length;
   const people = Object.values(graph.cvs)
     .filter((c) => !c.left)
@@ -545,12 +547,15 @@ function Overview({ graph, lens, onSelect }: { graph: BrainGraph; lens: Lens; on
       </p>
       {attention.length > 0 && (
         <ul className="mt-3 space-y-1.5">
-          {attention.map(({ n, t }) => (
+          {attention.map(({ n, t, asked }) => (
             <li key={n.id}>
               <button onClick={() => onSelect(n.id)} className="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-sm hover:bg-neutral-50">
                 <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: STATUS[t.status].color }} />
                 <span className="flex-1">{n.label}</span>
-                <span className="text-xs text-neutral-500">{STATUS[t.status].label}</span>
+                <span className="text-xs text-neutral-500">
+                  {asked ? <span className="mr-1 rounded-full bg-[#eef3ff] px-1.5 py-0.5 text-[#1463ff]">{asked} asked</span> : null}
+                  {STATUS[t.status].label}
+                </span>
               </button>
             </li>
           ))}
@@ -604,6 +609,11 @@ function Topic({ node, graph, onSelect, docByFile, onOpenDoc }: { node: GraphNod
         </div>
       )}
       <p className="mt-1 text-xs text-neutral-500">Scored for {graph.reference}</p>
+      {(graph.asked?.[keyOf(node.id)] ?? 0) > 0 && (
+        <p className="mt-2 text-xs text-[#1463ff]">
+          {graph.asked![keyOf(node.id)]} colleague{graph.asked![keyOf(node.id)] > 1 ? "s are" : " is"} waiting for a confirmation on this.
+        </p>
+      )}
       {first && (
         <p className="mt-3 rounded-xl bg-[#eef3ff] px-3 py-2 text-sm">
           Contact <b>{first.cv.name}</b> first. {first.label}.

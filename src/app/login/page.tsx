@@ -29,13 +29,14 @@ export default function Login() {
     }
   }
 
-  async function guest() {
+  // Try the app as one of the demo colleagues, no password (e.g. for a jury). Same rules as a real sign-in.
+  async function tryAs(persona: string) {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/guest", { method: "POST" });
-      if (res.ok) return fullReload("/");
-      setError(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Guest access failed");
+      const res = await fetch("/api/auth/demo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ persona }) });
+      if (res.ok) return fullReload(persona === "jan" ? "/loop" : "/");
+      setError(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Demo sign-in failed");
     } finally {
       setBusy(false);
     }
@@ -74,14 +75,37 @@ export default function Login() {
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
-        <button
-          type="button"
-          onClick={guest}
-          disabled={busy}
-          className="rounded-full border border-black/10 px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-neutral-600 hover:border-black/30 disabled:opacity-50"
-        >
-          Continue as guest
-        </button>
+        <div className="mt-3 border-t border-black/5 pt-4">
+          <p className="text-xs font-medium text-neutral-700">Try it without a password</p>
+          <p className="mt-0.5 text-[11px] text-neutral-500">Fictional colleagues with real roles. Switch person any time from the sidebar.</p>
+          <div className="mt-3 grid gap-2">
+            {[
+              { id: "sofie", name: "Sofie Maes", role: "Payroll consultant", does: "Asks questions, feeds meetings, sees her log" },
+              { id: "jan", name: "Jan Wouters", role: "Payroll expert", does: "Confirms, corrects and approves agreements" },
+            ].map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => tryAs(p.id)}
+                disabled={busy}
+                className="flex items-center gap-3 rounded-xl border border-black/10 px-3 py-2.5 text-left hover:border-[#1463ff] hover:bg-[#f5f8ff] disabled:opacity-50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#161616] text-xs font-semibold text-white">
+                  {p.name
+                    .split(" ")
+                    .map((w) => w[0])
+                    .join("")}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-[#161616]">
+                    Try as {p.name.split(" ")[0]} <span className="font-normal text-neutral-500">· {p.role}</span>
+                  </span>
+                  <span className="block truncate text-[11px] text-neutral-500">{p.does}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </form>
     </main>
   );

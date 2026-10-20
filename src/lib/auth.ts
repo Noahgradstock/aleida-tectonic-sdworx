@@ -19,7 +19,7 @@ export const cookieOptions = {
   maxAge: SESSION_TTL_S,
 };
 
-export type Session = { sub: string; sid: string; exp: number };
+export type Session = { sub: string; sid: string; exp: number; demo?: boolean };
 
 function secret(): string | null {
   const s = process.env.SESSION_SECRET;
@@ -39,18 +39,21 @@ const safeEqual = (a: string, b: string) => {
 // The shared demo guest ("Continue as guest"): no password, read-only. Switch off with GUEST_ACCESS=off.
 export const GUEST_ID = "guest";
 export const guestEnabled = () => process.env.GUEST_ACCESS !== "off";
+// Demo personas: real people from the (fictional) data that a visitor can try the app as, without a password,
+// e.g. a jury. Same roles and rules as a signed-in user. Off together with guest access.
+export const demoPersonas = () => (guestEnabled() ? (process.env.DEMO_PERSONAS ?? "sofie,jan").split(",").map((x) => x.trim()).filter(Boolean) : []);
 
 // Password version: changes when the user's password (salt) changes, which ends all their sessions.
 // Guest sessions all end when guest access is switched off.
 const passwordVersion = (userId: string) =>
   userId === GUEST_ID ? (guestEnabled() ? "guest" : null) : (users().get(userId)?.salt.slice(0, 8) ?? null);
 
-export function createSession(userId: string, now = Date.now()): string {
+export function createSession(userId: string, now = Date.now(), opts: { demo?: boolean } = {}): string {
   const key = secret();
-  const pv = passwordVersion(userId);
+  const pv = opts.demo ? (demoPersonas().includes(userId) ? "demo" : null) : passwordVersion(userId);
   if (!key) throw new Error("SESSION_SECRET (32+ characters) is not set");
   if (!pv) throw new Error("Unknown user");
-  const body = { sub: userId, sid: randomBytes(16).toString("base64url"), pv, exp: Math.floor(now / 1000) + SESSION_TTL_S };
+  const body = { sub: userId, sid: randomBytes(16).toString("base64url"), pv, exp: Math.floor(now / 1000) + SESSION_TTL_S, ...(opts.demo ? { demo: true } : {}) };
   const payload = Buffer.from(JSON.stringify(body)).toString("base64url");
   return `${payload}.${sign(payload, key)}`;
 }
@@ -62,10 +65,12 @@ export function readSession(token: string | undefined | null, now = Date.now()):
   const [payload, sig, extra] = token.split(".");
   if (!payload || !sig || extra !== undefined || !safeEqual(sig, sign(payload, key))) return null;
   try {
-    const { sub, sid, pv, exp } = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    const { sub, sid, pv, exp, demo } = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
     if (typeof sub !== "string" || typeof sid !== "string" || typeof exp !== "number" || exp * 1000 <= now) return null;
-    if (pv !== passwordVersion(sub)) return null;
-    return { sub, sid, exp };
+    // A demo session stays valid only while that persona is offered; a normal one only while the password is unchanged.
+    const expected = demo === true ? (demoPersonas().includes(sub) ? "demo" : null) : passwordVersion(sub);
+    if (!expected || pv !== expected) return null;
+    return { sub, sid, exp, ...(demo === true ? { demo: true } : {}) };
   } catch {
     return null;
   }

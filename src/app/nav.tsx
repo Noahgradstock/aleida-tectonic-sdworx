@@ -36,12 +36,18 @@ const initials = (name: string) =>
 export default function Nav() {
   const path = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  // In a demo session: the other colleagues a visitor can switch to, and a reset to a fresh morning.
+  const [demo, setDemo] = useState<{ personas: User[] } | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (path === "/login") return;
     fetch("/api/auth/me")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setUser(d?.user ?? null))
+      .then((d) => {
+        setUser(d?.user ?? null);
+        setDemo(d?.demo ? { personas: d.personas ?? [] } : null);
+      })
       .catch(() => setUser(null));
   }, [path]);
 
@@ -49,6 +55,18 @@ export default function Nav() {
     await fetch("/api/auth/logout", { method: "POST" });
     // Full page load so no cached signed-in page stays reachable after logout.
     window.location.replace("/login");
+  }
+
+  async function switchTo(persona: string) {
+    setBusy(true);
+    const res = await fetch("/api/auth/demo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ persona }) });
+    if (res.ok) window.location.reload();
+    else setBusy(false);
+  }
+  async function resetDemo() {
+    setBusy(true);
+    await fetch("/api/demo/reset", { method: "POST" }).catch(() => null);
+    window.location.reload();
   }
 
   if (path === "/login") return null;
@@ -85,8 +103,26 @@ export default function Nav() {
           ))}
         </nav>
 
+        {user && demo && (
+          <div className="ml-auto hidden rounded-xl bg-white/70 p-2.5 text-xs lg:ml-0 lg:mt-auto lg:block">
+            <p className="font-medium text-neutral-700">Demo</p>
+            <p className="mt-0.5 text-neutral-500">You are trying it as {user.name.split(" ")[0]}.</p>
+            <div className="mt-2 flex flex-col items-start gap-1">
+              {demo.personas
+                .filter((p) => p.id !== user.id)
+                .map((p) => (
+                  <button key={p.id} onClick={() => switchTo(p.id)} disabled={busy} className="font-medium text-[#1463ff] hover:underline disabled:opacity-50">
+                    Switch to {p.name.split(" ")[0]} ({p.role === "expert" ? "expert" : "consultant"})
+                  </button>
+                ))}
+              <button onClick={resetDemo} disabled={busy} className="text-neutral-500 hover:text-neutral-900 hover:underline disabled:opacity-50">
+                Reset the demo morning
+              </button>
+            </div>
+          </div>
+        )}
         {user && (
-          <div className="ml-auto flex items-center gap-2.5 lg:ml-0 lg:mt-auto lg:border-t lg:border-black/5 lg:px-2 lg:pt-4">
+          <div className={`ml-auto flex items-center gap-2.5 lg:ml-0 lg:border-t lg:border-black/5 lg:px-2 lg:pt-4 ${demo ? "lg:mt-3" : "lg:mt-auto"}`}>
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#161616] text-xs font-semibold text-white">{initials(user.name)}</span>
             <div className="hidden min-w-0 flex-1 lg:block">
               <div className="truncate text-sm font-medium text-neutral-900">{user.name}</div>

@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { activeSession, clientIp, cookieOptions, createSession, GUEST_ID, guestEnabled, rateLimit, SESSION_COOKIE } from "@/lib/auth";
+import { activeSession, clientIp, cookieOptions, createSession, demoPersonas, GUEST_ID, guestEnabled, rateLimit, SESSION_COOKIE } from "@/lib/auth";
 
 // Everything except the login page and the login/guest endpoints needs a valid, not logged-out session.
-// Visitors without one are signed in as the read-only demo guest, so the demo opens without a login screen.
+// Visitors without one are signed in as the first demo persona (a real, fictional colleague: same rules as anyone),
+// or as the read-only guest if no persona is offered, so the demo opens without a login screen.
 // Route handlers check the session again (defense in depth), this is the first gate.
-const PUBLIC = new Set(["/login", "/api/auth/login", "/api/auth/guest"]);
+const PUBLIC = new Set(["/login", "/api/auth/login", "/api/auth/guest", "/api/auth/demo"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,7 +22,8 @@ export async function proxy(request: NextRequest) {
   const ip = clientIp(request);
   if (guestEnabled() && (await rateLimit(ip ? `guest-auto:${ip}` : "guest-auto-all", ip ? 30 : 600, 60_000))) {
     try {
-      const token = createSession(GUEST_ID);
+      const persona = demoPersonas()[0];
+      const token = persona ? createSession(persona, Date.now(), { demo: true }) : createSession(GUEST_ID);
       // Set it on this request too, so the page renders signed in straight away.
       request.cookies.set(SESSION_COOKIE, token);
       const res = NextResponse.next({ request: { headers: request.headers } });

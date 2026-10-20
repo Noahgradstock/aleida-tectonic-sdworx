@@ -16,6 +16,8 @@ export interface Store {
   hset(hash: string, field: string, value: string): Promise<void>;
   hvals(hash: string): Promise<string[]>;
   hdel(hash: string, field: string): Promise<void>;
+  /** Removes a whole key (a counter, a flag or a hash). Used by the demo reset. */
+  del(key: string): Promise<void>;
 }
 
 class MemoryStore implements Store {
@@ -53,6 +55,10 @@ class MemoryStore implements Store {
   }
   async hdel(hash: string, field: string) {
     this.hashes.get(hash)?.delete(field);
+  }
+  async del(key: string) {
+    this.kv.delete(key);
+    this.hashes.delete(key);
   }
 }
 
@@ -102,6 +108,9 @@ export class UpstashStore implements Store {
   async hdel(hash: string, field: string) {
     await this.pipeline([["HDEL", hash, field]]);
   }
+  async del(key: string) {
+    await this.pipeline([["DEL", key]]);
+  }
 }
 
 function createStore(): Store {
@@ -122,5 +131,7 @@ const unavailable: Store = new Proxy({} as Store, {
 
 // One store per server process (survives hot reload in dev).
 const g = globalThis as typeof globalThis & { __tavlingStore?: Store };
-export const store: Store = (g.__tavlingStore ??= createStore());
+// After a code change in dev, an older cached instance may lack a newer method: then start a fresh one.
+const current = (s: Store | undefined): s is Store => !!s && typeof s.del === "function" && typeof s.hdel === "function";
+export const store: Store = current(g.__tavlingStore) ? g.__tavlingStore : (g.__tavlingStore = createStore());
 export const sharedStore = () => !(store instanceof MemoryStore);

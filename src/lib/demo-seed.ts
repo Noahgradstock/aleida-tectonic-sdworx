@@ -15,6 +15,14 @@ const MIN = 60_000;
 let running: Promise<void> | null = null;
 let inside = false;
 
+// Back to a fresh demo morning: everything learned, voted, asked and logged is cleared, then the morning runs again.
+const DEMO_KEYS = ["live-claims", "ledger", "ledger-seq", "votes", "questions", "documents", "retractions", "demo-morning"];
+export async function resetDemoMorning(): Promise<void> {
+  for (const key of DEMO_KEYS) await store.del(key);
+  running = null;
+  await ensureDemoMorning();
+}
+
 export async function ensureDemoMorning(): Promise<void> {
   if (inside || process.env.DEMO_SEED === "off") return;
   running ??= (async () => {

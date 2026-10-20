@@ -26,9 +26,9 @@ We start in the middle of the story: Isak gets it wrong. Then we meet the knowle
 
 | Video | Visual cue | Live line |
 |---|---|---|
-| **0:00 – 0:22 · Isak's email** (You are: Isak) | Isak types to a colleague: *"…the meal voucher is €6.91 per day, right?"* | **ISAK:** "My first week at SD Worx. I don't know a single rule yet, formal or informal." |
+| **0:00 – 0:22 · Isak's email** | Isak writes to a new client: *"…the employer part of the meal voucher is €6.91 per day."* | **ISAK:** "My first week at SD Worx. I don't know a single rule yet, formal or informal." |
 | | The blob turns **amber**: *→ €8.91* | **ISAK:** "And there it is: €6.91 was the old rule." |
-| | Isak's voice: *"Hey SD Worx, fix it."* → the email changes to €8.91 | *(silent)* |
+| | The assistant: *"Heads up: 6.91 euros is outdated… Want me to fix your email?"* → Isak: *"Yes, please."* → €8.91 | *(silent)* |
 | | Blob calm and green | **NOAH:** "Silent while you're right. There the moment you're not. But where does it know this from?" |
 | **0:22 – 0:40 · Ilke shares** (You are: Ilke) | Ilke types to Brouwerij De Kroon: *"as agreed… 22 holiday days"* | **ILKE:** "From people like me. I just agreed 22 holiday days with Brouwerij De Kroon." |
 | | Blue card: *Not in the Company brain for De Kroon yet* | **ILKE:** "The brain only knows the law: 20. So I share it. Just this sentence." |
@@ -73,17 +73,18 @@ Setup: local server `npm run dev` (accounts in `.env.local`); mascot `.env`: `BR
 
 Paste everything except the **bold** sentence before recording, then type the bold sentence on camera and stop typing.
 
-**Shot 1 · Isak** (You are: Isak). To: Sofie Maes · Subject: Meal vouchers for a new hire
-> Hi Sofie,
+**Shot 1 · Isak** (`Cmd+Shift+2`). To: Mr Peeters (a client contact; no company name, so the general rule applies) · Subject: Welcome to SD Worx · Mail signature: **Ingen/None**
+> Dear Mr Peeters,
 >
-> Quick question from the new guy. I am setting up meal vouchers for a new hire and I want to get it right.
+> Welcome to SD Worx. I am Isak, and I will take care of your payroll from now on.
 >
-> **The employer part of the meal voucher is €6.91 per day, right?**
+> **For your new employees, the employer part of the meal voucher is €6.91 per day.**
 >
-> Thanks a lot,
+> Kind regards,
 > Isak
+> Payroll consultant, SD Worx
 
-→ amber *€6.91 → €8.91*; "Hey SD Worx, fix it" → *€8.91*.
+→ amber; the assistant says *"Heads up: 6.91 euros is outdated. It's 8.91 euros now. Want me to fix your email?"* → Isak: **"Yes, please."** → *€8.91*.
 
 **Shot 2 · Ilke** (You are: Ilke). To: Jan van Damme, Brouwerij De Kroon · Subject: Holiday days 2026
 > Dear Mr Van Damme,

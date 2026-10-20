@@ -52,6 +52,14 @@ Listening uses voice-activity detection: an utterance is sent as soon as you pau
 
 Put `ELEVENLABS_API_KEY` (and optionally `ELEVENLABS_VOICE_ID`) in the repo's `.env`. Speech-to-text uses ElevenLabs Scribe, replies use ElevenLabs text-to-speech. Without a key the mascot cannot listen, and replies fall back to the macOS voice.
 
+## Privacy
+
+- **Off by default.** Offline it sees and hears nothing.
+- **Reads down, never shares on its own.** Checks download trusted answers and run on your device; nothing you write is sent to the brain.
+- **Shares one sentence, only when you click** "I know better" / "Share for review": never the email, recipients or thread. It is capped at 50% until an expert other than you approves it.
+- **New topics stay local:** a value about a topic the brain does not know yet is saved as a suggestion in `suggestions.json` in the app's data folder, not uploaded.
+- **Only your own writing:** in Mail only the message body you are writing; never your inbox, other apps' messages or meeting audio in anyone's name.
+
 ## Security
 
 - Renderer pages run with `contextIsolation`, `sandbox`, no `nodeIntegration`, a strict Content-Security-Policy, and no navigation or new windows.

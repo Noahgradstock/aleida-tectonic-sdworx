@@ -15,18 +15,20 @@ The story is one circle: **knowledge goes up** (Ilke speaks) → **knowledge com
 > **NOAH:** At university you get a pamphlet. And you get a mentor: the one who tells you the professor takes points off if you skip Friday at four. SD Worx doesn't have one mentor. It has ten thousand. Their knowledge lives in meetings and emails, and it walks out the door when they do.
 > Meet Ilke, payroll expert. And Isak, first week on the job.
 
-## 0:20 – 1:00 · Scene 1: knowledge goes up
+## 0:20 – 1:00 · Scene 1: knowledge goes up (with consent)
 
-*Clip A: a Teams meeting with Brouwerij De Kroon. The blob shows the purple camera. Cut to the Brain web: a new node appears, "22 days · De Kroon · 50% · waiting for Ilke".*
+*Clip A: Ilke's Mail. She writes to Brouwerij De Kroon. Her mascot (blue envelope) turns amber: "The brain says 20 days."*
 
-> **ILKE** *(on the call, to the client)*: For Brouwerij De Kroon we agreed 22 holiday days. Two extra on top of the law.
+> **ILKE** *(typing)*: "As agreed, your employees get 22 holiday days this year."
+> **ILKE** *(to the audience)*: The brain says 20. But I negotiated 22 with this client yesterday. *(clicks)* I know better.
 
-> **NOAH:** Ilke just taught the company something. She didn't write a wiki page. The meeting tool knows who spoke; the brain picks out the fact, the value, the client and her exact words. Spoken knowledge starts at fifty percent: usable, not trusted, until the person who said it confirms it.
+*The card: "Shared for review · Anna De Smet will approve it ✓". Ilke's blob goes calm.*
 
-*Clip A continues: one "Still right?" card for Ilke. She clicks ✓. The node turns green: 50% → 97%.*
+> **NOAH:** Ilke just taught the company something, without writing a wiki page. Only that one sentence left her laptop, because she clicked. Her email, the recipients, the thread: they stay with her. And until a colleague approves it, it changes nobody's answer.
 
-> **ILKE** *(clicks)*: Still right.
-> **NOAH:** One click. That is the only maintenance anyone did today.
+*Clip A continues: Anna's "Questions for you" in Company brain. One click ✓. The De Kroon node turns green: 22 days, 98%.*
+
+> **NOAH:** Anna approves with one click. That is the only maintenance anyone did today.
 
 ## 1:00 – 1:50 · Scene 2: knowledge comes down
 
@@ -36,13 +38,13 @@ The story is one circle: **knowledge goes up** (Ilke speaks) → **knowledge com
 
 *The blob turns amber.*
 
-> **BLOB** *(voice)*: For Brouwerij De Kroon it's 22 days. Client agreement, confirmed by Ilke.
+> **BLOB** *(voice)*: For Brouwerij De Kroon it's 22 days. Shared by Ilke, approved by Anna.
 > **ISAK:** Hey SD Worx, fix it.
 
 *The draft changes to 22 days. The blob goes calm.*
 
 > **ISAK:** How did you get that?
-> **BLOB:** I start from Belgian law: 20 days. But Ilke agreed 22 with this client and confirmed it, so the client agreement wins. Ninety-seven percent.
+> **BLOB:** I start from Belgian law: 20 days. But Ilke agreed 22 with this client and Anna approved it, so the client agreement wins. Ninety-eight percent.
 
 > **NOAH:** Isak didn't search. He didn't know who to ask. Ilke's knowledge found him at the moment he needed it, and stayed silent the rest of the time. Think electricity. Think wifi.
 
@@ -59,7 +61,7 @@ The story is one circle: **knowledge goes up** (Ilke speaks) → **knowledge com
 
 *Slide: Everyday work → AI reads → code decides → people confirm only when it matters. Brain health: "1,240 facts · 1,236 maintain themselves · 4 need a human".*
 
-> **NOAH:** Under the hood: AI only reads. Deterministic code decides, so every score is explainable and every point is in a ledger. It runs on your device, learns only from what you write, and never puts words in your mouth.
+> **NOAH:** Under the hood: AI only reads. Deterministic code decides, so every score is explainable and every point is in a ledger. The mascot reads down, never leaks up: it shares one sentence only when you click, and only after a colleague approves does it count.
 > Find it. Understand it. Trust it. **Keep it trusted, without making it another task.**
 
 ---
@@ -68,7 +70,7 @@ The story is one circle: **knowledge goes up** (Ilke speaks) → **knowledge com
 
 | Clip | Shows | Length |
 |---|---|---|
-| A | Teams meeting line → Brain web node at 50% → Ilke's one-click confirm → 97% (`/loop` + `/brain`) | ~25 s |
+| A | Ilke's Mail draft "22 holiday days" → amber → "I know better" → "Shared for review · Anna will approve it" → Anna approves in Company brain → 22 days, 98% | ~25 s |
 | B | Mail draft "20 holiday days" → amber blob → "Hey SD Worx, fix it" → 22 days → "How did you get that?" with spoken answer | ~35 s |
 | C | Meeting: "students can work 600 hours" → blob corrects out loud | ~10 s |
 
@@ -87,13 +89,11 @@ Record with the mascot online, sound on, the menu bar hidden. Keep each clip sho
 
 ## How to run the demo (tested 20 Oct, local server)
 
-The circle is verified end to end on a local server (`npm run dev`, accounts in `.env.local`, mascot `BRAIN_URL=http://localhost:3000`, signed in as Tom):
+Local server: `npm run dev`, accounts in `.env.local` (`node scripts/create-users.mjs jan tom anna sofie`), mascot `.env`: `BRAIN_URL=http://localhost:3000`. Restarting the server resets everything learned, which is handy between takes.
 
-1. **Up:** the meeting line `Jan Wouters: For Brouwerij De Kroon we agreed 22 holiday days, two extra on top of the law.` is fed through `/loop` by **Sofie** (channel meeting, client Brouwerij De Kroon). Claim learned at **50%**, waiting for Jan.
-2. **Confirm:** **Jan** clicks "Still right" (you cannot confirm what you fed in yourself). Claim **97%**; De Kroon's answer becomes **22 days**.
-3. **Down:** in Apple Mail, "Dear Brouwerij De Kroon, your employees get 20 holiday days this year." → mascot warns *20 holiday days → 22 days (Brouwerij De Kroon)*; "Hey SD Worx, fix it" → *22 holiday days*. Another client (TechStart Gent) stays at 20: the agreement is De Kroon's only.
-
-The local server keeps learned claims in memory: restarting it resets the demo, which is handy between takes.
+1. **Up (Ilke = account `jan`):** mascot `.env` `BRAIN_USER=jan`. In Mail: *"Dear Brouwerij De Kroon, as agreed your employees get 22 holiday days this year."* → amber (brain says 20) → **I know better** → *"Shared for review · Anna De Smet will approve it"*. The claim is learned at 50% with the `review` rule; the De Kroon answer stays 20.
+2. **Approve (Anna = account `anna`):** in Company brain, "Questions for you" → ✓. De Kroon's answer becomes **22 days, 98%**.
+3. **Down (Isak = account `tom`):** mascot `.env` `BRAIN_USER=tom`, restart the mascot. In Mail: *"Dear Brouwerij De Kroon, your employees get 20 holiday days this year."* → amber *20 holiday days → 22 days (Brouwerij De Kroon)* → "Hey SD Worx, fix it" → *22 holiday days*. TechStart Gent stays at 20.
 
 ## Open items
 
